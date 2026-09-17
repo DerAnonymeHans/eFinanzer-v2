@@ -7,17 +7,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["eFinanzer/eFinanzer.csproj", "eFinanzer/"]
-RUN dotnet restore "eFinanzer/eFinanzer.csproj"
+COPY ["Web/Web.csproj", "Web/"]
+RUN dotnet restore "Web/Web.csproj"
 COPY . .
-WORKDIR "/src/eFinanzer"
-RUN dotnet build "./eFinanzer.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/Web"
+RUN dotnet build "./Web.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./eFinanzer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Web.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "eFinanzer.dll"]
+ENTRYPOINT ["dotnet", "Web.dll"]
