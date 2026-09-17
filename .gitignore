@@ -1,0 +1,5 @@
+*.key
+*.csr
+/Shiboleth-Tests/Keys
+/src/eFinanzer/Web/obj
+**/.idea

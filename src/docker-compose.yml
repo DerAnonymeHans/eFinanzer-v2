@@ -1,0 +1,101 @@
+﻿services:
+  reverse-proxy:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      keycloak:
+        condition: service_started
+      victorialogs:
+        condition: service_started
+    networks:
+      - web-net
+    restart: unless-stopped
+
+  efinanzer_postgres:
+    image: postgres:16-alpine
+    container_name: app_postgres
+    environment:
+      POSTGRES_DB: ${EFINANZER_DB_NAME:-efinanzer}
+      POSTGRES_USER: ${EFINANZER_DB_USER:-efinanzer}
+      POSTGRES_PASSWORD: ${EFINANZER_DB_PASSWORD}
+    volumes:
+      - efinanzer_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EFINANZER_DB_USER:-efinanzer}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - efinanzer-net
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    command: start --optimized
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak_postgres:5432/${KEYCLOAK_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: efinanzer.stura.htwk-leipzig.de
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+    depends_on:
+      keycloak_postgres:
+        condition: service_healthy
+    networks:
+      - web-net
+      - keycloak-net
+    restart: unless-stopped
+
+  keycloak_postgres:
+    image: postgres:16-alpine
+    container_name: keycloak_postgres
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:-keycloak}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER:-keycloak}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - keycloak-net
+    restart: unless-stopped
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: victorialogs
+    # Removed direct host port mapping "9428:9428" so traffic must flow via nginx
+    volumes:
+      - vl_data:/victoria-logs-data
+    command:
+      - "-retentionPeriod=6M"
+      - "-http.pathPrefix=/logs"
+    networks:
+      - web-net
+    restart: unless-stopped
+
+networks:
+  web-net:
+    driver: bridge
+  keycloak-net:
+    driver: bridge
+  efinanzer-net:
+    driver: bridge
+
+volumes:
+  efinanzer_pgdata:
+  keycloak_pgdata:
+  vl_data:
