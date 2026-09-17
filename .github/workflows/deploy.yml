@@ -35,7 +35,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
-          context: ./src/eFinanzer/Web
+          context: ./src/eFinanzer
           file: ./src/eFinanzer/Web/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
@@ -47,7 +47,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "scr/docker-compose.yml"
+          source: "src/docker-compose.yml"
           target: "/home/psetzer/efinanzer"
 
       - name: Execute remote deployment commands
