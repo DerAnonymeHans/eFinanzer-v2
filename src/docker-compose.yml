@@ -13,11 +13,22 @@
         condition: service_started
     networks:
       - web-net
-    restart: unless-stopped
+    restart: unless-stopped 
+    
+  efinanzer:
+    image: deranonyme/efinanzer:main
+    container_name: efinanzer
+    depends_on:
+      - efinanzer_postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - web-net
+      - efinanzer-net
 
   efinanzer_postgres:
     image: postgres:16-alpine
-    container_name: app_postgres
+    container_name: efinanzer_postgres
     environment:
       POSTGRES_DB: ${EFINANZER_DB_NAME:-efinanzer}
       POSTGRES_USER: ${EFINANZER_DB_USER:-efinanzer}
