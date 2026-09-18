@@ -75,6 +75,7 @@ jobs:
       && needs.build.result != 'failure'
       && needs.build.result != 'cancelled'
     runs-on: ubuntu-latest
+    environment: Production
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -123,6 +124,14 @@ jobs:
 
           echo "--- copying compose files"
           scp src/deploy/docker-compose.yml src/deploy/nginx.conf "deploy:$TARGET/"
+
+          echo "--- checking required secrets are present"
+          for v in EFINANZER_DB_USER EFINANZER_DB_PASSWORD KEYCLOAK_DB_USER KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USER KEYCLOAK_ADMIN_PASSWORD; do
+            if [ -z "${!v}" ]; then
+              echo "::error::$v resolved to an empty string - check that the secret exists and is visible to this job"
+              exit 1
+            fi
+          done
 
           echo "--- writing .env"
           printf '%s\n' \
