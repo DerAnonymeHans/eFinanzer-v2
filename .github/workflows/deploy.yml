@@ -79,58 +79,71 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Copy deploy folder to server
+      # Everything below runs over a single multiplexed SSH connection, so the
+      # server's brute-force protection does not see a burst of new sessions.
+      - name: Deploy to server
         run: |
           set -eu
           SSH_PORT="${SSH_PORT:-22}"
+          TARGET=/home/psetzer/efinanzer
+
           echo "--- preparing key"
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
-          echo "--- scanning host key on port $SSH_PORT"
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts
+
+          echo "--- preparing known_hosts"
+          if [ -n "${SSH_KNOWN_HOSTS:-}" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "SSH_KNOWN_HOSTS secret is not set, falling back to a single ssh-keyscan"
+            ssh-keyscan -t ed25519 -p "$SSH_PORT" "$SSH_HOST" > ~/.ssh/known_hosts
+          fi
           chmod 600 ~/.ssh/known_hosts
-          echo "--- host keys collected: $(wc -l < ~/.ssh/known_hosts)"
-          echo "--- key fingerprint (must be in the server authorized_keys)"
-          ssh-keygen -lf ~/.ssh/deploy_key
+
+          printf '%s\n' \
+            "Host deploy" \
+            "  HostName $SSH_HOST" \
+            "  User $SSH_USER" \
+            "  Port $SSH_PORT" \
+            "  IdentityFile ~/.ssh/deploy_key" \
+            "  IdentitiesOnly yes" \
+            "  BatchMode yes" \
+            "  ConnectTimeout 20" \
+            "  ServerAliveInterval 30" \
+            "  ControlMaster auto" \
+            "  ControlPath ~/.ssh/cm-%C" \
+            "  ControlPersist 300" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+          # First command opens the master connection; the rest ride along on it.
           echo "--- creating target directory"
-          ssh -v -n -o BatchMode=yes -o ConnectTimeout=15 \
-            -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            'mkdir -p /home/psetzer/efinanzer'
-          echo "--- copying files"
-          scp -o BatchMode=yes -o ConnectTimeout=15 \
-            -i ~/.ssh/deploy_key -P "$SSH_PORT" \
-            src/deploy/docker-compose.yml src/deploy/nginx.conf \
-            "$SSH_USER@$SSH_HOST:/home/psetzer/efinanzer/"
+          ssh deploy "mkdir -p $TARGET"
+
+          echo "--- copying compose files"
+          scp src/deploy/docker-compose.yml src/deploy/nginx.conf "deploy:$TARGET/"
+
+          echo "--- writing .env"
+          printf '%s\n' \
+            "EFINANZER_DB_USER=$EFINANZER_DB_USER" \
+            "EFINANZER_DB_PASSWORD=$EFINANZER_DB_PASSWORD" \
+            "KEYCLOAK_DB_USER=$KEYCLOAK_DB_USER" \
+            "KEYCLOAK_DB_PASSWORD=$KEYCLOAK_DB_PASSWORD" \
+            "KEYCLOAK_ADMIN_USER=$KEYCLOAK_ADMIN_USER" \
+            "KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD" \
+            | ssh deploy "umask 077; cat > $TARGET/.env"
+
+          echo "--- pulling and starting containers"
+          ssh deploy "cd $TARGET && docker compose pull && docker compose up -d --remove-orphans"
+
           echo "--- done"
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Write .env to server
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: EFINANZER_DB_USER,EFINANZER_DB_PASSWORD,KEYCLOAK_DB_USER,KEYCLOAK_DB_PASSWORD,KEYCLOAK_ADMIN_USER,KEYCLOAK_ADMIN_PASSWORD
-          script: |
-            set -eu
-            mkdir -p /home/psetzer/efinanzer
-            cd /home/psetzer/efinanzer
-            umask 077
-            printf '%s\n' \
-              "EFINANZER_DB_USER=$EFINANZER_DB_USER" \
-              "EFINANZER_DB_PASSWORD=$EFINANZER_DB_PASSWORD" \
-              "KEYCLOAK_DB_USER=$KEYCLOAK_DB_USER" \
-              "KEYCLOAK_DB_PASSWORD=$KEYCLOAK_DB_PASSWORD" \
-              "KEYCLOAK_ADMIN_USER=$KEYCLOAK_ADMIN_USER" \
-              "KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD" > .env
-        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
           EFINANZER_DB_USER: ${{ secrets.EFINANZER_DB_USER }}
           EFINANZER_DB_PASSWORD: ${{ secrets.EFINANZER_DB_PASSWORD }}
           KEYCLOAK_DB_USER: ${{ secrets.KEYCLOAK_DB_USER }}
@@ -138,14 +151,6 @@ jobs:
           KEYCLOAK_ADMIN_USER: ${{ secrets.KEYCLOAK_ADMIN_USER }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
 
-      - name: Execute remote deployment commands
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /home/psetzer/efinanzer
-            docker compose pull
-            docker compose up -d --remove-orphans
+      - name: Close SSH master connection
+        if: always()
+        run: ssh -O exit deploy || true
