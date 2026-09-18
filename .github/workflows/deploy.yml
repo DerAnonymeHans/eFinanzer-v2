@@ -92,11 +92,15 @@ jobs:
           ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
           echo "--- host keys collected: $(wc -l < ~/.ssh/known_hosts)"
+          echo "--- key fingerprint (must be in the server authorized_keys)"
+          ssh-keygen -lf ~/.ssh/deploy_key
           echo "--- creating target directory"
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+          ssh -v -n -o BatchMode=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             'mkdir -p /home/psetzer/efinanzer'
           echo "--- copying files"
-          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
+          scp -o BatchMode=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/deploy_key -P "$SSH_PORT" \
             src/deploy/docker-compose.yml src/deploy/nginx.conf \
             "$SSH_USER@$SSH_HOST:/home/psetzer/efinanzer/"
           echo "--- done"
