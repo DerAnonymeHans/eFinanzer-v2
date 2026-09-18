@@ -47,6 +47,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "src/deploy/*"
@@ -59,6 +60,7 @@ jobs:
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: EFINANZER_DB_USER,EFINANZER_DB_PASSWORD,KEYCLOAK_DB_USER,KEYCLOAK_DB_PASSWORD,KEYCLOAK_ADMIN_USER,KEYCLOAK_ADMIN_PASSWORD
@@ -87,6 +89,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
