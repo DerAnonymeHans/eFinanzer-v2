@@ -16,6 +16,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -41,17 +42,49 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}
 
-      - name: Copy docker-compose.yml to server
+      - name: Copy deploy folder to server
         uses: appleboy/scp-action@v0.1.7
+        if: github.event_name != 'pull_request'
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "src/docker-compose.yml"
+          source: "src/deploy/*"
           target: "/home/psetzer/efinanzer"
+          strip_components: 2
+          overwrite: true
+
+      - name: Write .env to server
+        if: github.event_name != 'pull_request'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: EFINANZER_DB_USER,EFINANZER_DB_PASSWORD,KEYCLOAK_DB_USER,KEYCLOAK_DB_PASSWORD,KEYCLOAK_ADMIN_USER,KEYCLOAK_ADMIN_PASSWORD
+          script: |
+            set -eu
+            mkdir -p /home/psetzer/efinanzer
+            cd /home/psetzer/efinanzer
+            umask 077
+            printf '%s\n' \
+              "EFINANZER_DB_USER=$EFINANZER_DB_USER" \
+              "EFINANZER_DB_PASSWORD=$EFINANZER_DB_PASSWORD" \
+              "KEYCLOAK_DB_USER=$KEYCLOAK_DB_USER" \
+              "KEYCLOAK_DB_PASSWORD=$KEYCLOAK_DB_PASSWORD" \
+              "KEYCLOAK_ADMIN_USER=$KEYCLOAK_ADMIN_USER" \
+              "KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD" > .env
+        env:
+          EFINANZER_DB_USER: ${{ secrets.EFINANZER_DB_USER }}
+          EFINANZER_DB_PASSWORD: ${{ secrets.EFINANZER_DB_PASSWORD }}
+          KEYCLOAK_DB_USER: ${{ secrets.KEYCLOAK_DB_USER }}
+          KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
+          KEYCLOAK_ADMIN_USER: ${{ secrets.KEYCLOAK_ADMIN_USER }}
+          KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
 
       - name: Execute remote deployment commands
         uses: appleboy/ssh-action@v1.2.0
+        if: github.event_name != 'pull_request'
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
