@@ -123,7 +123,7 @@ jobs:
           ssh deploy "mkdir -p $TARGET"
 
           echo "--- copying compose files"
-          scp src/deploy/docker-compose.yml src/deploy/nginx.conf "deploy:$TARGET/"
+          scp src/deploy/docker-compose.yml src/deploy/nginx.conf src/deploy/vector.yaml "deploy:$TARGET/"
 
           echo "--- checking required secrets are present"
           for v in EFINANZER_DB_USER EFINANZER_DB_PASSWORD KEYCLOAK_DB_USER KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USER KEYCLOAK_ADMIN_PASSWORD; do

@@ -98,6 +98,19 @@
       - web-net
     restart: unless-stopped
 
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - vector_data:/vector-data
+    depends_on:
+      - victorialogs
+    networks:
+      - web-net
+    restart: unless-stopped
+
 networks:
   web-net:
     driver: bridge
@@ -110,3 +123,4 @@ volumes:
   efinanzer_pgdata:
   keycloak_pgdata:
   vl_data:
+  vector_data:
