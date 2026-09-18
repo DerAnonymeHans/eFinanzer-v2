@@ -45,19 +45,28 @@ jobs:
       - name: Copy deploy folder to server
         if: github.event_name != 'pull_request'
         run: |
+          set -eu
+          SSH_PORT="${SSH_PORT:-22}"
+          echo "--- preparing key"
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keygen -y -f ~/.ssh/deploy_key > /dev/null
+          echo "--- scanning host key on port $SSH_PORT"
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
+          echo "--- host keys collected: $(wc -l < ~/.ssh/known_hosts)"
+          echo "--- creating target directory"
           ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
             'mkdir -p /home/psetzer/efinanzer'
+          echo "--- copying files"
           scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
             src/deploy/docker-compose.yml src/deploy/nginx.conf \
             "$SSH_USER@$SSH_HOST:/home/psetzer/efinanzer/"
+          echo "--- done"
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT}}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
