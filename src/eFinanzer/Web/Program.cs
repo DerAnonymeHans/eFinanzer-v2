@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
@@ -14,6 +15,7 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeFormattedMessage = true;
     options.IncludeScopes = true;
 
+
     if (builder.Environment.IsProduction())
     {
         options.AddOtlpExporter(otlp =>
@@ -23,17 +25,30 @@ builder.Logging.AddOpenTelemetry(options =>
         });
     }
 });
-builder.Services.AddHttpLogging(options =>
-{
-    options.LoggingFields = HttpLoggingFields.RequestMethod | HttpLoggingFields.RequestPath |
-                            HttpLoggingFields.ResponseStatusCode | HttpLoggingFields.Duration;
-});
 
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-app.UseHttpLogging();
+app.Use(async (context, next) =>
+{
+    var stopwatch = Stopwatch.StartNew();
+
+    await next();
+
+    stopwatch.Stop();
+
+    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+    // OpenTelemetry captures structured parameters as OTLP Log Attributes
+    logger.LogInformation(
+        "HTTP {HttpMethod} {HttpPath} responded {HttpStatusCode} in {ElapsedMs:0.0000} ms",
+        context.Request.Method,
+        context.Request.Path.Value,
+        context.Response.StatusCode,
+        stopwatch.Elapsed.TotalMilliseconds
+    );
+});
 
 app.MapOpenApi();
 app.MapScalarApiReference(options =>
