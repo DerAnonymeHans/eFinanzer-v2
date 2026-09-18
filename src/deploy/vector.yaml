@@ -3,7 +3,7 @@ data_dir: /vector-data
 sources:
   docker:
     type: docker_logs
-    exclude_containers: ["vector", "efinanzer", "reverse-proxy"]
+    include_containers: ["efinanzer_postgres", "keycloak", "keycloak_postgres", "victorialogs"]
 
 transforms:
   # App logs that are already JSON get lifted into top-level fields so they

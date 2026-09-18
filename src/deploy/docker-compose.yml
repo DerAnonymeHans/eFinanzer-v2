@@ -101,6 +101,12 @@
   vector:
     image: timberio/vector:latest-alpine
     container_name: vector
+    # --watch-config so edits to vector.yaml apply without recreating the
+    # container (a bind-mount change alone does not trigger a recreate).
+    command: ["--config", "/etc/vector/vector.yaml", "--watch-config"]
+    environment:
+      # inotify does not see host edits to a bind-mounted single file reliably
+      VECTOR_WATCH_CONFIG_METHOD: poll
     volumes:
       - ./vector.yaml:/etc/vector/vector.yaml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -10,20 +10,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddOpenTelemetry(options =>
 {
     var openTelemetryBuilder = ResourceBuilder.CreateDefault()
-        .AddService(serviceName: "eFinanzer", serviceNamespace: "production");
+        .AddService(serviceName: "eFinanzer", serviceNamespace: builder.Environment.EnvironmentName);
     options.SetResourceBuilder(openTelemetryBuilder);
     options.IncludeFormattedMessage = true;
     options.IncludeScopes = true;
 
-
-    if (builder.Environment.IsProduction())
+    options.AddOtlpExporter(otlp =>
     {
-        options.AddOtlpExporter(otlp =>
-        {
-            otlp.Endpoint = new Uri(builder.Configuration.GetValue<string>("Logging:OpenTelemetryExport:Endpoint")!);
-            otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
-        });
-    }
+        otlp.Endpoint = new Uri(builder.Configuration.GetValue<string>("Logging:OpenTelemetryExport:Endpoint")!);
+        otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+    });
+    
 });
 
 builder.Services.AddOpenApi();
