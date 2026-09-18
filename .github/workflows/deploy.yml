@@ -43,17 +43,23 @@ jobs:
           annotations: ${{ steps.meta.outputs.annotations }}
 
       - name: Copy deploy folder to server
-        uses: appleboy/scp-action@v0.1.7
         if: github.event_name != 'pull_request'
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "src/deploy/*"
-          target: "/home/psetzer/efinanzer"
-          strip_components: 2
-          overwrite: true
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            'mkdir -p /home/psetzer/efinanzer'
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" \
+            src/deploy/docker-compose.yml src/deploy/nginx.conf \
+            "$SSH_USER@$SSH_HOST:/home/psetzer/efinanzer/"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT}}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Write .env to server
         if: github.event_name != 'pull_request'
