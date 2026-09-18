@@ -2,4 +2,5 @@
 *.csr
 /Shiboleth-Tests/Keys
 /src/eFinanzer/Web/obj
+/src/eFinanzer/Web/bin
 **/.idea

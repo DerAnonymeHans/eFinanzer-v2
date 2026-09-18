@@ -1,17 +1,46 @@
+using Microsoft.AspNetCore.HttpLogging;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Resources;
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Logging.AddOpenTelemetry(options =>
+{
+    var openTelemetryBuilder = ResourceBuilder.CreateDefault()
+        .AddService(serviceName: "eFinanzer", serviceNamespace: "production");
+    options.SetResourceBuilder(openTelemetryBuilder);
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+
+    if (builder.Environment.IsProduction())
+    {
+        options.AddOtlpExporter(otlp =>
+        {
+            otlp.Endpoint = new Uri(builder.Configuration.GetValue<string>("Logging:OpenTelemetryExport:Endpoint")!);
+            otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+        });
+    }
+});
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = HttpLoggingFields.RequestMethod | HttpLoggingFields.RequestPath |
+                            HttpLoggingFields.ResponseStatusCode | HttpLoggingFields.Duration;
+});
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.UseHttpLogging();
 
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("eFinanzer")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+});
 app.UseHttpsRedirection();
 
 var summaries = new[]
@@ -19,7 +48,7 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
     {
         var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
@@ -29,6 +58,7 @@ app.MapGet("/weatherforecast", () =>
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
+        logger.LogInformation("Created {count} forecast", forecast.Length);
         return forecast;
     })
     .WithName("GetWeatherForecast");
