@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using eFinanzer.Common.Database;
 using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
@@ -15,14 +16,19 @@ builder.Logging.AddOpenTelemetry(options =>
     options.IncludeFormattedMessage = true;
     options.IncludeScopes = true;
 
-    options.AddOtlpExporter(otlp =>
+    var otlpEndpoint = builder.Configuration.GetValue<string>("Logging:OpenTelemetryExport:Endpoint");
+    if (!string.IsNullOrEmpty(otlpEndpoint))
     {
-        otlp.Endpoint = new Uri(builder.Configuration.GetValue<string>("Logging:OpenTelemetryExport:Endpoint")!);
-        otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
-    });
+        options.AddOtlpExporter(otlp =>
+        {
+            otlp.Endpoint = new Uri(otlpEndpoint);
+            otlp.Protocol = OtlpExportProtocol.HttpProtobuf;
+        });
+    }
     
 });
 
+builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();

@@ -18,8 +18,11 @@
   efinanzer:
     image: deranonyme/efinanzer:main
     container_name: efinanzer
+    environment:
+      ConnectionStrings__Database: Host=efinanzer_postgres;Port=5432;Database=${EFINANZER_DB_NAME:-efinanzer};Username=${EFINANZER_DB_USER:-efinanzer};Password=${EFINANZER_DB_PASSWORD}
     depends_on:
-      - efinanzer_postgres
+      efinanzer_postgres:
+        condition: service_healthy
     ports:
       - "8080:8080"
     networks:
