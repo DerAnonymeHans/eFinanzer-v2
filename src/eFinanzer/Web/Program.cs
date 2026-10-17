@@ -1,5 +1,8 @@
 using System.Diagnostics;
+using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
+using eFinanzer.Common.Endpoints;
+using eFinanzer.Features.ManageAccountingUnits;
 using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
@@ -28,8 +31,12 @@ builder.Logging.AddOpenTelemetry(options =>
     
 });
 
+builder.Services.AddProblemDetails();
+builder.Services.AddAuth(builder.Configuration, builder.Environment);
 builder.Services.AddDatabase(builder.Configuration);
-builder.Services.AddOpenApi();
+builder.Services.AddManageAccountingUnits();
+builder.Services.AddEndpoints(typeof(Program).Assembly);
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>());
 
 var app = builder.Build();
 
@@ -53,13 +60,34 @@ app.Use(async (context, next) =>
     );
 });
 
-app.MapOpenApi();
-app.MapScalarApiReference(options =>
-{
-    options.WithTitle("eFinanzer")
-        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-});
+// Inside the request logging above, so the logged status code is the one produced by the exception handlers
+app.UseExceptionHandler();
+
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapOpenApi().AllowAnonymous();
+app.MapScalarApiReference((options, httpContext) =>
+{
+    var request = httpContext.Request;
+
+    options.WithTitle("eFinanzer")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+        .AddPreferredSecuritySchemes(KeycloakSecuritySchemeTransformer.SchemeName)
+        .AddAuthorizationCodeFlow(KeycloakSecuritySchemeTransformer.SchemeName, flow =>
+        {
+            flow.ClientId = builder.Configuration.GetValue<string>("Authentication:OpenApiClientId");
+            // Scalar sends an empty redirect_uri otherwise, which Keycloak rejects
+            flow.RedirectUri = $"{request.Scheme}://{request.Host}{request.PathBase}/scalar/";
+            flow.Pkce = Pkce.Sha256;
+            flow.SelectedScopes = ["openid", "profile"];
+        })
+        .EnablePersistentAuthentication();
+}).AllowAnonymous();
+
+app.MapEndpoints();
 
 var summaries = new[]
 {

@@ -1,13 +1,17 @@
-﻿namespace eFinanzer.Common.Database.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace eFinanzer.Common.Database.Models;
 
 public record FiscalYear
 {
-    public int Id { get; init; }
+    [MaxLength(15)]
+    public required string Key { get; init; }
     public string? Name { get; init; }
     public DateOnly StartDate { get; init; }
     public DateOnly EndDate { get; init; }
     
-    public int AccountingUnitId { get; init; }
+    [MaxLength(10)]
+    public required string AccountingUnitKey { get; init; }
     public AccountingUnit? AccountingUnit { get; init; }
     
     public List<Budget>? Budgets { get; init; }

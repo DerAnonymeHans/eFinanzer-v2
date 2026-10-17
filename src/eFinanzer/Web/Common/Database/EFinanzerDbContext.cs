@@ -1,4 +1,4 @@
-using eFinanzer.Common.Database.Models;
+﻿using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Database.Models.Attachments;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,22 +26,26 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
 
         modelBuilder.Entity<AccountingUnit>(entity =>
         {
+            entity.HasKey(a => a.Key);
+
             entity.HasMany(a => a.FiscalYears)
                 .WithOne(f => f.AccountingUnit)
-                .HasForeignKey(f => f.AccountingUnitId)
+                .HasForeignKey(f => f.AccountingUnitKey)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<FiscalYear>(entity =>
         {
+            entity.HasKey(f => f.Key);
+
             entity.HasMany(f => f.Budgets)
                 .WithOne(b => b.FiscalYear)
-                .HasForeignKey(b => b.FiscalYearId)
+                .HasForeignKey(b => b.FiscalYearKey)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(f => f.Receipts)
                 .WithOne(r => r.FiscalYear)
-                .HasForeignKey(r => r.FiscalYearId)
+                .HasForeignKey(r => r.FiscalYearKey)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -80,7 +84,7 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
 
         modelBuilder.Entity<Receipt>(entity =>
         {
-            entity.HasIndex(r => new { r.FiscalYearId, r.Key }).IsUnique();
+            entity.HasIndex(r => new { r.FiscalYearKey, r.Key }).IsUnique();
 
             entity.HasMany(r => r.Positions)
                 .WithOne(p => p.Receipt)

@@ -1,0 +1,183 @@
+{
+  "realm": "efinanzer",
+  "enabled": true,
+  "identityProviders": [
+    {
+      "alias": "htwk-idp",
+      "providerId": "saml",
+      "enabled": true,
+      "config": {
+        "postBindingLogout": "true",
+        "postBindingResponse": "true",
+        "singleLogoutServiceUrl": "https://shib1.rz.htwk-leipzig.de/idp/profile/SAML2/POST/SLO",
+        "backchannelSupported": "false",
+        "caseSensitiveOriginalUsername": "false",
+        "encryptionAlgorithm": "RSA-OAEP",
+        "xmlSigKeyInfoKeyNameTransformer": "KEY_ID",
+        "idpEntityId": "https://shib1.rz.htwk-leipzig.de/idp/shibboleth",
+        "loginHint": "false",
+        "allowCreate": "true",
+        "enabledFromMetadata": "true",
+        "syncMode": "LEGACY",
+        "authnContextComparisonType": "exact",
+        "singleSignOnServiceUrl": "https://shib1.rz.htwk-leipzig.de/idp/profile/SAML2/POST/SSO",
+        "wantAuthnRequestsSigned": "true",
+        "allowedClockSkew": "5",
+        "artifactResolutionServiceUrl": "https://shib1.rz.htwk-leipzig.de:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
+        "encryptionPublicKey": "MIIFDTCCA3WgAwIBAgIUTrmu//wvKeDw0Mi+miaP5OUutN0wDQYJKoZIhvcNAQEL\nBQAwgZUxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdTYWNoc2VuMRAwDgYDVQQHDAdM\nZWlwemlnMT8wPQYDVQQKDDZIb2Noc2NodWxlIGZ1ZXIgVGVjaG5paywgV2lydHNj\naGFmdCB1bmQgS3VsdHVyIExlaXB6aWcxITAfBgNVBAMMGHNoaWIxLnJ6Lmh0d2st\nbGVpcHppZy5kZTAeFw0yNDAzMTMwNzUzNDdaFw0yNzA1MDcwNzUzNDdaMIGVMQsw\nCQYDVQQGEwJERTEQMA4GA1UECAwHU2FjaHNlbjEQMA4GA1UEBwwHTGVpcHppZzE/\nMD0GA1UECgw2SG9jaHNjaHVsZSBmdWVyIFRlY2huaWssIFdpcnRzY2hhZnQgdW5k\nIEt1bHR1ciBMZWlwemlnMSEwHwYDVQQDDBhzaGliMS5yei5odHdrLWxlaXB6aWcu\nZGUwggGiMA0GCSqGSIb3DQEBAQUAA4IBjwAwggGKAoIBgQDTZ2ccjc+iUsyLqpFs\nvJuECSJrRM/8o5Hb3AUl6muwgJE3jucTEcWXNP8fljMibMqWhbLDYfL30VN6tP2z\nukys8U9U6brd2QpfBE1YaBVetVDfWB06iUmisLR14F4kdwOAql3uOl6prhXByXOt\nwmljsR3fHf+qvEPLZmMBXvieQE0+xjPnA8KO7Q5Bg0G4NkG37FPQAb3tzks3bnjX\nzXjzYHtMa6yV7P8OOFsw/A7ByCS0ieEdfxNzr0EGopF68ZWBeYjby88AFb+zbXSC\nF4PL8Vpb/tweQNWud5ESu4TTO2GQFU5GWKWypfLxEzU5LFATCJhwdhUvm39N4z5+\nlJBydtTEK79feOtbkG2Y1abscxyT7P1pSuukZO15C8aqjAXJhEsqj1EJCYqOP3CA\nXxGdj4tSxJGUggwGsUafeRRLoXsjhU4nnHurHj/GZcb8/xaW3pZWzbm1aR7nhRQs\nLsvJcxVNQ2pvVUrFCB2MaAiTlthwgJ+l5qqUBtteEIr1RrcCAwEAAaNTMFEwHQYD\nVR0OBBYEFMXLoJfZ7amEH3n4ld5IwQ74mA36MB8GA1UdIwQYMBaAFMXLoJfZ7amE\nH3n4ld5IwQ74mA36MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggGB\nAHMX3nGrikLaMLRMjOEWampXIfPKPG0TkoUzXrdztR63+VIVkcMkY5CvxXwY0/jP\nv/Ukpzd3haboEU+V1VjUQpMcUCKrn3CqtR/4YdB6cJ0JXyB85EsM0JcSyCKVTSeb\n/JKzyL/ujYMeBS6jWOVqnjNAGLaaxV+bhrFRbNv4bNmR8hSC0axT6xXDcnihTcVm\n7RPmZEuXQdCnfYj0VQLJ6Xhip62BNu10B3iy507TkeqiGav73ED8U8bSVHuEFONN\nDnTA3VEg7vJn0YZea02SuNQyaRgUF5ijYr2J2v/9nLpwYdqD+FKULcKgdxUFU+em\nWYE6I85/0U231dHQdjXc0e2jtzE0CbhEXYYyws8EupmrTNre6T1n0K8bHHjpeWG/\npUzdBw0nRUob/cKwD1j5ZJSUNTXZyxYt0LJfeDTqQyrxCrRhusbf4FURw3rtt5Az\n2VovA/5EUbqC/uoxEHfOukMPKSEtzZR7/tHtRKiqgDYJCCVIsNy3NWy+/7XZ9AxD\njg==",
+        "artifactBindingResponse": "false",
+        "validateSignature": "true",
+        "signingCertificate": "MIIFDTCCA3WgAwIBAgIUTrmu//wvKeDw0Mi+miaP5OUutN0wDQYJKoZIhvcNAQEL\nBQAwgZUxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdTYWNoc2VuMRAwDgYDVQQHDAdM\nZWlwemlnMT8wPQYDVQQKDDZIb2Noc2NodWxlIGZ1ZXIgVGVjaG5paywgV2lydHNj\naGFmdCB1bmQgS3VsdHVyIExlaXB6aWcxITAfBgNVBAMMGHNoaWIxLnJ6Lmh0d2st\nbGVpcHppZy5kZTAeFw0yNDAzMTMwNzUzNDdaFw0yNzA1MDcwNzUzNDdaMIGVMQsw\nCQYDVQQGEwJERTEQMA4GA1UECAwHU2FjaHNlbjEQMA4GA1UEBwwHTGVpcHppZzE/\nMD0GA1UECgw2SG9jaHNjaHVsZSBmdWVyIFRlY2huaWssIFdpcnRzY2hhZnQgdW5k\nIEt1bHR1ciBMZWlwemlnMSEwHwYDVQQDDBhzaGliMS5yei5odHdrLWxlaXB6aWcu\nZGUwggGiMA0GCSqGSIb3DQEBAQUAA4IBjwAwggGKAoIBgQDTZ2ccjc+iUsyLqpFs\nvJuECSJrRM/8o5Hb3AUl6muwgJE3jucTEcWXNP8fljMibMqWhbLDYfL30VN6tP2z\nukys8U9U6brd2QpfBE1YaBVetVDfWB06iUmisLR14F4kdwOAql3uOl6prhXByXOt\nwmljsR3fHf+qvEPLZmMBXvieQE0+xjPnA8KO7Q5Bg0G4NkG37FPQAb3tzks3bnjX\nzXjzYHtMa6yV7P8OOFsw/A7ByCS0ieEdfxNzr0EGopF68ZWBeYjby88AFb+zbXSC\nF4PL8Vpb/tweQNWud5ESu4TTO2GQFU5GWKWypfLxEzU5LFATCJhwdhUvm39N4z5+\nlJBydtTEK79feOtbkG2Y1abscxyT7P1pSuukZO15C8aqjAXJhEsqj1EJCYqOP3CA\nXxGdj4tSxJGUggwGsUafeRRLoXsjhU4nnHurHj/GZcb8/xaW3pZWzbm1aR7nhRQs\nLsvJcxVNQ2pvVUrFCB2MaAiTlthwgJ+l5qqUBtteEIr1RrcCAwEAAaNTMFEwHQYD\nVR0OBBYEFMXLoJfZ7amEH3n4ld5IwQ74mA36MB8GA1UdIwQYMBaAFMXLoJfZ7amE\nH3n4ld5IwQ74mA36MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggGB\nAHMX3nGrikLaMLRMjOEWampXIfPKPG0TkoUzXrdztR63+VIVkcMkY5CvxXwY0/jP\nv/Ukpzd3haboEU+V1VjUQpMcUCKrn3CqtR/4YdB6cJ0JXyB85EsM0JcSyCKVTSeb\n/JKzyL/ujYMeBS6jWOVqnjNAGLaaxV+bhrFRbNv4bNmR8hSC0axT6xXDcnihTcVm\n7RPmZEuXQdCnfYj0VQLJ6Xhip62BNu10B3iy507TkeqiGav73ED8U8bSVHuEFONN\nDnTA3VEg7vJn0YZea02SuNQyaRgUF5ijYr2J2v/9nLpwYdqD+FKULcKgdxUFU+em\nWYE6I85/0U231dHQdjXc0e2jtzE0CbhEXYYyws8EupmrTNre6T1n0K8bHHjpeWG/\npUzdBw0nRUob/cKwD1j5ZJSUNTXZyxYt0LJfeDTqQyrxCrRhusbf4FURw3rtt5Az\n2VovA/5EUbqC/uoxEHfOukMPKSEtzZR7/tHtRKiqgDYJCCVIsNy3NWy+/7XZ9AxD\njg==",
+        "nameIDPolicyFormat": "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+        "entityId": "https://efinanzer.stura.htwk-leipzig.de/auth/realms/efinanzer",
+        "signSpMetadata": "false",
+        "wantAssertionsEncrypted": "true",
+        "signatureAlgorithm": "RSA_SHA256",
+        "sendClientIdOnLogout": "false",
+        "metadataDescriptorUrl": "https://shib1.rz.htwk-leipzig.de/idp/shibboleth",
+        "wantAssertionsSigned": "true",
+        "sendIdTokenOnLogout": "true",
+        "postBindingAuthnRequest": "true",
+        "forceAuthn": "false",
+        "attributeConsumingServiceIndex": "0",
+        "addExtensionsElementWithKeyInfo": "false",
+        "principalType": "SUBJECT"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "givenName-importer",
+      "identityProviderAlias": "htwk-idp",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "firstName",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "givenName"
+      }
+    },
+    {
+      "name": "sn-importer",
+      "identityProviderAlias": "htwk-idp",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "lastName",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "sn"
+      }
+    },
+    {
+      "name": "samlPairwiseID-importer",
+      "identityProviderAlias": "htwk-idp",
+      "identityProviderMapper": "saml-user-attribute-idp-mapper",
+      "config": {
+        "syncMode": "INHERIT",
+        "user.attribute": "username",
+        "attribute.name.format": "ATTRIBUTE_FORMAT_BASIC",
+        "attribute.name": "samlPairwiseID"
+      }
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"validations\":{\"length\":{\"min\":3,\"max\":255},\"username-prohibited-characters\":{},\"up-username-not-idn-homograph\":{}},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"validations\":{\"email\":{},\"length\":{\"max\":255}},\"annotations\":{},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"validations\":{\"length\":{\"max\":255},\"person-name-prohibited-characters\":{}},\"required\":{\"roles\":[\"user\"]},\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"
+          ]
+        }
+      }
+    ],
+    "org.keycloak.keys.KeyProvider": [
+      {
+        "name": "my-rsa",
+        "providerId": "rsa",
+        "config": {
+          "privateKey": [
+            "$(env:KEYCLOAK_HTWK_IDP_PRIVATE_KEY)"
+          ],
+          "certificate": [
+            "-----BEGIN CERTIFICATE-----\nMIIDNTCCAh2gAwIBAgIUdJfW/yKx49eCb2E1htmALarLk2EwDQYJKoZIhvcNAQEL\nBQAwKjEoMCYGA1UEAwwfZWZpbmFuemVyLnN0dXJhLmh0d2stbGVpcHppZy5kZTAe\nFw0yNjA5MTcwOTAyMjNaFw0zNjA5MTQwOTAyMjNaMCoxKDAmBgNVBAMMH2VmaW5h\nbnplci5zdHVyYS5odHdrLWxlaXB6aWcuZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IB\nDwAwggEKAoIBAQC2/jo+acjpqTJ18ak5729qE77c2hgsTYLF5Lfry/2lEzoFAmKo\nBu025FxpL8GSrG1ZDnMeoxp/wR8XwfRcwCikE2xKdPrj0K5gsIRLVIFnosO3M3QJ\nTemooMgOVyvasb0D+Hla5Y4U+SIcK4zt6G60f5tKj1eOo4xlMMqojJm8Xny3mnaR\nsB/z1bgcMjTm0CAUORgN6xkCQX/1fgxsYed1bKamjeY8EFgrgwUTVetWjJVrY8hr\nWsYfkUhtA67U58llw9sfI4OUlciJBNBy/IAOWxPLkgoic0whIdqfkqWlMomN64oF\nPy4JqW1UAD/YprZAvaE/TiBEo5dXGLDV8f8lAgMBAAGjUzBRMB0GA1UdDgQWBBSI\n3MaGO34nsyFftL7KQaDm/NmK7DAfBgNVHSMEGDAWgBSI3MaGO34nsyFftL7KQaDm\n/NmK7DAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQCH9ujA5yZu\n2WyTd+GmQBzofpxGYiZ2KEaKYpozljWijDRnt7Tw+APQvrSefkDHvb0qgyLVdE+8\n0rhMQU49mG4sEPiDSrUKQG+py4pSbAYxKExKueMOuMVYb6CQ0z1csRTN2G71/oqX\nuXpOYHopHGEhI+6p0lfqzidV1IjBPoojVQzEMcgddw3s05oDwZBOeb5izhVLKRGU\nqfPw28kYlWbUInkJsmP/PKlmT+nPvhk392tAytEE31pfKeT2MkgFUJtrOOy7f+Ic\nDCy59B63gEEkMrSvnkith6tvsoZzqNgyyw1KPlI+pBL8NLI56RszC2wg/iOA5h+a\neKspFpHlpLDS\n-----END CERTIFICATE-----\n"
+          ],
+          "priority": [
+            "200"
+          ],
+          "algorithm": [
+            "RS256"
+          ]
+        }
+      },
+      {
+        "name": "my-rsa-enc",
+        "providerId": "rsa-enc",
+        "config": {
+          "privateKey": [
+            "$(env:KEYCLOAK_HTWK_IDP_PRIVATE_KEY)"
+          ],
+          "certificate": [
+            "-----BEGIN CERTIFICATE-----\nMIIDNTCCAh2gAwIBAgIUdJfW/yKx49eCb2E1htmALarLk2EwDQYJKoZIhvcNAQEL\nBQAwKjEoMCYGA1UEAwwfZWZpbmFuemVyLnN0dXJhLmh0d2stbGVpcHppZy5kZTAe\nFw0yNjA5MTcwOTAyMjNaFw0zNjA5MTQwOTAyMjNaMCoxKDAmBgNVBAMMH2VmaW5h\nbnplci5zdHVyYS5odHdrLWxlaXB6aWcuZGUwggEiMA0GCSqGSIb3DQEBAQUAA4IB\nDwAwggEKAoIBAQC2/jo+acjpqTJ18ak5729qE77c2hgsTYLF5Lfry/2lEzoFAmKo\nBu025FxpL8GSrG1ZDnMeoxp/wR8XwfRcwCikE2xKdPrj0K5gsIRLVIFnosO3M3QJ\nTemooMgOVyvasb0D+Hla5Y4U+SIcK4zt6G60f5tKj1eOo4xlMMqojJm8Xny3mnaR\nsB/z1bgcMjTm0CAUORgN6xkCQX/1fgxsYed1bKamjeY8EFgrgwUTVetWjJVrY8hr\nWsYfkUhtA67U58llw9sfI4OUlciJBNBy/IAOWxPLkgoic0whIdqfkqWlMomN64oF\nPy4JqW1UAD/YprZAvaE/TiBEo5dXGLDV8f8lAgMBAAGjUzBRMB0GA1UdDgQWBBSI\n3MaGO34nsyFftL7KQaDm/NmK7DAfBgNVHSMEGDAWgBSI3MaGO34nsyFftL7KQaDm\n/NmK7DAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQCH9ujA5yZu\n2WyTd+GmQBzofpxGYiZ2KEaKYpozljWijDRnt7Tw+APQvrSefkDHvb0qgyLVdE+8\n0rhMQU49mG4sEPiDSrUKQG+py4pSbAYxKExKueMOuMVYb6CQ0z1csRTN2G71/oqX\nuXpOYHopHGEhI+6p0lfqzidV1IjBPoojVQzEMcgddw3s05oDwZBOeb5izhVLKRGU\nqfPw28kYlWbUInkJsmP/PKlmT+nPvhk392tAytEE31pfKeT2MkgFUJtrOOy7f+Ic\nDCy59B63gEEkMrSvnkith6tvsoZzqNgyyw1KPlI+pBL8NLI56RszC2wg/iOA5h+a\neKspFpHlpLDS\n-----END CERTIFICATE-----\n"
+          ],
+          "priority": [
+            "200"
+          ],
+          "algorithm": [
+            "RSA-OAEP"
+          ]
+        }
+      },
+      {
+        "name": "rsa-generated",
+        "providerId": "rsa-generated",
+        "config": {
+          "active": [
+            "false"
+          ],
+          "enabled": [
+            "false"
+          ]
+        }
+      },
+      {
+        "name": "rsa-enc-generated",
+        "providerId": "rsa-enc-generated",
+        "config": {
+          "active": [
+            "false"
+          ],
+          "enabled": [
+            "false"
+          ]
+        }
+      }
+    ]
+  },
+  "requiredActions": [
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 30
+    },
+    {
+      "alias": "UPDATE_PROFILE",
+      "name": "Update Profile",
+      "providerId": "UPDATE_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 40
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 50
+    }
+  ]
+}

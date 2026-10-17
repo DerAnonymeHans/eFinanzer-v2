@@ -19,7 +19,8 @@ public record Receipt
     public string? Signature1 { get; init; }
     public string? Signature2 { get; init; }
     
-    public int FiscalYearId { get; init; }
+    [MaxLength(15)]
+    public required string FiscalYearKey { get; init; }
     public FiscalYear? FiscalYear { get; init; }
     
     public List<ReceiptPosition>? Positions { get; set; }
