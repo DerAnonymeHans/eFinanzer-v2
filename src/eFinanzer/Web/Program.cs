@@ -87,7 +87,13 @@ app.MapScalarApiReference((options, httpContext) =>
         {
             flow.ClientId = builder.Configuration.GetValue<string>("Authentication:OpenApiClientId");
             // Scalar sends an empty redirect_uri otherwise, which Keycloak rejects
-            flow.RedirectUri = $"{request.Scheme}://{request.Host}{request.PathBase}/scalar/";
+            var scheme = request.Scheme;
+
+#if RELEASE
+            scheme = app.Environment.IsProduction() ? "https" : scheme; 
+#endif
+            
+            flow.RedirectUri = $"{scheme}://{request.Host}{request.PathBase}/scalar/";
             flow.Pkce = Pkce.Sha256;
             flow.SelectedScopes = ["openid", "profile"];
         })
