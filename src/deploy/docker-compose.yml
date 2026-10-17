@@ -21,6 +21,7 @@
     environment:
       ConnectionStrings__Database: Host=efinanzer_postgres;Port=5432;Database=${EFINANZER_DB_NAME:-efinanzer};Username=${EFINANZER_DB_USER:-efinanzer};Password=${EFINANZER_DB_PASSWORD}
       KeycloakAdmin__ClientSecret: ${EFINANZER_KEYCLOAK_CLIENT_SECRET}
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
     depends_on:
       efinanzer_postgres:
         condition: service_healthy
