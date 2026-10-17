@@ -25,7 +25,7 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
         CancellationToken ct)
     {
         user.ForAdministration()
-            .MustBeOneOf(AdministrationRoles.HeadFinanceOfficer, AdministrationRoles.FinanceAdministrator);
+            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator);
         
         var result = await task.Delete(key, ct);
         if (result.IsSuccess)

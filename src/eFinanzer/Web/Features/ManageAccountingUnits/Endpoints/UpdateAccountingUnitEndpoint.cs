@@ -5,6 +5,7 @@ using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,12 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
     {
         public string? Name { get; init; }
         public string? Description { get; init; }
+
+        /// <summary>
+        /// Complete list of users and their roles. Users that are not listed lose all their roles in the accounting
+        /// unit. Leave it out to keep the roles unchanged.
+        /// </summary>
+        public List<UpdateAccountingUnitCommand.UserRoles>? UsersWithRoles { get; init; }
     }
 
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -27,7 +34,13 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
             .WithName("UpdateAccountingUnit")
             .WithTags("ManageAccountingUnits");
 
-    private static async Task<Results<NoContent, NotFound<NotFoundError>>> Handle(
+    private static async Task<Results<
+        NoContent,
+        BadRequest<InvalidInputError>,
+        BadRequest<UnknownUserError>,
+        NotFound<NotFoundError>,
+        InternalServerError<LoadCurrentUserRolesError>,
+        InternalServerError<ChangeUserRoleError>>> Handle(
         [FromQuery] string key,
         Request request,
         IUpdateAccountingUnitTask task,
@@ -35,13 +48,14 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
         CancellationToken ct)
     {
         user.ForAdministration()
-            .MustBeOneOf(AdministrationRoles.HeadFinanceOfficer, AdministrationRoles.FinanceAdministrator);
-        
+            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator);
+
         var command = new UpdateAccountingUnitCommand
         {
             Key = key,
             Name = request.Name,
             Description = request.Description,
+            UsersWithRoles = request.UsersWithRoles,
         };
 
         var result = await task.Update(command, ct);
@@ -50,7 +64,11 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
 
         return result.Error switch
         {
+            InvalidInputError error => TypedResults.BadRequest(error),
+            UnknownUserError error => TypedResults.BadRequest(error),
             NotFoundError error => TypedResults.NotFound(error),
+            LoadCurrentUserRolesError error => TypedResults.InternalServerError(error),
+            ChangeUserRoleError error => TypedResults.InternalServerError(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

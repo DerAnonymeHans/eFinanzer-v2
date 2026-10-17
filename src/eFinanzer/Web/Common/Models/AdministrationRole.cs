@@ -2,7 +2,7 @@
 
 namespace eFinanzer.Common.Models;
 
-public enum AdministrationRoles
+public enum AdministrationRole
 {
     /// <summary>
     /// StuRa Finanzer

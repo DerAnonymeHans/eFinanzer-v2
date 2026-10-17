@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
+using eFinanzer.Common.Integrations.Keycloak;
 using eFinanzer.Features.ManageAccountingUnits;
 using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Exporter;
@@ -33,9 +35,12 @@ builder.Logging.AddOpenTelemetry(options =>
 
 builder.Services.AddProblemDetails();
 builder.Services.AddAuth(builder.Configuration, builder.Environment);
+builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
 builder.Services.AddEndpoints(typeof(Program).Assembly);
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>());
 
 var app = builder.Build();

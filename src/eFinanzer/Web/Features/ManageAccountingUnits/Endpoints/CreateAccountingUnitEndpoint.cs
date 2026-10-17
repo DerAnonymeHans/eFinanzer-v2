@@ -5,6 +5,7 @@ using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -17,14 +18,14 @@ public class CreateAccountingUnitEndpoint : IEndpoint
             .WithName("CreateAccountingUnit")
             .WithTags("ManageAccountingUnits");
 
-    private static async Task<Results<Created, BadRequest<InvalidInputError>>> Handle(
+    private static async Task<Results<Created, BadRequest<InvalidInputError>, Conflict<AccountingUnitKeyAlreadyExistsError>>> Handle(
         CreateAccountingUnitCommand command,
         ICreateAccountingUnitTask task,
         ClaimsPrincipal user,
         CancellationToken ct)
     {
         user.ForAdministration()
-            .MustBeOneOf(AdministrationRoles.FinanceAdministrator, AdministrationRoles.HeadFinanceOfficer);
+            .MustBeOneOf(AdministrationRole.FinanceAdministrator, AdministrationRole.HeadFinanceOfficer);
         
         var result = await task.Create(command, ct);
         if (result.IsSuccess)
@@ -33,6 +34,7 @@ public class CreateAccountingUnitEndpoint : IEndpoint
         return result.Error switch
         {
             InvalidInputError error => TypedResults.BadRequest(error),
+            AccountingUnitKeyAlreadyExistsError error => TypedResults.Conflict(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

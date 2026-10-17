@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 
 namespace eFinanzer.Common.Auth;
@@ -12,11 +13,7 @@ public static class UserClaims
 {
     public const string ClaimType = "groups";
 
-    /// <summary>
-    /// Keycloak group name of a role, e.g. <c>HeadFinanceOfficer</c> → <c>head-finance-officer</c>
-    /// </summary>
-    private static string GetGroupName<TRole>(TRole role) where TRole : struct, Enum
-        => JsonNamingPolicy.KebabCaseLower.ConvertName(role.ToString());
+    
 
     /// <summary>
     /// Whether the user is a direct member of the group. Membership in a subgroup does not count for its parent.
@@ -33,22 +30,22 @@ public static class UserClaims
 
     public record AccountingUnitClaim(ClaimsPrincipal User, string AccountingUnit)
     {
-        private string GetGroupPath(AccountingUnitRoles role) =>
-            $"/accounting-units/{AccountingUnit}/{GetGroupName(role)}";
-
-        public AccountingUnitClaim MustBe(AccountingUnitRoles role)
+        private string GetGroupPath(AccountingUnitRole role) =>
+            KeycloakGroups.GetAccountingUnitRoleGroup(AccountingUnit, role);
+        
+        public AccountingUnitClaim MustBe(AccountingUnitRole role)
         {
             var groupPath = GetGroupPath(role);
             return !User.IsInGroup(groupPath) ? throw AccessForbiddenException.MustBeInAllGroups(groupPath) : this;
         }
         
-        public AccountingUnitClaim MustBeAllOf(params AccountingUnitRoles[] roles)
+        public AccountingUnitClaim MustBeAllOf(params AccountingUnitRole[] roles)
         {
             var groupPaths = roles.Select(GetGroupPath).ToArray();
             return !groupPaths.All(User.IsInGroup) ? throw AccessForbiddenException.MustBeInAllGroups(groupPaths) : this;
         }
         
-        public AccountingUnitClaim MustBeOneOf(params AccountingUnitRoles[] roles)
+        public AccountingUnitClaim MustBeOneOf(params AccountingUnitRole[] roles)
         {
             var groupPaths = roles.Select(GetGroupPath).ToArray();
             return groupPaths.Any(User.IsInGroup) ? this : throw AccessForbiddenException.MustBeInAnyGroups(groupPaths);
@@ -58,22 +55,21 @@ public static class UserClaims
     
     public record AdministrationClaim(ClaimsPrincipal User)
     {
-        private string GetGroupPath(AdministrationRoles role) =>
-            $"/administration/{GetGroupName(role)}";
+        private string GetGroupPath(AdministrationRole role) => KeycloakGroups.GetAdministrationRoleGroup(role);
 
-        public AdministrationClaim MustBe(AdministrationRoles role)
+        public AdministrationClaim MustBe(AdministrationRole role)
         {
             var groupPath = GetGroupPath(role);
             return !User.IsInGroup(groupPath) ? throw AccessForbiddenException.MustBeInAllGroups(groupPath) : this;
         }
         
-        public AdministrationClaim MustBeAllOf(params AdministrationRoles[] roles)
+        public AdministrationClaim MustBeAllOf(params AdministrationRole[] roles)
         {
             var groupPaths = roles.Select(GetGroupPath).ToArray();
             return !groupPaths.All(User.IsInGroup) ? throw AccessForbiddenException.MustBeInAllGroups(groupPaths) : this;
         }
         
-        public AdministrationClaim MustBeOneOf(params AdministrationRoles[] roles)
+        public AdministrationClaim MustBeOneOf(params AdministrationRole[] roles)
         {
             var groupPaths = roles.Select(GetGroupPath).ToArray();
             return groupPaths.Any(User.IsInGroup) ? this : throw AccessForbiddenException.MustBeInAnyGroups(groupPaths);

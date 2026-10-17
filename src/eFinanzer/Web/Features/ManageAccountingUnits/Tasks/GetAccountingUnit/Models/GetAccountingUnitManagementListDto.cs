@@ -1,6 +1,6 @@
 ﻿namespace eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit.Models;
 
-public record AccountingUnitModel
+public record GetAccountingUnitManagementListDto
 {
     public required string Key { get; init; }
     public string? Name { get; init; }

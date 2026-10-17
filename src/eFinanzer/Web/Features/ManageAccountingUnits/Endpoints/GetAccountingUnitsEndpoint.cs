@@ -16,13 +16,13 @@ public class GetAccountingUnitsEndpoint : IEndpoint
             .WithName("GetAccountingUnits")
             .WithTags("ManageAccountingUnits");
 
-    private static async Task<Ok<List<AccountingUnitModel>>> Handle(
+    private static async Task<Ok<List<GetAccountingUnitManagementListDto>>> Handle(
         IGetAccountingUnitTask task,
         ClaimsPrincipal user,
         CancellationToken ct)
     {
         user.ForAdministration()
-            .MustBeOneOf(AdministrationRoles.HeadFinanceOfficer, AdministrationRoles.FinanceAdministrator);
+            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator);
         
         var result = await task.GetAll(ct);
         if (result.IsSuccess)

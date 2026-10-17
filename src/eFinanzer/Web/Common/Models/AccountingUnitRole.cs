@@ -2,7 +2,7 @@
 
 namespace eFinanzer.Common.Models;
 
-public enum AccountingUnitRoles
+public enum AccountingUnitRole
 {
     /// <summary>
     /// Finanzer
