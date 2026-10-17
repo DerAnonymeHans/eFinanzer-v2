@@ -32,7 +32,6 @@ public class GetAccountingUnitTask(
     public async Task<Result<GetAccountingUnitManagementDto>> Get(string key, CancellationToken ct)
     {
         var accountingUnit = await context.AccountingUnits
-            .AsNoTracking()
             .Where(x => x.Key == key)
             .Select(x => new
             {
@@ -100,7 +99,6 @@ public class GetAccountingUnitTask(
     public async Task<Result<List<GetAccountingUnitManagementListDto>>> GetAll(CancellationToken ct)
     {
         var accountingUnits = await context.AccountingUnits
-            .AsNoTracking()
             .OrderBy(x => x.Key)
             .Select(x => new GetAccountingUnitManagementListDto
             {
