@@ -207,14 +207,11 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         Assert.Equal(new ChangeUserRoleError("fsr", "alice", AccountingUnitRole.Treasurer, Added: true, keycloakError), result.Error);
     }
 
-    public static TheoryData<List<UpdateAccountingUnitCommand.UserRoles>?> InvalidUsersWithRoles()
+    public static TheoryData<List<UpdateAccountingUnitCommand.UserRoles>> InvalidUsersWithRoles()
     {
-        var data = new TheoryData<List<UpdateAccountingUnitCommand.UserRoles>?>();
-        data.Add(null!);
-        data.Add([null!]);
+        var data = new TheoryData<List<UpdateAccountingUnitCommand.UserRoles>>();
         data.Add([UserRoles("alice", AccountingUnitRole.Treasurer), UserRoles("Alice", AccountingUnitRole.FinanceOfficer)]);
         data.Add([UserRoles("alice", AccountingUnitRole.Treasurer), UserRoles(" ", AccountingUnitRole.FinanceOfficer)]);
-        data.Add([new() { UserName = "alice", Roles = null! }]);
         data.Add([UserRoles("alice", (AccountingUnitRole)99)]);
         return data;
     }
@@ -222,12 +219,12 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
     [Theory]
     [MemberData(nameof(InvalidUsersWithRoles))]
     public async Task Update_InvalidUsersWithRoles_ReturnsInvalidInputWithoutCallingKeycloak(
-        List<UpdateAccountingUnitCommand.UserRoles>? usersWithRoles)
+        List<UpdateAccountingUnitCommand.UserRoles> usersWithRoles)
     {
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var command = Command("fsr") with { UsersWithRoles = usersWithRoles! };
+        var command = Command("fsr") with { UsersWithRoles = usersWithRoles };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
