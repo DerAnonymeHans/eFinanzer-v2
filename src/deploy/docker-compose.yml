@@ -47,6 +47,8 @@
     networks:
       - efinanzer-net
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
