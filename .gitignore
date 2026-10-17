@@ -3,4 +3,7 @@
 /Shiboleth-Tests/Keys
 /src/eFinanzer/Web/obj
 /src/eFinanzer/Web/bin
+/src/eFinanzer/Web.Tests/obj
+/src/eFinanzer/Web.Tests/bin
 **/.idea
+/src/eFinanzer/eFinanzer.sln.DotSettings.user

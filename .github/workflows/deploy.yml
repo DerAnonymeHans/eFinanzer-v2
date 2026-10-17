@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: build and deploy
 
 # Controls when the workflow will run
 on:
@@ -126,7 +126,7 @@ jobs:
           scp src/deploy/docker-compose.yml src/deploy/nginx.conf src/deploy/vector.yaml "deploy:$TARGET/"
 
           echo "--- checking required secrets are present"
-          for v in EFINANZER_DB_USER EFINANZER_DB_PASSWORD KEYCLOAK_DB_USER KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USER KEYCLOAK_ADMIN_PASSWORD; do
+          for v in EFINANZER_DB_USER EFINANZER_DB_PASSWORD KEYCLOAK_DB_USER KEYCLOAK_DB_PASSWORD KEYCLOAK_ADMIN_USER KEYCLOAK_ADMIN_PASSWORD EFINANZER_KEYCLOAK_CLIENT_SECRET; do
             if [ -z "${!v}" ]; then
               echo "::error::$v resolved to an empty string - check that the secret exists and is visible to this job"
               exit 1
@@ -141,6 +141,7 @@ jobs:
             "KEYCLOAK_DB_PASSWORD=$KEYCLOAK_DB_PASSWORD" \
             "KEYCLOAK_ADMIN_USER=$KEYCLOAK_ADMIN_USER" \
             "KEYCLOAK_ADMIN_PASSWORD=$KEYCLOAK_ADMIN_PASSWORD" \
+            "EFINANZER_KEYCLOAK_CLIENT_SECRET=$EFINANZER_KEYCLOAK_CLIENT_SECRET" \
             | ssh deploy "umask 077; cat > $TARGET/.env"
 
           echo "--- pulling and starting containers"
@@ -159,6 +160,7 @@ jobs:
           KEYCLOAK_DB_PASSWORD: ${{ secrets.KEYCLOAK_DB_PASSWORD }}
           KEYCLOAK_ADMIN_USER: ${{ secrets.KEYCLOAK_ADMIN_USER }}
           KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}
+          EFINANZER_KEYCLOAK_CLIENT_SECRET: ${{ secrets.EFINANZER_KEYCLOAK_CLIENT_SECRET }}
 
       - name: Close SSH master connection
         if: always()
