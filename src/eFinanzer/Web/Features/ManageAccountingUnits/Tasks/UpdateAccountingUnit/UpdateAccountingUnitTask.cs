@@ -25,7 +25,7 @@ public class UpdateAccountingUnitTask(
 {
     private record UserRole(string UserName, AccountingUnitRole Role);
 
-    private record RoleChange(string UserName, string UserId, AccountingUnitRole Role, bool Added);
+    private record RoleChange(string UserName, string UserId, AccountingUnitRole Role, string GroupId, bool Added);
 
     public async Task<Result> Update(UpdateAccountingUnitCommand command, CancellationToken ct)
     {
@@ -40,15 +40,9 @@ public class UpdateAccountingUnitTask(
             return failedValidation;
 
         // Everything that can fail is resolved before anything is changed
-        List<RoleChange> roleChanges = [];
-        if (command.UsersWithRoles is not null)
-        {
-            var roleChangesResult = await GetRoleChanges(command.Key, command.UsersWithRoles, ct);
-            if (roleChangesResult.IsError)
-                return roleChangesResult.Error;
-
-            roleChanges = roleChangesResult.Value;
-        }
+        var roleChangesResult = await GetRoleChanges(command.Key, command.UsersWithRoles, ct);
+        if (roleChangesResult.IsError)
+            return roleChangesResult.Error;
 
         var updatedRows = await context.AccountingUnits
             .Where(x => x.Key == command.Key)
@@ -61,12 +55,11 @@ public class UpdateAccountingUnitTask(
 
         logger.LogInformation("Updated accounting unit {AccountingUnitKey}", command.Key);
 
-        foreach (var change in roleChanges)
+        foreach (var change in roleChangesResult.Value)
         {
-            var groupPath = KeycloakGroups.GetAccountingUnitRoleGroup(command.Key, change.Role);
             var changeResult = change.Added
-                ? await keycloakUserClient.AddUserToGroup(change.UserId, groupPath, ct)
-                : await keycloakUserClient.RemoveUserFromGroup(change.UserId, groupPath, ct);
+                ? await keycloakUserClient.AddUserToGroup(change.UserId, change.GroupId, ct)
+                : await keycloakUserClient.RemoveUserFromGroup(change.UserId, change.GroupId, ct);
 
             if (changeResult.IsError)
             {
@@ -85,7 +78,8 @@ public class UpdateAccountingUnitTask(
     }
 
     /// <summary>
-    /// Diffs the requested roles with the current ones in Keycloak and resolves the user ids needed to apply them
+    /// Diffs the requested roles with the current ones in Keycloak and resolves the user and group ids needed to apply
+    /// them
     /// </summary>
     private async Task<Result<List<RoleChange>>> GetRoleChanges(string key,
         List<UpdateAccountingUnitCommand.UserRoles> usersWithRoles, CancellationToken ct)
@@ -122,26 +116,50 @@ public class UpdateAccountingUnitTask(
             userIds[userName] = userResult.Value.Id;
         }
 
+        var groupIds = new Dictionary<AccountingUnitRole, string>();
+        foreach (var role in added.Concat(removed).Select(x => x.Role).Distinct())
+        {
+            var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(
+                KeycloakGroups.GetAccountingUnitRoleGroup(key, role), ct);
+            if (groupIdResult.IsError)
+            {
+                logger.LogError("Loading the group of role {Role} of accounting unit {AccountingUnitKey} failed: {Error}",
+                    role, key, groupIdResult.Error);
+                return new LoadCurrentUserRolesError(key, groupIdResult.Error);
+            }
+
+            groupIds[role] = groupIdResult.Value;
+        }
+
         // Removals first, so a failure leaves users with fewer instead of more rights
-        return removed.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, Added: false))
-            .Concat(added.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, Added: true)))
+        return removed.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, groupIds[x.Role], Added: false))
+            .Concat(added.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, groupIds[x.Role], Added: true)))
             .ToList();
     }
 
+    /// <summary>
+    /// The JSON deserialization does not enforce non-nullable references and accepts undefined enum values, so they are
+    /// checked here
+    /// </summary>
     private static Result ValidateUsersWithRoles(List<UpdateAccountingUnitCommand.UserRoles>? usersWithRoles)
     {
+        const string field = nameof(UpdateAccountingUnitCommand.UsersWithRoles);
+
         if (usersWithRoles is null)
-            return Result.Ok();
+            return new InvalidInputError(field, "UsersWithRoles must not be null, use an empty list to remove all users");
 
         if (usersWithRoles.Any(x => string.IsNullOrWhiteSpace(x.UserName)))
-            return new InvalidInputError(nameof(UpdateAccountingUnitCommand.UsersWithRoles), "Usernames must not be empty");
+            return new InvalidInputError(field, "Usernames must not be empty");
+
+        var undefinedRoles = usersWithRoles.SelectMany(x => x.Roles).Where(x => !Enum.IsDefined(x)).ToList();
+        if (undefinedRoles.Count > 0)
+            return new InvalidInputError(field, $"Role '{undefinedRoles[0]}' does not exist");
 
         var duplicate = usersWithRoles
             .GroupBy(x => x.UserName.ToLowerInvariant())
             .FirstOrDefault(x => x.Count() > 1);
         if (duplicate is not null)
-            return new InvalidInputError(nameof(UpdateAccountingUnitCommand.UsersWithRoles),
-                $"User '{duplicate.Key}' is listed more than once");
+            return new InvalidInputError(field, $"User '{duplicate.Key}' is listed more than once");
 
         return Result.Ok();
     }

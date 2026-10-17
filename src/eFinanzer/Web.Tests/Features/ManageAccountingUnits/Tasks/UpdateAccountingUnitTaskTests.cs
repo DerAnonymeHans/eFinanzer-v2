@@ -28,15 +28,28 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
     private async Task<AccountingUnit> LoadAccountingUnit(string key)
         => await Context.AccountingUnits.SingleAsync(x => x.Key == key, TestContext.Current.CancellationToken);
 
-    private static string RoleGroup(AccountingUnitRole role) => KeycloakGroups.GetAccountingUnitRoleGroup("fsr", role);
+    private static string RoleGroupId(AccountingUnitRole role) => KeycloakUserClientExtensions.RoleGroup("fsr", role).Id;
+
+    private static UpdateAccountingUnitCommand Command(string key, params UpdateAccountingUnitCommand.UserRoles[] usersWithRoles) => new()
+    {
+        Key = key,
+        Name = null,
+        Description = null,
+        UsersWithRoles = usersWithRoles.ToList(),
+    };
+
+    private static UpdateAccountingUnitCommand.UserRoles UserRoles(string userName, params AccountingUnitRole[] roles)
+        => new() { UserName = userName, Roles = roles };
 
     [Fact]
-    public async Task Update_WithoutUsersWithRoles_UpdatesFieldsAndLeavesRolesUntouched()
+    public async Task Update_UnchangedUsersWithRoles_UpdatesFieldsWithoutChangingRoles()
     {
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "Old name", Description = "Old description" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var command = new UpdateAccountingUnitCommand { Key = "fsr", Name = "New name", Description = null };
+        _keycloakUserClient.SetupRoleMembers("fsr", (AccountingUnitRole.Treasurer, ["alice"]));
+        _keycloakUserClient.SetupUsers("alice");
+        var command = Command("fsr", UserRoles("alice", AccountingUnitRole.Treasurer)) with { Name = "New name" };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -44,32 +57,16 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(new AccountingUnit { Key = "fsr", Name = "New name", Description = null }, await LoadAccountingUnit("fsr"));
-        Assert.Empty(_keycloakUserClient.ReceivedCalls());
+        await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await _keycloakUserClient.DidNotReceive().RemoveUserFromGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Update_UnknownKey_ReturnsNotFound()
-    {
-        // Arrange
-        var command = new UpdateAccountingUnitCommand { Key = "unknown", Name = "Name" };
-
-        // Act
-        var result = await MyTask.Update(command, CancellationToken.None);
-
-        // Assert
-        Assert.Equal(new NotFoundError(nameof(AccountingUnit), "unknown"), result.Error);
-    }
-
-    [Fact]
-    public async Task Update_UnknownKeyWithUsersWithRoles_ReturnsNotFoundWithoutChangingRoles()
+    public async Task Update_UnknownKey_ReturnsNotFoundWithoutChangingRoles()
     {
         // Arrange
         _keycloakUserClient.SetupUsers("alice");
-        var command = new UpdateAccountingUnitCommand
-        {
-            Key = "unknown",
-            UsersWithRoles = [new() { UserName = "alice", Roles = [AccountingUnitRole.Treasurer] }],
-        };
+        var command = Command("unknown", UserRoles("alice", AccountingUnitRole.Treasurer));
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -89,16 +86,10 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
             (AccountingUnitRole.FinanceOfficer, ["alice", "bob"]),
             (AccountingUnitRole.Treasurer, ["alice"]));
         _keycloakUserClient.SetupUsers("alice", "bob", "carol");
-        var command = new UpdateAccountingUnitCommand
-        {
-            Key = "fsr",
-            UsersWithRoles =
-            [
-                // Keycloak stores usernames in lower case, so this is the existing user "alice"
-                new() { UserName = "Alice", Roles = [AccountingUnitRole.FinanceOfficer] },
-                new() { UserName = "carol", Roles = [AccountingUnitRole.Treasurer] },
-            ],
-        };
+        var command = Command("fsr",
+            // Keycloak stores usernames in lower case, so this is the existing user "alice"
+            UserRoles("Alice", AccountingUnitRole.FinanceOfficer),
+            UserRoles("carol", AccountingUnitRole.Treasurer));
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -107,9 +98,9 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         Assert.True(result.IsSuccess);
         Received.InOrder(() =>
         {
-            _keycloakUserClient.RemoveUserFromGroup("id-alice", RoleGroup(AccountingUnitRole.Treasurer), CancellationToken.None);
-            _keycloakUserClient.RemoveUserFromGroup("id-bob", RoleGroup(AccountingUnitRole.FinanceOfficer), CancellationToken.None);
-            _keycloakUserClient.AddUserToGroup("id-carol", RoleGroup(AccountingUnitRole.Treasurer), CancellationToken.None);
+            _keycloakUserClient.RemoveUserFromGroup("id-alice", RoleGroupId(AccountingUnitRole.Treasurer), CancellationToken.None);
+            _keycloakUserClient.RemoveUserFromGroup("id-bob", RoleGroupId(AccountingUnitRole.FinanceOfficer), CancellationToken.None);
+            _keycloakUserClient.AddUserToGroup("id-carol", RoleGroupId(AccountingUnitRole.Treasurer), CancellationToken.None);
         });
         await _keycloakUserClient.Received(1).AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _keycloakUserClient.Received(2).RemoveUserFromGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
@@ -123,14 +114,14 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
         _keycloakUserClient.SetupRoleMembers("fsr", (AccountingUnitRole.Treasurer, ["alice"]));
         _keycloakUserClient.SetupUsers("alice");
-        var command = new UpdateAccountingUnitCommand { Key = "fsr", UsersWithRoles = [] };
+        var command = Command("fsr");
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);
-        await _keycloakUserClient.Received(1).RemoveUserFromGroup("id-alice", RoleGroup(AccountingUnitRole.Treasurer), Arg.Any<CancellationToken>());
+        await _keycloakUserClient.Received(1).RemoveUserFromGroup("id-alice", RoleGroupId(AccountingUnitRole.Treasurer), Arg.Any<CancellationToken>());
         await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
@@ -144,12 +135,7 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         _keycloakUserClient.SetupUsers("alice");
         _keycloakUserClient.GetUserByUsername("mallory", Arg.Any<CancellationToken>())
             .Returns(Result<KeycloakUser>.Fail(new NotFoundError("User", "mallory")));
-        var command = new UpdateAccountingUnitCommand
-        {
-            Key = "fsr",
-            Name = "New name",
-            UsersWithRoles = [new() { UserName = "mallory", Roles = [AccountingUnitRole.Treasurer] }],
-        };
+        var command = Command("fsr", UserRoles("mallory", AccountingUnitRole.Treasurer)) with { Name = "New name" };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -167,9 +153,9 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "Old name" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        _keycloakUserClient.GetSubgroups(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result<List<KeycloakGroup>>.Fail(new NotFoundError("Group", "/accounting-units/fsr")));
-        var command = new UpdateAccountingUnitCommand { Key = "fsr", Name = "New name", UsersWithRoles = [] };
+        _keycloakUserClient.GetGroupIdFromPath(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Result<string>.Fail(new NotFoundError("Group", "/accounting-units/fsr")));
+        var command = Command("fsr") with { Name = "New name" };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -177,6 +163,28 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         // Assert
         Assert.IsType<LoadCurrentUserRolesError>(result.Error);
         Assert.Equal("Old name", (await LoadAccountingUnit("fsr")).Name);
+    }
+
+    [Fact]
+    public async Task Update_RoleGroupMissing_ReturnsLoadCurrentUserRolesErrorWithoutChangingAnything()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "Old name" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _keycloakUserClient.SetupRoleMembers("fsr");
+        _keycloakUserClient.SetupUsers("alice");
+        var treasurerGroup = KeycloakGroups.GetAccountingUnitRoleGroup("fsr", AccountingUnitRole.Treasurer);
+        _keycloakUserClient.GetGroupIdFromPath(treasurerGroup, Arg.Any<CancellationToken>())
+            .Returns(Result<string>.Fail(new NotFoundError("Group", treasurerGroup)));
+        var command = Command("fsr", UserRoles("alice", AccountingUnitRole.Treasurer)) with { Name = "New name" };
+
+        // Act
+        var result = await MyTask.Update(command, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<LoadCurrentUserRolesError>(result.Error);
+        Assert.Equal("Old name", (await LoadAccountingUnit("fsr")).Name);
+        await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -188,13 +196,9 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         _keycloakUserClient.SetupRoleMembers("fsr");
         _keycloakUserClient.SetupUsers("alice");
         var keycloakError = new NotFoundError("User", "id-alice");
-        _keycloakUserClient.AddUserToGroup("id-alice", RoleGroup(AccountingUnitRole.Treasurer), Arg.Any<CancellationToken>())
+        _keycloakUserClient.AddUserToGroup("id-alice", RoleGroupId(AccountingUnitRole.Treasurer), Arg.Any<CancellationToken>())
             .Returns(Result.Fail(keycloakError));
-        var command = new UpdateAccountingUnitCommand
-        {
-            Key = "fsr",
-            UsersWithRoles = [new() { UserName = "alice", Roles = [AccountingUnitRole.Treasurer] }],
-        };
+        var command = Command("fsr", UserRoles("alice", AccountingUnitRole.Treasurer));
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -203,23 +207,27 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         Assert.Equal(new ChangeUserRoleError("fsr", "alice", AccountingUnitRole.Treasurer, Added: true, keycloakError), result.Error);
     }
 
+    public static TheoryData<List<UpdateAccountingUnitCommand.UserRoles>?> InvalidUsersWithRoles()
+    {
+        var data = new TheoryData<List<UpdateAccountingUnitCommand.UserRoles>?>();
+        data.Add(null!);
+        data.Add([null!]);
+        data.Add([UserRoles("alice", AccountingUnitRole.Treasurer), UserRoles("Alice", AccountingUnitRole.FinanceOfficer)]);
+        data.Add([UserRoles("alice", AccountingUnitRole.Treasurer), UserRoles(" ", AccountingUnitRole.FinanceOfficer)]);
+        data.Add([new() { UserName = "alice", Roles = null! }]);
+        data.Add([UserRoles("alice", (AccountingUnitRole)99)]);
+        return data;
+    }
+
     [Theory]
-    [InlineData("alice", "Alice")]
-    [InlineData("alice", " ")]
-    public async Task Update_InvalidUsersWithRoles_ReturnsInvalidInputWithoutCallingKeycloak(string firstUserName, string secondUserName)
+    [MemberData(nameof(InvalidUsersWithRoles))]
+    public async Task Update_InvalidUsersWithRoles_ReturnsInvalidInputWithoutCallingKeycloak(
+        List<UpdateAccountingUnitCommand.UserRoles>? usersWithRoles)
     {
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var command = new UpdateAccountingUnitCommand
-        {
-            Key = "fsr",
-            UsersWithRoles =
-            [
-                new() { UserName = firstUserName, Roles = [AccountingUnitRole.Treasurer] },
-                new() { UserName = secondUserName, Roles = [AccountingUnitRole.FinanceOfficer] },
-            ],
-        };
+        var command = Command("fsr") with { UsersWithRoles = usersWithRoles! };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);
@@ -236,7 +244,7 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "Old name" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var command = new UpdateAccountingUnitCommand { Key = "fsr", Name = new string('a', 51) };
+        var command = Command("fsr") with { Name = new string('a', 51) };
 
         // Act
         var result = await MyTask.Update(command, CancellationToken.None);

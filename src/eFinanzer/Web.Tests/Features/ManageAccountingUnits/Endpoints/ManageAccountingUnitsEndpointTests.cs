@@ -7,6 +7,7 @@ using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit.Models;
 using eFinanzer.Tests.Infrastructure;
+using NSubstitute;
 
 namespace eFinanzer.Tests.Features.ManageAccountingUnits.Endpoints;
 
@@ -43,7 +44,12 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     private static HttpRequestMessage CreateRequest(string method, string url) => new(new HttpMethod(method), url)
     {
         // Valid body for the create and update endpoints, so the request reaches the authorization check
-        Content = method is "POST" or "PUT" ? JsonContent.Create(new { key = "fsr" }) : null,
+        Content = method switch
+        {
+            "POST" => JsonContent.Create(new { key = "fsr" }),
+            "PUT" => JsonContent.Create(new { name = (string?)null, description = (string?)null, usersWithRoles = Array.Empty<object>() }),
+            _ => null,
+        },
     };
 
     [Theory]
@@ -82,6 +88,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     public async Task Create_UserWithManagingRole_ReturnsCreated(AdministrationRole role)
     {
         // Arrange
+        _factory.KeycloakUserClient.SetupGroupCreation();
         var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
@@ -90,6 +97,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Null(response.Headers.Location);
     }
 
     [Fact]
@@ -156,5 +164,24 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("""{ "name": null, "description": null }""")]
+    [InlineData("""{ "name": null, "description": null, "usersWithRoles": [{ "userName": "alice", "roles": [1] }] }""")]
+    public async Task Update_InvalidBody_ReturnsBadRequest(string body)
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+
+        // Act
+        var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
+            new StringContent(body, System.Text.Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(_factory.KeycloakUserClient.ReceivedCalls());
     }
 }

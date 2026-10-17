@@ -34,13 +34,15 @@ builder.Logging.AddOpenTelemetry(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
 builder.Services.AddAuth(builder.Configuration, builder.Environment);
 builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    // Enums are only accepted by name, so a number cannot smuggle in an undefined value
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>());
 
 var app = builder.Build();

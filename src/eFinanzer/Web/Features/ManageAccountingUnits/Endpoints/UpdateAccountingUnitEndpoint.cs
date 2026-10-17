@@ -15,18 +15,18 @@ namespace eFinanzer.Features.ManageAccountingUnits.Endpoints;
 public class UpdateAccountingUnitEndpoint : IEndpoint
 {
     /// <summary>
-    /// The key is taken from the route, so the body only contains the changeable fields
+    /// The key is taken from the query, so the body only contains the changeable fields
     /// </summary>
     public record Request
     {
-        public string? Name { get; init; }
-        public string? Description { get; init; }
+        public required string? Name { get; init; }
+        public required string? Description { get; init; }
 
         /// <summary>
         /// Complete list of users and their roles. Users that are not listed lose all their roles in the accounting
-        /// unit. Leave it out to keep the roles unchanged.
+        /// unit, so an empty list removes all users.
         /// </summary>
-        public List<UpdateAccountingUnitCommand.UserRoles>? UsersWithRoles { get; init; }
+        public required List<UpdateAccountingUnitCommand.UserRoles> UsersWithRoles { get; init; }
     }
 
     public void MapEndpoint(IEndpointRouteBuilder app)

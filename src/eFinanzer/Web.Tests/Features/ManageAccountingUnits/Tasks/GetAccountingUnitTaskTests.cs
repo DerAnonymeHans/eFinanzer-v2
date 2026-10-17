@@ -56,9 +56,7 @@ public class GetAccountingUnitTaskTests(DatabaseFixture database) : DatabaseTest
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var unknownGroup = new KeycloakGroup { Id = "unknown-id", Name = "auditor", Path = "/accounting-units/fsr/auditor" };
-        _keycloakUserClient.GetSubgroups(KeycloakGroups.GetAccountingUnitGroup("fsr"), Arg.Any<CancellationToken>())
-            .Returns(Result<List<KeycloakGroup>>.Ok([unknownGroup]));
+        _keycloakUserClient.SetupSubgroups("fsr", KeycloakUserClientExtensions.Group("/accounting-units/fsr/auditor"));
 
         // Act
         var result = await MyTask.Get("fsr", CancellationToken.None);
@@ -90,8 +88,8 @@ public class GetAccountingUnitTaskTests(DatabaseFixture database) : DatabaseTest
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
         var keycloakError = new NotFoundError("Group", "/accounting-units/fsr");
-        _keycloakUserClient.GetSubgroups(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result<List<KeycloakGroup>>.Fail(keycloakError));
+        _keycloakUserClient.GetGroupIdFromPath(KeycloakGroups.GetAccountingUnitGroup("fsr"), Arg.Any<CancellationToken>())
+            .Returns(Result<string>.Fail(keycloakError));
 
         // Act
         var result = await MyTask.Get("fsr", CancellationToken.None);
@@ -108,9 +106,8 @@ public class GetAccountingUnitTaskTests(DatabaseFixture database) : DatabaseTest
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
         var group = KeycloakUserClientExtensions.RoleGroup("fsr", AccountingUnitRole.Treasurer);
         var keycloakError = new NotFoundError("Group", group.Path);
-        _keycloakUserClient.GetSubgroups(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result<List<KeycloakGroup>>.Ok([group]));
-        _keycloakUserClient.GetUsersInGroup(group.Path, Arg.Any<CancellationToken>())
+        _keycloakUserClient.SetupSubgroups("fsr", group);
+        _keycloakUserClient.GetUsersInGroup(group.Id, Arg.Any<CancellationToken>())
             .Returns(Result<List<KeycloakUser>>.Fail(keycloakError));
 
         // Act
@@ -139,5 +136,24 @@ public class GetAccountingUnitTaskTests(DatabaseFixture database) : DatabaseTest
             new GetAccountingUnitManagementListDto { Key = "fsr", Name = "FSR", Description = "Fachschaftsrat" },
             new GetAccountingUnitManagementListDto { Key = "stura", Name = "StuRa" },
         ], result.Value);
+    }
+
+    [Fact]
+    public async Task Get_LoadingSubgroupsFails_ReturnsLoadRoleGroupsError()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var groupPath = KeycloakGroups.GetAccountingUnitGroup("fsr");
+        var keycloakError = new NotFoundError("Group", KeycloakUserClientExtensions.GroupId(groupPath));
+        _keycloakUserClient.SetupGroups(groupPath);
+        _keycloakUserClient.GetSubgroups(KeycloakUserClientExtensions.GroupId(groupPath), Arg.Any<CancellationToken>())
+            .Returns(Result<List<KeycloakGroup>>.Fail(keycloakError));
+
+        // Act
+        var result = await MyTask.Get("fsr", CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new LoadAccountingUnitRoleGroupsError("fsr", keycloakError), result.Error);
     }
 }

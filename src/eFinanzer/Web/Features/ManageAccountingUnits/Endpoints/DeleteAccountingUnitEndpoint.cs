@@ -18,7 +18,11 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
             .WithName("DeleteAccountingUnit")
             .WithTags("ManageAccountingUnits");
 
-    private static async Task<Results<NoContent, NotFound<NotFoundError>, Conflict<AccountingUnitHasFiscalYearsError>>> Handle(
+    private static async Task<Results<
+        NoContent,
+        NotFound<NotFoundError>,
+        Conflict<AccountingUnitHasFiscalYearsError>,
+        InternalServerError<DeleteAccountingUnitGroupError>>> Handle(
         [FromQuery] string key,
         IDeleteAccountingUnitTask task,
         ClaimsPrincipal user,
@@ -35,6 +39,7 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
         {
             NotFoundError error => TypedResults.NotFound(error),
             AccountingUnitHasFiscalYearsError error => TypedResults.Conflict(error),
+            DeleteAccountingUnitGroupError error => TypedResults.InternalServerError(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

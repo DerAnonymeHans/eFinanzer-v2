@@ -18,7 +18,11 @@ public class CreateAccountingUnitEndpoint : IEndpoint
             .WithName("CreateAccountingUnit")
             .WithTags("ManageAccountingUnits");
 
-    private static async Task<Results<Created, BadRequest<InvalidInputError>, Conflict<AccountingUnitKeyAlreadyExistsError>>> Handle(
+    private static async Task<Results<
+        Created,
+        BadRequest<InvalidInputError>,
+        Conflict<AccountingUnitKeyAlreadyExistsError>,
+        InternalServerError<CreateAccountingUnitGroupsError>>> Handle(
         CreateAccountingUnitCommand command,
         ICreateAccountingUnitTask task,
         ClaimsPrincipal user,
@@ -29,12 +33,13 @@ public class CreateAccountingUnitEndpoint : IEndpoint
         
         var result = await task.Create(command, ct);
         if (result.IsSuccess)
-            return TypedResults.Created($"/api/accounting-units/{command.Key}");
+            return TypedResults.Created();
 
         return result.Error switch
         {
             InvalidInputError error => TypedResults.BadRequest(error),
             AccountingUnitKeyAlreadyExistsError error => TypedResults.Conflict(error),
+            CreateAccountingUnitGroupsError error => TypedResults.InternalServerError(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

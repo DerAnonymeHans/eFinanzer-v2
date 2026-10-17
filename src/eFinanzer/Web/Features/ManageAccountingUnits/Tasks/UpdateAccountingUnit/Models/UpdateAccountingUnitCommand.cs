@@ -5,14 +5,14 @@ namespace eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Mo
 public record UpdateAccountingUnitCommand
 {
     public required string Key { get; init; }
-    public string? Name { get; init; }
-    public string? Description { get; init; }
+    public required string? Name { get; init; }
+    public required string? Description { get; init; }
 
     /// <summary>
-    /// Complete list of users and their roles in the accounting unit. Users that are not listed lose all their roles.
-    /// <c>null</c> leaves the roles unchanged.
+    /// Complete list of users and their roles in the accounting unit. Users that are not listed lose all their roles,
+    /// so an empty list removes all users.
     /// </summary>
-    public List<UserRoles>? UsersWithRoles { get; init; }
+    public required List<UserRoles> UsersWithRoles { get; init; }
 
     public record UserRoles
     {

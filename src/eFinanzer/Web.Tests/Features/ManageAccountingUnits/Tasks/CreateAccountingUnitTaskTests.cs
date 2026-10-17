@@ -1,4 +1,7 @@
 using eFinanzer.Common.Database.Models;
+using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
+using eFinanzer.Common.Integrations.Keycloak.Constants;
+using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Errors;
@@ -6,12 +9,21 @@ using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Models
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 
 namespace eFinanzer.Tests.Features.ManageAccountingUnits.Tasks;
 
 public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseTest(database)
 {
-    private CreateAccountingUnitTask MyTask => new(Database.CreateContext(), NullLogger<CreateAccountingUnitTask>.Instance);
+    private readonly IKeycloakUserClient _keycloakUserClient = Substitute.For<IKeycloakUserClient>();
+
+    private CreateAccountingUnitTask MyTask => new(Database.CreateContext(), _keycloakUserClient, NullLogger<CreateAccountingUnitTask>.Instance);
+
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
+        _keycloakUserClient.SetupGroupCreation();
+    }
 
     [Fact]
     public async Task Create_ValidCommand_StoresAccountingUnit()
@@ -114,5 +126,78 @@ public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         // Assert
         var error = Assert.IsType<InvalidInputError>(result.Error);
         Assert.Equal("Description", error.Field);
+    }
+
+    [Fact]
+    public async Task Create_ValidCommand_CreatesUnitGroupWithOneSubgroupPerRole()
+    {
+        // Arrange
+        var command = new CreateAccountingUnitCommand { Key = "fsr" };
+        var unitGroupId = KeycloakUserClientExtensions.GroupId(KeycloakGroups.GetAccountingUnitGroup("fsr"));
+
+        // Act
+        var result = await MyTask.Create(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        await _keycloakUserClient.Received(1).CreateSubgroup(
+            KeycloakUserClientExtensions.GroupId(KeycloakGroups.AccountingUnitsGroup), "fsr", Arg.Any<CancellationToken>());
+        foreach (var role in Enum.GetValues<AccountingUnitRole>())
+        {
+            await _keycloakUserClient.Received(1).CreateSubgroup(
+                unitGroupId, KeycloakGroups.GetGroupName(role), Arg.Any<CancellationToken>());
+        }
+    }
+
+    [Fact]
+    public async Task Create_GroupsAlreadyExist_ReusesThemAndStoresAccountingUnit()
+    {
+        // Arrange
+        var unitGroupPath = KeycloakGroups.GetAccountingUnitGroup("fsr");
+        _keycloakUserClient.CreateSubgroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(call => Result<string>.Fail(new AlreadyExistsError("Group", call.ArgAt<string>(1))));
+        _keycloakUserClient.SetupGroups(Enum.GetValues<AccountingUnitRole>()
+            .Select(role => KeycloakGroups.GetAccountingUnitRoleGroup("fsr", role))
+            .Append(unitGroupPath)
+            .ToArray());
+
+        // Act
+        var result = await MyTask.Create(new CreateAccountingUnitCommand { Key = "fsr" }, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(await Context.AccountingUnits.AnyAsync(x => x.Key == "fsr", TestContext.Current.CancellationToken));
+        await _keycloakUserClient.Received(Enum.GetValues<AccountingUnitRole>().Length).CreateSubgroup(
+            KeycloakUserClientExtensions.GroupId(unitGroupPath), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_CreatingGroupsFails_ReturnsCreateGroupsErrorAndStoresNothing()
+    {
+        // Arrange
+        var keycloakError = new NotFoundError("Group", KeycloakGroups.AccountingUnitsGroup);
+        _keycloakUserClient.GetGroupIdFromPath(KeycloakGroups.AccountingUnitsGroup, Arg.Any<CancellationToken>())
+            .Returns(Result<string>.Fail(keycloakError));
+
+        // Act
+        var result = await MyTask.Create(new CreateAccountingUnitCommand { Key = "fsr" }, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new CreateAccountingUnitGroupsError("fsr", keycloakError), result.Error);
+        Assert.False(await Context.AccountingUnits.AnyAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Create_KeyAlreadyExists_DoesNotCreateGroups()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        await MyTask.Create(new CreateAccountingUnitCommand { Key = "fsr" }, CancellationToken.None);
+
+        // Assert
+        await _keycloakUserClient.DidNotReceive().CreateSubgroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }
