@@ -13,7 +13,7 @@ env:
 jobs:
   build-and-test-app:
 
-    name: build-and-test-app
+    name: build-and-test
     runs-on: ubuntu-latest
 
     defaults:
