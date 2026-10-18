@@ -1,18 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, Result, Spin } from 'antd';
 import keycloak, { initKeycloak } from './keycloak';
+import { AuthContext } from './useAuth';
+import type { AuthState } from './useAuth';
 import './AuthProvider.css';
-
-interface AuthState {
-  /** Keycloak user name, e.g. the HTWK login */
-  username: string;
-  /** Full name if Keycloak knows it, otherwise the user name */
-  displayName: string;
-  logout: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthState | undefined>(undefined);
 
 interface AuthProviderProps {
   children?: ReactNode;
@@ -67,10 +59,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthState {
-  const state = useContext(AuthContext);
-  if (!state) throw new Error('useAuth must be used inside an AuthProvider');
-  return state;
 }

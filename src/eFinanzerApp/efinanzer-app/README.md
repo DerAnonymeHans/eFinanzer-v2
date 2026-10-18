@@ -1,70 +1,27 @@
-# Getting Started with Create React App
+# eFinanzer App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React frontend of eFinanzer, built with [Vite](https://vite.dev), TypeScript and [Ant Design](https://ant.design).
+Requires Node 22.12 or newer.
 
-## Available Scripts
+## Scripts
 
-In the project directory, you can run:
+| Command | Description |
+|---|---|
+| `npm run dev` | Dev server on http://localhost:3000, forwards `/api` to the backend |
+| `npm run build` | Type check and production build into `dist/` |
+| `npm run preview` | Serves the production build locally |
+| `npm test` | Tests with Vitest (watch mode, `npx vitest run` for a single run) |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | TypeScript check only |
+| `npm run generate:api` | API types from the backend's `OpenApi/efinanzer.json` (updated on Debug builds) |
+| `npm run generate:api:url -- <url>` | API types from a running backend, e.g. `https://efinanzer.stura.htwk-leipzig.de/openapi/v1.json` |
 
-### `npm start`
+## Configuration
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+`.env` holds the defaults, put local overrides into `.env.local` (not committed).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Variable | Description |
+|---|---|
+| `VITE_KEYCLOAK_URL`, `VITE_KEYCLOAK_REALM`, `VITE_KEYCLOAK_CLIENT_ID` | Keycloak login (public client `efinanzer-app`) |
+| `VITE_API_BASE_URL` | API origin, empty for the same origin as the app (production, or the dev proxy) |
+| `API_PROXY_TARGET` | Target of the dev server's `/api` proxy, defaults to `http://localhost:5114` |

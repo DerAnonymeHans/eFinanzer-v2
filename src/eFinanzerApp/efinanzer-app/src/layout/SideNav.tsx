@@ -2,9 +2,9 @@ import { Button, ConfigProvider, Divider, Menu, Select, Typography, theme } from
 import type { MenuProps } from 'antd';
 import { EditOutlined, LogoutOutlined } from '@ant-design/icons';
 import type { AccountingGroup, FiscalYear } from '../api/types';
-import { useAuth } from '../auth/AuthProvider';
+import { useAuth } from '../auth/useAuth';
 import { getRoleNames } from '../constants/roles';
-import { useUserAccess } from '../stores/UserAccessStore';
+import { useUserAccess } from '../stores/useUserAccess';
 import { colors } from '../theme';
 import Logo from './Logo';
 import './AppLayout.css';

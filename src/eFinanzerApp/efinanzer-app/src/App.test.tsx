@@ -1,3 +1,4 @@
+import type { Mock } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import apiClient from './api/client';
@@ -5,23 +6,22 @@ import keycloak, { initKeycloak } from './auth/keycloak';
 import App from './App';
 
 // Keeps the user access store from calling the real API
-jest.mock('./api/client', () => ({ __esModule: true, default: { GET: jest.fn() } }));
+vi.mock('./api/client', () => ({ default: { GET: vi.fn() } }));
 
 // Pretends an existing Keycloak session instead of redirecting to the login page
-jest.mock('./auth/keycloak', () => ({
-  __esModule: true,
-  initKeycloak: jest.fn(),
+vi.mock('./auth/keycloak', () => ({
+  initKeycloak: vi.fn(),
   default: {
     tokenParsed: { preferred_username: 'mmuster', name: 'Max Muster' },
-    logout: jest.fn(),
+    logout: vi.fn(),
   },
 }));
 
-// Set per test, because CRA's Jest config resets all mocks before each test
+// Set per test, so every test starts with the same responses
 beforeEach(() => {
-  (apiClient.GET as jest.Mock).mockResolvedValue({ data: undefined, response: { ok: false, status: 401 } });
-  (initKeycloak as jest.Mock).mockResolvedValue(true);
-  (keycloak.logout as jest.Mock).mockResolvedValue(undefined);
+  (apiClient.GET as Mock).mockResolvedValue({ data: undefined, response: { ok: false, status: 401 } });
+  (initKeycloak as Mock).mockResolvedValue(true);
+  (keycloak.logout as Mock).mockResolvedValue(undefined);
 });
 
 // The matchMedia mock in setupTests matches no breakpoint, so the mobile layout is rendered.
@@ -39,11 +39,11 @@ test('shows the logged-in user and logs out', async () => {
   expect(screen.getByText('mmuster')).toBeInTheDocument();
 
   userEvent.click(screen.getByRole('button', { name: 'Abmelden' }));
-  expect(keycloak.logout).toHaveBeenCalledWith({ redirectUri: 'http://localhost/' });
+  expect(keycloak.logout).toHaveBeenCalledWith({ redirectUri: `${window.location.origin}/` });
 });
 
 test('shows at most two roles, administration roles first', async () => {
-  (apiClient.GET as jest.Mock).mockResolvedValue({
+  (apiClient.GET as Mock).mockResolvedValue({
     data: {
       administrationRoles: ['FinanceReviewer'],
       accountingGroups: [
@@ -64,7 +64,7 @@ test('shows at most two roles, administration roles first', async () => {
 });
 
 test('offers only the accessible Haushalte and fiscal years, edit buttons only with manage rights', async () => {
-  (apiClient.GET as jest.Mock).mockResolvedValue({
+  (apiClient.GET as Mock).mockResolvedValue({
     data: {
       manageAccountingUnits: false,
       administrationRoles: [],

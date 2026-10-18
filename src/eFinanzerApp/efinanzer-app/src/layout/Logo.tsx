@@ -7,7 +7,7 @@ function Logo({ size }: LogoProps) {
   return (
     <img
       className="app-logo"
-      src={`${process.env.PUBLIC_URL}/money-with-wings.svg`}
+      src={`${import.meta.env.BASE_URL}money-with-wings.svg`}
       width={size}
       height={size}
       alt=""

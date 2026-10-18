@@ -1,18 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import apiClient from '../api/client';
 import type { UserAccess } from '../api/types';
-
-interface UserAccessState {
-  /** Undefined until loaded, or when loading failed */
-  userAccess: UserAccess | undefined;
-  loading: boolean;
-  error: Error | undefined;
-  /** Loads the user access again, e.g. after the user's roles changed */
-  reload: () => Promise<void>;
-}
-
-const UserAccessContext = createContext<UserAccessState | undefined>(undefined);
+import { UserAccessContext } from './useUserAccess';
 
 interface UserAccessProviderProps {
   children?: ReactNode;
@@ -27,9 +17,9 @@ export function UserAccessProvider({ children }: UserAccessProviderProps) {
   // Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
   const latestRequest = useRef(0);
 
-  const reload = useCallback(async () => {
+  // Sets state only once the response is there, so it can run inside an effect
+  const load = useCallback(async () => {
     const request = ++latestRequest.current;
-    setLoading(true);
 
     let result: UserAccess | undefined;
     let failure: Error | undefined;
@@ -51,8 +41,13 @@ export function UserAccessProvider({ children }: UserAccessProviderProps) {
   }, []);
 
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    void load();
+  }, [load]);
+
+  const reload = useCallback(() => {
+    setLoading(true);
+    return load();
+  }, [load]);
 
   const value = useMemo(
     () => ({ userAccess, loading, error, reload }),
@@ -60,10 +55,4 @@ export function UserAccessProvider({ children }: UserAccessProviderProps) {
   );
 
   return <UserAccessContext.Provider value={value}>{children}</UserAccessContext.Provider>;
-}
-
-export function useUserAccess(): UserAccessState {
-  const state = useContext(UserAccessContext);
-  if (!state) throw new Error('useUserAccess must be used inside a UserAccessProvider');
-  return state;
 }

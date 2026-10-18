@@ -7,7 +7,7 @@ import { getAccessToken } from '../auth/keycloak';
  * The types in schema.d.ts are generated from the backend's OpenAPI document via `npm run generate:api`.
  *
  * Frontend and API are served from the same origin (see src/deploy/nginx.conf), so requests use relative URLs by
- * default. During development the CRA dev server proxies them to the backend (see src/setupProxy.js).
+ * default. During development the Vite dev server proxies them to the backend (see vite.config.ts).
  *
  * Every request carries the Keycloak access token of the logged-in user.
  *
@@ -17,7 +17,7 @@ import { getAccessToken } from '../auth/keycloak';
  * });
  */
 const apiClient = createClient<paths>({
-  baseUrl: process.env.REACT_APP_API_BASE_URL ?? '',
+  baseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
 });
 
 apiClient.use({

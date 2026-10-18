@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Button, Drawer, Grid, Layout, Typography } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import Logo from './Logo';
-import { useUserAccess } from '../stores/UserAccessStore';
+import { useUserAccess } from '../stores/useUserAccess';
 import SideNav from './SideNav';
 import './AppLayout.css';
 

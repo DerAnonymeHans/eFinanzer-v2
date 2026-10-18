@@ -1,11 +1,13 @@
+import type { Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import apiClient from '../api/client';
 import type { UserAccess } from '../api/types';
-import { UserAccessProvider, useUserAccess } from './UserAccessStore';
+import { UserAccessProvider } from './UserAccessStore';
+import { useUserAccess } from './useUserAccess';
 
-jest.mock('../api/client', () => ({ __esModule: true, default: { GET: jest.fn() } }));
-const get = apiClient.GET as jest.Mock;
+vi.mock('../api/client', () => ({ default: { GET: vi.fn() } }));
+const get = apiClient.GET as Mock;
 
 const userAccess: UserAccess = {
   accountingGroups: [
@@ -70,7 +72,7 @@ test('exposes an error when loading fails and recovers on reload', async () => {
 });
 
 test('throws when used outside the provider', () => {
-  jest.spyOn(console, 'error').mockImplementation(() => {});
+  const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
   expect(() => render(<Consumer />)).toThrow('useUserAccess must be used inside a UserAccessProvider');
-  (console.error as jest.Mock).mockRestore();
+  consoleError.mockRestore();
 });
