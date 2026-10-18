@@ -11,7 +11,7 @@ namespace eFinanzer.Common.Auth;
 /// </summary>
 public static class UserClaims
 {
-    public const string ClaimType = "groups";
+    public const string GroupClaimType = "groups";
 
     
 
@@ -20,7 +20,7 @@ public static class UserClaims
     /// </summary>
     /// <param name="groupPath">Full group path, e.g. <c>/accounting-units/fsr/editor</c></param>
     public static bool IsInGroup(this ClaimsPrincipal user, string groupPath)
-        => user.HasClaim(ClaimType, groupPath);
+        => user.HasClaim(GroupClaimType, groupPath);
 
     public static ClaimBuilder CreateClaimBuilder(this ClaimsPrincipal user) => new(user);
 
@@ -96,6 +96,17 @@ public static class UserClaims
             return this;
         }
         
+        public ClaimBuilder MustBeOneOf(params string[] groups)
+        {
+            _mustHaveOneOfGroups.Add(groups);
+            return this;
+        }
+        
+        public ClaimBuilder MustBeOneOf(IEnumerable<string> groups)
+        {
+            _mustHaveOneOfGroups.Add(groups.ToArray());
+            return this;
+        }
         
     }
 }

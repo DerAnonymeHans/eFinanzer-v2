@@ -15,7 +15,7 @@ public class UserClaimsTests
     private static readonly string SturaFinanceOfficer = KeycloakGroups.GetAccountingUnitRoleGroup("stura", AccountingUnitRole.FinanceOfficer);
 
     private static ClaimsPrincipal CreateUser(params string[] groupPaths)
-        => new(new ClaimsIdentity(groupPaths.Select(x => new Claim(UserClaims.ClaimType, x)), "Test"));
+        => new(new ClaimsIdentity(groupPaths.Select(x => new Claim(UserClaims.GroupClaimType, x)), "Test"));
 
     [Fact]
     public void IsInGroup_MemberOfSubgroup_ReturnsFalseForParent()

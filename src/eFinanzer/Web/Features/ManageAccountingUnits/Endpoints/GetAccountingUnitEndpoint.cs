@@ -30,7 +30,7 @@ public class GetAccountingUnitEndpoint : IEndpoint
         CancellationToken ct)
     {
         user.CreateClaimBuilder()
-            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator)
+            .MustBeOneOf(GroupRules.GetManageAccountingUnitGroups())
             .Validate();
 
         var result = await task.Get(key, ct);

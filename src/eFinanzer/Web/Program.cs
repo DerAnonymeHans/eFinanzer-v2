@@ -4,6 +4,7 @@ using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
+using eFinanzer.Features.GetUserAccess;
 using eFinanzer.Features.GetUsers;
 using eFinanzer.Features.ManageAccountingUnits;
 using eFinanzer.Features.ManageFiscalYears;
@@ -21,6 +22,7 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
 builder.Services.AddManageFiscalYears();
 builder.Services.AddGetUsers();
+builder.Services.AddGetUserAccess();
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.ConfigureHttpJsonOptions(options =>
     // Enums are only accepted by name, so a number cannot smuggle in an undefined value
