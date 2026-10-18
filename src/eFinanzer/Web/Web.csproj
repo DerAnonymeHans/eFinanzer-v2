@@ -26,4 +26,8 @@
         <Using Include="eFinanzer.Common.Results" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Features\GetUsers\" />
+    </ItemGroup>
+
 </Project>
