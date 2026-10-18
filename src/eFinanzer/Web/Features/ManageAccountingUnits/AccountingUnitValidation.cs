@@ -9,8 +9,8 @@ namespace eFinanzer.Features.ManageAccountingUnits;
 public static partial class AccountingUnitValidation
 {
     public const int KeyMaxLength = 10;
-    public const int NameMaxLength = 50;
-    public const int DescriptionMaxLength = 500;
+    public const int NameMaxLength = 15;
+    public const int DescriptionMaxLength = 200;
 
     [GeneratedRegex("^[a-zA-Z0-9_-]+$")]
     private static partial Regex KeyRegex();

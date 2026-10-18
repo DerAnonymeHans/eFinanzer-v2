@@ -2,6 +2,6 @@
 
 public enum PaymentType
 {
-    Card,
+    Bank,
     Cash
 }

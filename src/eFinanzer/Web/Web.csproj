@@ -39,6 +39,7 @@
 
     <ItemGroup>
       <Folder Include="Features\GetUsers\" />
+      <Folder Include="Features\ManageFiscalYears\Endpoints\" />
     </ItemGroup>
 
 </Project>

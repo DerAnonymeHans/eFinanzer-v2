@@ -47,8 +47,9 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        user.ForAdministration()
-            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator);
+        user.CreateClaimBuilder()
+            .MustBeOneOf(GroupRules.GetManageAccountingUnitGroups())
+            .Validate();
 
         var command = new UpdateAccountingUnitCommand
         {

@@ -27,7 +27,7 @@ public class TestAuthHandler(
 
         var claims = groupsHeader.ToString()
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(group => new Claim(UserClaims.ClaimType, group))
+            .Select(group => new Claim(UserClaims.GroupClaimType, group))
             .Append(new Claim("sub", "test-user"));
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));

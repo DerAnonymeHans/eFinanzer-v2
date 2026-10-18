@@ -32,7 +32,7 @@ public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         var command = new CreateAccountingUnitCommand
         {
             Key = "fsr-inf_1",
-            Name = "Fachschaftsrat Informatik",
+            Name = "FSR Informatik",
             Description = "Finanzen des FSR",
         };
 
@@ -45,7 +45,7 @@ public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         Assert.Equal(new AccountingUnit
         {
             Key = "fsr-inf_1",
-            Name = "Fachschaftsrat Informatik",
+            Name = "FSR Informatik",
             Description = "Finanzen des FSR",
         }, stored);
     }

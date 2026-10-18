@@ -28,8 +28,9 @@ public class CreateAccountingUnitEndpoint : IEndpoint
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        user.ForAdministration()
-            .MustBeOneOf(AdministrationRole.FinanceAdministrator, AdministrationRole.HeadFinanceOfficer);
+        user.CreateClaimBuilder()
+            .MustBeOneOf(GroupRules.GetManageAccountingUnitGroups())
+            .Validate();
         
         var result = await task.Create(command, ct);
         if (result.IsSuccess)
