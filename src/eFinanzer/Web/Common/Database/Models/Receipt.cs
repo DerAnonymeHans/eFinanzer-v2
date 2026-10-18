@@ -19,7 +19,11 @@ public record Receipt
     public string? Signature1 { get; init; }
     public string? Signature2 { get; init; }
     
-    [MaxLength(15)]
+    [MaxLength(10)]
+    public required string AccountingUnitKey { get; init; }
+    public AccountingUnit? AccountingUnit { get; init; }
+    
+    [MaxLength(10)]
     public required string FiscalYearKey { get; init; }
     public FiscalYear? FiscalYear { get; init; }
     

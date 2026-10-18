@@ -10,4 +10,5 @@ public record AccountingUnit
     public string? Description { get; init; }
     
     public List<FiscalYear>? FiscalYears { get; init; }
+    public List<Receipt>? Receipts { get; init; }
 }

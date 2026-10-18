@@ -28,8 +28,9 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
         ClaimsPrincipal user,
         CancellationToken ct)
     {
-        user.ForAdministration()
-            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator);
+        user.CreateClaimBuilder()
+            .MustBeOneOf(AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator)
+            .Validate();
         
         var result = await task.Delete(key, ct);
         if (result.IsSuccess)

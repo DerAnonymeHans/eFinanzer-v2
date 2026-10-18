@@ -32,11 +32,16 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithOne(f => f.AccountingUnit)
                 .HasForeignKey(f => f.AccountingUnitKey)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(a => a.Receipts)
+                .WithOne(r => r.AccountingUnit)
+                .HasForeignKey(r => r.AccountingUnitKey)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<FiscalYear>(entity =>
         {
-            entity.HasKey(f => f.Key);
+            entity.HasKey(f => new { f.AccountingUnitKey, f.Key });
 
             entity.HasMany(f => f.Budgets)
                 .WithOne(b => b.FiscalYear)
@@ -45,7 +50,7 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
 
             entity.HasMany(f => f.Receipts)
                 .WithOne(r => r.FiscalYear)
-                .HasForeignKey(r => r.FiscalYearKey)
+                .HasForeignKey(r => new { r.AccountingUnitKey, r.FiscalYearKey })
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
