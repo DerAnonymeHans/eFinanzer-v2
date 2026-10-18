@@ -1,0 +1,854 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Web | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/manage-accounting-units/create-accounting-unit": {
+      "post": {
+        "tags": [
+          "ManageAccountingUnits"
+        ],
+        "operationId": "CreateAccountingUnit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountingUnitCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountingUnitKeyAlreadyExistsError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateAccountingUnitGroupsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-accounting-units/delete-accounting-unit": {
+      "delete": {
+        "tags": [
+          "ManageAccountingUnits"
+        ],
+        "operationId": "DeleteAccountingUnit",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountingUnitHasFiscalYearsError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteAccountingUnitGroupError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-accounting-units/get-accounting-unit": {
+      "get": {
+        "tags": [
+          "ManageAccountingUnits"
+        ],
+        "operationId": "GetAccountingUnit",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAccountingUnitManagementDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoadAccountingUnitRoleMembersError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-accounting-units/list-accounting-units": {
+      "get": {
+        "tags": [
+          "ManageAccountingUnits"
+        ],
+        "operationId": "GetAccountingUnits",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetAccountingUnitManagementListDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-accounting-units/update-accounting-unit": {
+      "put": {
+        "tags": [
+          "ManageAccountingUnits"
+        ],
+        "operationId": "UpdateAccountingUnit",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnknownUserError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangeUserRoleError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/get-users/get-user": {
+      "get": {
+        "tags": [
+          "GetUsers"
+        ],
+        "operationId": "GetUser",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AccountingUnitHasFiscalYearsError": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "AccountingUnitKeyAlreadyExistsError": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "AccountingUnitRole": {
+        "enum": [
+          "FinanceOfficer",
+          "Treasurer",
+          "FinanceAuthorizedUser"
+        ]
+      },
+      "ChangeUserRoleError": {
+        "required": [
+          "key",
+          "userName",
+          "role",
+          "added",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AccountingUnitRole"
+          },
+          "added": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "CreateAccountingUnitCommand": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateAccountingUnitGroupsError": {
+        "required": [
+          "key",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "DeleteAccountingUnitGroupError": {
+        "required": [
+          "key",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "GetAccountingUnitManagementDto": {
+        "required": [
+          "key",
+          "usersWithRoles"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usersWithRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            }
+          }
+        }
+      },
+      "GetAccountingUnitManagementListDto": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "GetUserDto": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "HttpStatusCode": {
+        "enum": [
+          "Continue",
+          "SwitchingProtocols",
+          "Processing",
+          "EarlyHints",
+          "OK",
+          "Created",
+          "Accepted",
+          "NonAuthoritativeInformation",
+          "NoContent",
+          "ResetContent",
+          "PartialContent",
+          "MultiStatus",
+          "AlreadyReported",
+          "IMUsed",
+          "MultipleChoices",
+          "Ambiguous",
+          "MovedPermanently",
+          "Moved",
+          "Found",
+          "Redirect",
+          "SeeOther",
+          "RedirectMethod",
+          "NotModified",
+          "UseProxy",
+          "Unused",
+          "TemporaryRedirect",
+          "RedirectKeepVerb",
+          "PermanentRedirect",
+          "BadRequest",
+          "Unauthorized",
+          "PaymentRequired",
+          "Forbidden",
+          "NotFound",
+          "MethodNotAllowed",
+          "NotAcceptable",
+          "ProxyAuthenticationRequired",
+          "RequestTimeout",
+          "Conflict",
+          "Gone",
+          "LengthRequired",
+          "PreconditionFailed",
+          "RequestEntityTooLarge",
+          "RequestUriTooLong",
+          "UnsupportedMediaType",
+          "RequestedRangeNotSatisfiable",
+          "ExpectationFailed",
+          "MisdirectedRequest",
+          "UnprocessableEntity",
+          "UnprocessableContent",
+          "Locked",
+          "FailedDependency",
+          "UpgradeRequired",
+          "PreconditionRequired",
+          "TooManyRequests",
+          "RequestHeaderFieldsTooLarge",
+          "UnavailableForLegalReasons",
+          "InternalServerError",
+          "NotImplemented",
+          "BadGateway",
+          "ServiceUnavailable",
+          "GatewayTimeout",
+          "HttpVersionNotSupported",
+          "VariantAlsoNegotiates",
+          "InsufficientStorage",
+          "LoopDetected",
+          "NotExtended",
+          "NetworkAuthenticationRequired"
+        ]
+      },
+      "InvalidInputError": {
+        "required": [
+          "field",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "LoadAccountingUnitRoleMembersError": {
+        "required": [
+          "key",
+          "groupPath",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "groupPath": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "NotFoundError": {
+        "required": [
+          "entity",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "entity": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "Request": {
+        "required": [
+          "name",
+          "description",
+          "usersWithRoles"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usersWithRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRoles"
+            }
+          }
+        }
+      },
+      "UnknownUserError": {
+        "required": [
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "UserDto": {
+        "required": [
+          "userName",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountingUnitRole"
+            }
+          }
+        }
+      },
+      "UserRoles": {
+        "required": [
+          "userName",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountingUnitRole"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Keycloak": {
+        "type": "oauth2",
+        "description": "Login via Keycloak",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://efinanzer.stura.htwk-leipzig.de/auth/realms/efinanzer/protocol/openid-connect/auth",
+            "tokenUrl": "https://efinanzer.stura.htwk-leipzig.de/auth/realms/efinanzer/protocol/openid-connect/token",
+            "scopes": {
+              "openid": "OpenID Connect",
+              "profile": "User profile"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "Keycloak": [ ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "ManageAccountingUnits"
+    },
+    {
+      "name": "GetUsers"
+    }
+  ]
+}
