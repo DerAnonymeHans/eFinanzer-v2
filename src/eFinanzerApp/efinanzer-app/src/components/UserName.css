@@ -1,0 +1,6 @@
+/* Roughly the width of a name, so the layout does not jump once it is loaded */
+.user-name__skeleton.ant-skeleton-element .ant-skeleton-input {
+  width: 120px;
+  min-width: 120px;
+  vertical-align: middle;
+}

@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/get-users/search-user": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SearchUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/get-user-access/my-user-access": {
         parameters: {
             query?: never;
@@ -336,18 +352,23 @@ export interface components {
             statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
-        Request: {
-            name: null | string;
-            /** Format: date */
-            startDate: string;
-            /** Format: date */
-            endDate: string;
-        };
         UnknownUserError: {
             userName: string;
             message?: string;
             statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
+        };
+        UpdateAccountingUnitRequest: {
+            name: null | string;
+            description: null | string;
+            usersWithRoles: components["schemas"]["UserRoles"][];
+        };
+        UpdateFiscalYearRequest: {
+            name: null | string;
+            /** Format: date */
+            startDate: string;
+            /** Format: date */
+            endDate: string;
         };
         UserAccess: {
             accountingGroups: components["schemas"]["AccountingGroupDto"][];
@@ -355,6 +376,10 @@ export interface components {
             administrationRoles: components["schemas"]["AdministrationRole"][];
         };
         UserDto: {
+            userName: string;
+            roles: components["schemas"]["AccountingUnitRole"][];
+        };
+        UserRoles: {
             userName: string;
             roles: components["schemas"]["AccountingUnitRole"][];
         };
@@ -498,7 +523,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["UpdateFiscalYearRequest"];
             };
         };
         responses: {
@@ -705,7 +730,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["UpdateAccountingUnitRequest"];
             };
         };
         responses: {
@@ -772,6 +797,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+        };
+    };
+    SearchUser: {
+        parameters: {
+            query: {
+                search: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetUserDto"][];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidInputError"];
                 };
             };
         };

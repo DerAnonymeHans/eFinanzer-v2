@@ -8,3 +8,7 @@ export type AccountingGroup = Schemas['AccountingGroupDto'];
 export type FiscalYear = Schemas['FiscalYearDto'];
 export type AccountingUnitRole = Schemas['AccountingUnitRole'];
 export type AdministrationRole = Schemas['AdministrationRole'];
+export type AccountingUnitListItem = Schemas['GetAccountingUnitManagementListDto'];
+export type AccountingUnitDetails = Schemas['GetAccountingUnitManagementDto'];
+export type UserRoles = Schemas['UserRoles'];
+export type User = Schemas['GetUserDto'];

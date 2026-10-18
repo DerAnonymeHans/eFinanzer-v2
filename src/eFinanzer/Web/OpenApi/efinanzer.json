@@ -180,7 +180,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Request"
+                "$ref": "#/components/schemas/UpdateFiscalYearRequest"
               }
             }
           },
@@ -422,7 +422,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Request"
+                "$ref": "#/components/schemas/UpdateAccountingUnitRequest"
               }
             }
           },
@@ -498,6 +498,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/get-users/search-user": {
+      "get": {
+        "tags": [
+          "GetUsers"
+        ],
+        "operationId": "SearchUser",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetUserDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
                 }
               }
             }
@@ -1232,30 +1275,6 @@
           }
         }
       },
-      "Request": {
-        "required": [
-          "name",
-          "startDate",
-          "endDate"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "startDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "endDate": {
-            "type": "string",
-            "format": "date"
-          }
-        }
-      },
       "UnknownUserError": {
         "required": [
           "userName"
@@ -1280,6 +1299,58 @@
                 "$ref": "#/components/schemas/Error"
               }
             ]
+          }
+        }
+      },
+      "UpdateAccountingUnitRequest": {
+        "required": [
+          "name",
+          "description",
+          "usersWithRoles"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usersWithRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserRoles"
+            }
+          }
+        }
+      },
+      "UpdateFiscalYearRequest": {
+        "required": [
+          "name",
+          "startDate",
+          "endDate"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -1308,6 +1379,24 @@
         }
       },
       "UserDto": {
+        "required": [
+          "userName",
+          "roles"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountingUnitRole"
+            }
+          }
+        }
+      },
+      "UserRoles": {
         "required": [
           "userName",
           "roles"

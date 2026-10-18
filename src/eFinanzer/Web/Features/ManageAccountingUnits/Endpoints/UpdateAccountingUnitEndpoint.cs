@@ -17,7 +17,7 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
     /// <summary>
     /// The key is taken from the query, so the body only contains the changeable fields
     /// </summary>
-    public record Request
+    public record UpdateAccountingUnitRequest
     {
         public required string? Name { get; init; }
         public required string? Description { get; init; }
@@ -42,7 +42,7 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
         InternalServerError<LoadCurrentUserRolesError>,
         InternalServerError<ChangeUserRoleError>>> Handle(
         [FromQuery] string key,
-        Request request,
+        UpdateAccountingUnitRequest request,
         IUpdateAccountingUnitTask task,
         ClaimsPrincipal user,
         CancellationToken ct)
