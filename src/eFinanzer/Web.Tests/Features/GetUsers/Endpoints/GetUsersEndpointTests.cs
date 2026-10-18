@@ -47,7 +47,7 @@ public class GetUsersEndpointTests(DatabaseFixture database) : DatabaseTest(data
             {
                 Id = "alice-id", Username = "alice", FirstName = "Alice", LastName = "Liddell",
             }));
-        var client = _factory.CreateClientInGroups();
+        var client = _factory.CreateAuthorizedClient();
 
         // Act
         var response = await client.GetAsync($"{BaseUrl}/get-user?username=alice",
@@ -68,7 +68,7 @@ public class GetUsersEndpointTests(DatabaseFixture database) : DatabaseTest(data
         // Arrange
         _factory.KeycloakUserClient.GetUserByUsername("mallory", Arg.Any<CancellationToken>())
             .Returns(Result<KeycloakUser>.Fail(new NotFoundError("User", "mallory")));
-        var client = _factory.CreateClientInGroups();
+        var client = _factory.CreateAuthorizedClient();
 
         // Act
         var response = await client.GetAsync($"{BaseUrl}/get-user?username=mallory",
