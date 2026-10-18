@@ -6,6 +6,7 @@ using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageFiscalYears.Errors;
 using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear;
+using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Errors;
 using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +34,8 @@ public class UpdateFiscalYearEndpoint : IEndpoint
         NoContent,
         BadRequest<InvalidInputError>,
         NotFound<NotFoundError>,
-        Conflict<FiscalYearOverlapsExistingError>>> Handle(
+        Conflict<FiscalYearOverlapsExistingError>,
+        Conflict<FiscalYearWithBookingsShortenedError>>> Handle(
         [FromQuery] string accountingUnitKey,
         [FromQuery] string key,
         Request request,
@@ -64,6 +66,7 @@ public class UpdateFiscalYearEndpoint : IEndpoint
             InvalidInputError error => TypedResults.BadRequest(error),
             NotFoundError error => TypedResults.NotFound(error),
             FiscalYearOverlapsExistingError error => TypedResults.Conflict(error),
+            FiscalYearWithBookingsShortenedError error => TypedResults.Conflict(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

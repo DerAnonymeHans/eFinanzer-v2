@@ -2,6 +2,7 @@ using eFinanzer.Common.Database;
 using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageFiscalYears.Errors;
+using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Errors;
 using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,10 +29,15 @@ public class UpdateFiscalYearTask(
         if (failedValidation is not null)
             return failedValidation;
 
-        var exists = await context.FiscalYears
-            .AnyAsync(x => x.Key == command.Key && x.AccountingUnitKey == command.AccountingUnitKey, ct);
-        if (!exists)
+        var current = await context.FiscalYears
+            .Where(x => x.Key == command.Key && x.AccountingUnitKey == command.AccountingUnitKey)
+            .Select(x => new { HasReceiptsOutside = x.Receipts!.Any(r => r.ReceiptAt < command.StartDate || r.ReceiptAt > command.EndDate) })
+            .FirstOrDefaultAsync(ct);
+        if (current is null)
             return new NotFoundError(nameof(FiscalYear), $"{command.AccountingUnitKey}/{command.Key}");
+
+        if (current.HasReceiptsOutside)
+            return new FiscalYearWithBookingsShortenedError(command.Key, command.AccountingUnitKey, command.StartDate, command.EndDate);
 
         // The fiscal year itself is excluded, it may overlap its own old dates
         var overlappingFiscalYear = await context.FiscalYears

@@ -2,6 +2,7 @@ using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageFiscalYears.Errors;
 using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear;
+using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Errors;
 using eFinanzer.Features.ManageFiscalYears.Tasks.UpdateFiscalYear.Models;
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -164,5 +165,93 @@ public class UpdateFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
 
         // Assert
         Assert.Equal(new NotFoundError(nameof(FiscalYear), "fsr/unknown"), result.Error);
+    }
+
+    private async Task AddReceipt(string accountingUnitKey, DateOnly receiptAt)
+    {
+        Context.Receipts.Add(new Receipt
+        {
+            Key = $"R-{receiptAt:yyyyMMdd}",
+            AccountingUnitKey = accountingUnitKey,
+            FiscalYearKey = "2026",
+            ReceiptAt = receiptAt,
+        });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Periods of the update command from 2026-04-01 to 2027-03-31 not containing the receipt date
+    /// </summary>
+    public static TheoryData<DateOnly> ReceiptDatesOutsideNewPeriod => new()
+    {
+        new DateOnly(2026, 3, 31),
+        new DateOnly(2027, 4, 1),
+    };
+
+    [Theory]
+    [MemberData(nameof(ReceiptDatesOutsideNewPeriod))]
+    public async Task Update_ReceiptWouldLeavePeriod_ReturnsConflictAndKeepsFiscalYear(DateOnly receiptAt)
+    {
+        // Arrange
+        await AddReceipt("fsr", new DateOnly(2026, 6, 1));
+        await AddReceipt("fsr", receiptAt);
+
+        // Act
+        var result = await MyTask.Update(ValidCommand, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new FiscalYearWithBookingsShortenedError("2026", "fsr", new DateOnly(2026, 4, 1), new DateOnly(2027, 3, 31)),
+            result.Error);
+        var stored = await Context.FiscalYears.SingleAsync(x => x.AccountingUnitKey == "fsr", TestContext.Current.CancellationToken);
+        Assert.Equal(Original("fsr"), stored);
+    }
+
+    public static TheoryData<DateOnly> ReceiptDatesInsideNewPeriod => new()
+    {
+        // First day
+        new DateOnly(2026, 4, 1),
+        // Last day
+        new DateOnly(2026, 12, 31),
+    };
+
+    [Theory]
+    [MemberData(nameof(ReceiptDatesInsideNewPeriod))]
+    public async Task Update_ShortenedButReceiptsStayInside_UpdatesFiscalYear(DateOnly receiptAt)
+    {
+        // Arrange
+        await AddReceipt("fsr", receiptAt);
+
+        // Act
+        var result = await MyTask.Update(ValidCommand, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Update_ShortenedWithBudgets_UpdatesFiscalYear()
+    {
+        // Arrange
+        Context.Budgets.Add(new Budget { AccountingUnitKey = "fsr", FiscalYearKey = "2026" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await MyTask.Update(ValidCommand, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Update_OtherUnitHasReceiptOutsideNewPeriod_UpdatesFiscalYear()
+    {
+        // Arrange
+        await AddReceipt("stura", new DateOnly(2026, 1, 15));
+
+        // Act
+        var result = await MyTask.Update(ValidCommand, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
     }
 }

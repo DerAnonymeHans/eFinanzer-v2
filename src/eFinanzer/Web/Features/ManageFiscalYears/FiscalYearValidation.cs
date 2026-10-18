@@ -5,14 +5,14 @@ using eFinanzer.Common.Results.Errors;
 namespace eFinanzer.Features.ManageFiscalYears;
 
 /// <summary>
-/// Input constraints of an accounting unit, shared by the create and update tasks
+/// Input constraints of a fiscal year, shared by the create and update tasks
 /// </summary>
 public static partial class FiscalYearValidation
 {
     public const int KeyMaxLength = 10;
     public const int NameMaxLength = 10;
     private static readonly DateOnly MinDate = new DateOnly(1900, 01, 01);
-    private static readonly TimeSpan MinFiscalYear = TimeSpan.FromDays(100);
+    public const int MinLengthInDays = 100;
 
     [GeneratedRegex("^[a-zA-Z0-9_-]+$")]
     private static partial Regex KeyRegex();
@@ -38,15 +38,17 @@ public static partial class FiscalYearValidation
     
     public static Result ValidateDates(DateOnly start, DateOnly end)
     {
-        if (start >= end)
-            return new InvalidInputError("StartDate", $"StartDate must be less than endDate");
-        
         if (start < MinDate)
-            return new InvalidInputError("StartDate", $"StartDate must be greater than {MinDate}");
+            return new InvalidInputError("StartDate", $"StartDate must not be before {MinDate:yyyy-MM-dd}");
 
-        if (end.ToDateTime(TimeOnly.MaxValue) - start.ToDateTime(TimeOnly.MinValue) < MinFiscalYear)
-            return new InvalidInputError("EndDate", $"EndDate must be more than {MinFiscalYear} after startDate");
-        
+        if (start >= end)
+            return new InvalidInputError("StartDate", "StartDate must be before EndDate");
+
+        // Both dates are inclusive, so a fiscal year from 01-01 to 01-01 is one day long
+        var lengthInDays = end.DayNumber - start.DayNumber + 1;
+        if (lengthInDays < MinLengthInDays)
+            return new InvalidInputError("EndDate", $"The fiscal year must be at least {MinLengthInDays} days long");
+
         return Result.Ok();
     }
 

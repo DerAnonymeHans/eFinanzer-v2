@@ -85,11 +85,19 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithMany()
                 .HasForeignKey(p => p.DeficitBudgetPositionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Receipts must not be lost or silently detached by deleting the budget they were booked on
+            entity.HasMany(p => p.Receipts)
+                .WithOne(r => r.BudgetPosition)
+                .HasForeignKey(r => r.BudgetPositionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Receipt>(entity =>
         {
             entity.HasIndex(r => new { r.AccountingUnitKey, r.FiscalYearKey, r.Key }).IsUnique();
+
+            entity.ComplexProperty(r => r.Receiver, receiver => receiver.ToJson());
 
             entity.HasMany(r => r.Positions)
                 .WithOne(p => p.Receipt)

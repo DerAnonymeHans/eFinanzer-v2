@@ -138,6 +138,8 @@ public class CreateFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
         { new DateOnly(1899, 1, 1), new DateOnly(1899, 12, 31), "StartDate" },
         // Shorter than the minimum length
         { new DateOnly(2026, 1, 1), new DateOnly(2026, 3, 1), "EndDate" },
+        // One day shorter than the minimum length of 100 days
+        { new DateOnly(2026, 1, 1), new DateOnly(2026, 4, 9), "EndDate" },
     };
 
     [Theory]
@@ -151,6 +153,18 @@ public class CreateFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
         var error = Assert.IsType<InvalidInputError>(result.Error);
         Assert.Equal(field, error.Field);
         Assert.False(await Context.FiscalYears.AnyAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Create_ExactlyMinimumLength_StoresFiscalYear()
+    {
+        // Act: 2026-01-01 to 2026-04-10 are 100 days including both ends
+        var result = await MyTask.Create(
+            ValidCommand with { StartDate = new DateOnly(2026, 1, 1), EndDate = new DateOnly(2026, 4, 10) },
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
     }
 
     private async Task AddExistingFiscalYear(string accountingUnitKey)
