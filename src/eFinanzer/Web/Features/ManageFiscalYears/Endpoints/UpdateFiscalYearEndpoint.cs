@@ -18,7 +18,7 @@ public class UpdateFiscalYearEndpoint : IEndpoint
     /// <summary>
     /// The keys are taken from the query, so the body only contains the changeable fields
     /// </summary>
-    public record Request
+    public record UpdateFiscalYearRequest
     {
         public required string? Name { get; init; }
         public required DateOnly StartDate { get; init; }
@@ -38,7 +38,7 @@ public class UpdateFiscalYearEndpoint : IEndpoint
         Conflict<FiscalYearWithBookingsShortenedError>>> Handle(
         [FromQuery] string accountingUnitKey,
         [FromQuery] string key,
-        Request request,
+        UpdateFiscalYearRequest request,
         IUpdateFiscalYearTask task,
         ClaimsPrincipal user,
         CancellationToken ct)

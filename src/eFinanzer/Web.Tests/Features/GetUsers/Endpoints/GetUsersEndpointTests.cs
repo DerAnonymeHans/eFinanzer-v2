@@ -77,4 +77,56 @@ public class GetUsersEndpointTests(DatabaseFixture database) : DatabaseTest(data
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    [Fact]
+    public async Task SearchUser_AnonymousUser_ReturnsUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync($"{BaseUrl}/search-user?search=alice",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task SearchUser_ByRealName_ReturnsMatchingUsers()
+    {
+        // Arrange
+        _factory.KeycloakUserClient.SearchUser("alice lid", Arg.Any<CancellationToken>())
+            .Returns(Result<KeycloakUser[]>.Ok([
+                new KeycloakUser { Id = "alice-id", Username = "alice", FirstName = "Alice", LastName = "Liddell" },
+            ]));
+        var client = _factory.CreateAuthorizedClient();
+
+        // Act
+        var response = await client.GetAsync($"{BaseUrl}/search-user?search={Uri.EscapeDataString("alice lid")}",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var users = await response.Content.ReadFromJsonAsync<List<GetUserDto>>(TestContext.Current.CancellationToken);
+        Assert.NotNull(users);
+        var user = Assert.Single(users);
+        Assert.Equal("alice", user.Username);
+        Assert.Equal("Alice", user.FirstName);
+        Assert.Equal("Liddell", user.LastName);
+    }
+
+    [Fact]
+    public async Task SearchUser_TooShortSearch_ReturnsBadRequest()
+    {
+        // Arrange
+        var client = _factory.CreateAuthorizedClient();
+
+        // Act
+        var response = await client.GetAsync($"{BaseUrl}/search-user?search=a",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }

@@ -37,7 +37,8 @@ const navTheme = {
 };
 
 interface SideNavProps {
-  selectedKey: string;
+  /** Undefined while a page outside of the menu is shown */
+  selectedKey: string | undefined;
   onSelect: (key: string) => void;
   /** Haushalte the user has access to */
   budgets: AccountingGroup[];
@@ -61,7 +62,7 @@ function SideNav({
   onEditBudget,
   onEditFiscalYear,
 }: SideNavProps) {
-  const { username, displayName, logout } = useAuth();
+  const { displayName, logout } = useAuth();
   const { userAccess, loading } = useUserAccess();
   const canEditBudgets = userAccess?.manageAccountingUnits ?? false;
   const canEditFiscalYears = budget?.manageFiscalYears ?? false;
@@ -145,7 +146,7 @@ function SideNav({
           mode="inline"
           inlineIndent={12}
           items={navItems}
-          selectedKeys={[selectedKey]}
+          selectedKeys={selectedKey ? [selectedKey] : []}
           onClick={({ key }) => onSelect(key)}
         />
 
@@ -155,8 +156,7 @@ function SideNav({
               {displayName}
             </Text>
             <div className="side-nav__user-roles">
-              {/* The user name stands in until the roles are loaded, or if the user has none */}
-              {(roleNames.length > 0 ? roleNames : [username]).map((line) => (
+              {roleNames.map((line) => (
                 <Text key={line} className="side-nav__user-role" ellipsis={{ tooltip: line }}>
                   {line}
                 </Text>

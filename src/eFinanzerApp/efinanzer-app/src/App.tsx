@@ -1,18 +1,40 @@
-import { ConfigProvider } from 'antd';
+import { App as AntApp, ConfigProvider } from 'antd';
 import deDE from 'antd/locale/de_DE';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import theme from './theme';
 import AppLayout from './layout/AppLayout';
 import { AuthProvider } from './auth/AuthProvider';
 import { UserAccessProvider } from './stores/UserAccessStore';
+import { UserStoreProvider } from './stores/UserStore';
+import RequireManageAccountingUnits from './pages/manage-accounting-units/RequireManageAccountingUnits';
+import ManageAccountingUnitsPage from './pages/manage-accounting-units/ManageAccountingUnitsPage';
+import AccountingUnitPage from './pages/manage-accounting-units/AccountingUnitPage';
 
 function App() {
   return (
     <ConfigProvider theme={theme} locale={deDE}>
-      <AuthProvider>
-        <UserAccessProvider>
-          <AppLayout />
-        </UserAccessProvider>
-      </AuthProvider>
+      {/* Above AntApp, so names can also be shown in its confirm dialogs */}
+      <UserStoreProvider>
+        {/* Lets the pages open themed confirm dialogs and messages via App.useApp() */}
+        <AntApp>
+          <BrowserRouter>
+            <AuthProvider>
+              <UserAccessProvider>
+                <AppLayout>
+                  <Routes>
+                    <Route path="haushalte-verwalten" element={<RequireManageAccountingUnits />}>
+                      <Route index element={<ManageAccountingUnitsPage />} />
+                      <Route path=":key" element={<AccountingUnitPage />} />
+                    </Route>
+                    {/* The other pages do not exist yet */}
+                    <Route path="*" element={null} />
+                  </Routes>
+                </AppLayout>
+              </UserAccessProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </AntApp>
+      </UserStoreProvider>
     </ConfigProvider>
   );
 }

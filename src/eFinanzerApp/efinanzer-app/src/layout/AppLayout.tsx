@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, Drawer, Grid, Layout, Typography } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
+import { useLocation, useNavigate } from 'react-router';
 import Logo from './Logo';
 import { useUserAccess } from '../stores/useUserAccess';
 import SideNav from './SideNav';
@@ -23,6 +24,9 @@ function AppLayout({ children }: AppLayoutProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState('uebersicht');
+  const navigate = useNavigate();
+  // The menu entries are not routed yet, so they only count as selected outside of the routed pages
+  const onRoutedPage = useLocation().pathname !== '/';
   const [budgetKey, setBudgetKey] = useState<string>();
   const [fiscalYearKey, setFiscalYearKey] = useState<string>();
 
@@ -42,17 +46,24 @@ function AppLayout({ children }: AppLayoutProps) {
   const handleSelect = (key: string) => {
     setSelectedKey(key);
     setDrawerOpen(false);
+    navigate('/');
+  };
+
+  const handleEditBudget = () => {
+    setDrawerOpen(false);
+    navigate('/haushalte-verwalten');
   };
 
   const nav = (
     <SideNav
-      selectedKey={selectedKey}
+      selectedKey={onRoutedPage ? undefined : selectedKey}
       onSelect={handleSelect}
       budgets={budgets}
       budget={budget}
       onBudgetChange={handleBudgetChange}
       fiscalYear={fiscalYear}
       onFiscalYearChange={setFiscalYearKey}
+      onEditBudget={handleEditBudget}
     />
   );
 

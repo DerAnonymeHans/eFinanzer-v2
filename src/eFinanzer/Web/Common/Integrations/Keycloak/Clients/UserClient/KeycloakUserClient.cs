@@ -54,6 +54,13 @@ public interface IKeycloakUserClient
     /// <param name="userId">Keycloak user id (<c>sub</c> claim)</param>
     /// <param name="groupId">Keycloak group id</param>
     Task<Result> RemoveUserFromGroup(string userId, string groupId, CancellationToken ct);
+
+    /// <summary>
+    /// Enabled users whose username, first name, last name or email starts with the search string. Keycloak splits it
+    /// at whitespace and every word has to match one of the fields, so <c>max must</c> finds Max Mustermann. Returns at
+    /// most <see cref="KeycloakUserClient.SearchLimit"/> users.
+    /// </summary>
+    Task<Result<KeycloakUser[]>> SearchUser(string searchString, CancellationToken ct);
 }
 
 /// <summary>
@@ -63,6 +70,11 @@ public interface IKeycloakUserClient
 public class KeycloakUserClient(HttpClient httpClient) : IKeycloakUserClient
 {
     private const int PageSize = 100;
+
+    /// <summary>
+    /// Search results are meant to be picked from, so more would only be noise
+    /// </summary>
+    public const int SearchLimit = 20;
 
     public async Task<Result<string>> GetGroupIdFromPath(string groupPath, CancellationToken ct)
     {
@@ -128,6 +140,15 @@ public class KeycloakUserClient(HttpClient httpClient) : IKeycloakUserClient
 
     public Task<Result> RemoveUserFromGroup(string userId, string groupId, CancellationToken ct)
         => ChangeGroupMembership(HttpMethod.Delete, userId, groupId, ct);
+
+    public async Task<Result<KeycloakUser[]>> SearchUser(string searchString, CancellationToken ct)
+    {
+        var users = await httpClient.GetFromJsonAsync<KeycloakUser[]>(
+                        $"users?search={Uri.EscapeDataString(searchString)}&enabled=true&briefRepresentation=true&max={SearchLimit}", ct)
+                    ?? [];
+
+        return users;
+    }
 
     private async Task<Result> ChangeGroupMembership(HttpMethod method, string userId, string groupId,
         CancellationToken ct)

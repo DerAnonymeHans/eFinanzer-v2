@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 export interface AuthState {
-  /** Keycloak user name, e.g. the HTWK login */
+  /** Keycloak user name, e.g. the HTWK login. Cryptic. */
   username: string;
   /** Full name if Keycloak knows it, otherwise the user name */
   displayName: string;

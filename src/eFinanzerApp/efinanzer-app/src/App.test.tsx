@@ -36,7 +36,8 @@ test('shows the logged-in user and logs out', async () => {
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
 
   expect(await screen.findByText('Max Muster')).toBeInTheDocument();
-  expect(screen.getByText('mmuster')).toBeInTheDocument();
+  // The cryptic user name is not shown next to the full name
+  expect(screen.queryByText('mmuster')).not.toBeInTheDocument();
 
   userEvent.click(screen.getByRole('button', { name: 'Abmelden' }));
   expect(keycloak.logout).toHaveBeenCalledWith({ redirectUri: `${window.location.origin}/` });
@@ -60,7 +61,6 @@ test('shows at most two roles, administration roles first', async () => {
   expect(await screen.findByText('Finanzprüfung')).toBeInTheDocument();
   expect(screen.getByText('FSR DIT · Kassenwart')).toBeInTheDocument();
   expect(screen.queryByText('FSR IM · Finanzer')).not.toBeInTheDocument();
-  expect(screen.queryByText('mmuster')).not.toBeInTheDocument();
 });
 
 test('offers only the accessible Haushalte and fiscal years, edit buttons only with manage rights', async () => {
