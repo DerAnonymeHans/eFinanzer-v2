@@ -45,7 +45,7 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
 
             entity.HasMany(f => f.Budgets)
                 .WithOne(b => b.FiscalYear)
-                .HasForeignKey(b => b.FiscalYearKey)
+                .HasForeignKey(b => new { b.AccountingUnitKey, b.FiscalYearKey })
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(f => f.Receipts)
@@ -89,7 +89,7 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
 
         modelBuilder.Entity<Receipt>(entity =>
         {
-            entity.HasIndex(r => new { r.FiscalYearKey, r.Key }).IsUnique();
+            entity.HasIndex(r => new { r.AccountingUnitKey, r.FiscalYearKey, r.Key }).IsUnique();
 
             entity.HasMany(r => r.Positions)
                 .WithOne(p => p.Receipt)

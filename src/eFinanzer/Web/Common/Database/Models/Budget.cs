@@ -13,7 +13,10 @@ public record Budget
     public DateTimeOffset? ApprovedAt { get; init; }
     public string? ApprovedBy { get; init; }
     
-    [MaxLength(15)]
+    [MaxLength(10)]
+    public required string AccountingUnitKey { get; init; }
+    
+    [MaxLength(10)]
     public required string FiscalYearKey { get; init; }
     public FiscalYear? FiscalYear { get; init; }
     

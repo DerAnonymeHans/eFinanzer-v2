@@ -77,6 +77,36 @@ public class DeleteFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
     }
 
     [Fact]
+    public async Task Delete_FiscalYearWithBudgets_ReturnsConflictAndKeepsFiscalYear()
+    {
+        // Arrange
+        Context.Budgets.Add(new Budget { AccountingUnitKey = "fsr", FiscalYearKey = "2026" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await MyTask.Delete("fsr", "2026", CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new FiscalYearHasBookingsError("2026", "fsr"), result.Error);
+        Assert.True(await Context.FiscalYears.AnyAsync(x => x.AccountingUnitKey == "fsr" && x.Key == "2026",
+            TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Delete_OtherUnitHasBudgetsForSameKey_DeletesFiscalYear()
+    {
+        // Arrange
+        Context.Budgets.Add(new Budget { AccountingUnitKey = "stura", FiscalYearKey = "2026" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await MyTask.Delete("fsr", "2026", CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
     public async Task Delete_OtherUnitHasReceiptsForSameKey_DeletesFiscalYear()
     {
         // Arrange

@@ -130,6 +130,11 @@ namespace eFinanzer.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccountingUnitKey")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -144,12 +149,12 @@ namespace eFinanzer.Migrations
 
                     b.Property<string>("FiscalYearKey")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FiscalYearKey");
+                    b.HasIndex("AccountingUnitKey", "FiscalYearKey");
 
                     b.ToTable("Budgets");
                 });
@@ -208,12 +213,11 @@ namespace eFinanzer.Migrations
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.FiscalYear", b =>
                 {
-                    b.Property<string>("Key")
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
-
                     b.Property<string>("AccountingUnitKey")
-                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Key")
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
@@ -226,9 +230,7 @@ namespace eFinanzer.Migrations
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
-                    b.HasKey("Key");
-
-                    b.HasIndex("AccountingUnitKey");
+                    b.HasKey("AccountingUnitKey", "Key");
 
                     b.ToTable("FiscalYears");
                 });
@@ -241,6 +243,11 @@ namespace eFinanzer.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccountingUnitKey")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -249,8 +256,8 @@ namespace eFinanzer.Migrations
 
                     b.Property<string>("FiscalYearKey")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)");
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<string>("Key")
                         .IsRequired()
@@ -273,7 +280,7 @@ namespace eFinanzer.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FiscalYearKey", "Key")
+                    b.HasIndex("AccountingUnitKey", "FiscalYearKey", "Key")
                         .IsUnique();
 
                     b.ToTable("Receipts");
@@ -351,7 +358,7 @@ namespace eFinanzer.Migrations
                 {
                     b.HasOne("eFinanzer.Common.Database.Models.FiscalYear", "FiscalYear")
                         .WithMany("Budgets")
-                        .HasForeignKey("FiscalYearKey")
+                        .HasForeignKey("AccountingUnitKey", "FiscalYearKey")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -400,11 +407,19 @@ namespace eFinanzer.Migrations
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Receipt", b =>
                 {
-                    b.HasOne("eFinanzer.Common.Database.Models.FiscalYear", "FiscalYear")
+                    b.HasOne("eFinanzer.Common.Database.Models.AccountingUnit", "AccountingUnit")
                         .WithMany("Receipts")
-                        .HasForeignKey("FiscalYearKey")
+                        .HasForeignKey("AccountingUnitKey")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("eFinanzer.Common.Database.Models.FiscalYear", "FiscalYear")
+                        .WithMany("Receipts")
+                        .HasForeignKey("AccountingUnitKey", "FiscalYearKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AccountingUnit");
 
                     b.Navigation("FiscalYear");
                 });
@@ -423,6 +438,8 @@ namespace eFinanzer.Migrations
             modelBuilder.Entity("eFinanzer.Common.Database.Models.AccountingUnit", b =>
                 {
                     b.Navigation("FiscalYears");
+
+                    b.Navigation("Receipts");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Budget", b =>
