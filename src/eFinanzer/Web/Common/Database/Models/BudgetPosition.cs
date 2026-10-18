@@ -14,4 +14,6 @@ public record BudgetPosition
     
     public int BudgetGroupId { get; init; }
     public BudgetGroup? BudgetGroup { get; init; }
+    
+    public List<Receipt>? Receipts { get; init; }
 }

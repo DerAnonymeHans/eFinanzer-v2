@@ -32,20 +32,25 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithOne(f => f.AccountingUnit)
                 .HasForeignKey(f => f.AccountingUnitKey)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(a => a.Receipts)
+                .WithOne(r => r.AccountingUnit)
+                .HasForeignKey(r => r.AccountingUnitKey)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<FiscalYear>(entity =>
         {
-            entity.HasKey(f => f.Key);
+            entity.HasKey(f => new { f.AccountingUnitKey, f.Key });
 
             entity.HasMany(f => f.Budgets)
                 .WithOne(b => b.FiscalYear)
-                .HasForeignKey(b => b.FiscalYearKey)
+                .HasForeignKey(b => new { b.AccountingUnitKey, b.FiscalYearKey })
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(f => f.Receipts)
                 .WithOne(r => r.FiscalYear)
-                .HasForeignKey(r => r.FiscalYearKey)
+                .HasForeignKey(r => new { r.AccountingUnitKey, r.FiscalYearKey })
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -80,11 +85,19 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithMany()
                 .HasForeignKey(p => p.DeficitBudgetPositionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Receipts must not be lost or silently detached by deleting the budget they were booked on
+            entity.HasMany(p => p.Receipts)
+                .WithOne(r => r.BudgetPosition)
+                .HasForeignKey(r => r.BudgetPositionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Receipt>(entity =>
         {
-            entity.HasIndex(r => new { r.FiscalYearKey, r.Key }).IsUnique();
+            entity.HasIndex(r => new { r.AccountingUnitKey, r.FiscalYearKey, r.Key }).IsUnique();
+
+            entity.ComplexProperty(r => r.Receiver, receiver => receiver.ToJson());
 
             entity.HasMany(r => r.Positions)
                 .WithOne(p => p.Receipt)

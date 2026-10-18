@@ -21,58 +21,81 @@ public static class UserClaims
     /// <param name="groupPath">Full group path, e.g. <c>/accounting-units/fsr/editor</c></param>
     public static bool IsInGroup(this ClaimsPrincipal user, string groupPath)
         => user.HasClaim(ClaimType, groupPath);
-    
-    public static AccountingUnitClaim ForAccountingUnit(this ClaimsPrincipal user, string accountingUnit)
-        => new(user, accountingUnit);
-    
-    public static AdministrationClaim ForAdministration(this ClaimsPrincipal user)
-        => new(user);
 
-    public record AccountingUnitClaim(ClaimsPrincipal User, string AccountingUnit)
-    {
-        private string GetGroupPath(AccountingUnitRole role) =>
-            KeycloakGroups.GetAccountingUnitRoleGroup(AccountingUnit, role);
-        
-        public AccountingUnitClaim MustBe(AccountingUnitRole role)
-        {
-            var groupPath = GetGroupPath(role);
-            return !User.IsInGroup(groupPath) ? throw AccessForbiddenException.MustBeInAllGroups(groupPath) : this;
-        }
-        
-        public AccountingUnitClaim MustBeAllOf(params AccountingUnitRole[] roles)
-        {
-            var groupPaths = roles.Select(GetGroupPath).ToArray();
-            return !groupPaths.All(User.IsInGroup) ? throw AccessForbiddenException.MustBeInAllGroups(groupPaths) : this;
-        }
-        
-        public AccountingUnitClaim MustBeOneOf(params AccountingUnitRole[] roles)
-        {
-            var groupPaths = roles.Select(GetGroupPath).ToArray();
-            return groupPaths.Any(User.IsInGroup) ? this : throw AccessForbiddenException.MustBeInAnyGroups(groupPaths);
-        }
-    }
-    
-    
-    public record AdministrationClaim(ClaimsPrincipal User)
-    {
-        private string GetGroupPath(AdministrationRole role) => KeycloakGroups.GetAdministrationRoleGroup(role);
+    public static ClaimBuilder CreateClaimBuilder(this ClaimsPrincipal user) => new(user);
 
-        public AdministrationClaim MustBe(AdministrationRole role)
+    /// <summary>
+    /// A class instead of a record, so copies cannot share the collected requirements
+    /// </summary>
+    public class ClaimBuilder(ClaimsPrincipal user)
+    {
+        /// <summary>
+        /// Each entry is one requirement: the user must be in at least one of its groups
+        /// </summary>
+        private readonly List<string[]> _mustHaveOneOfGroups = [];
+
+        public ClaimsPrincipal User { get; } = user;
+        public string? AccountingUnitKey { get; private set; }
+        
+        private string GetAccountingUnitGroup(AccountingUnitRole role) =>
+            KeycloakGroups.GetAccountingUnitRoleGroup(AccountingUnitKey ?? "", role);
+        
+        private string GetAdministrationGroup(AdministrationRole role) =>
+            KeycloakGroups.GetAdministrationRoleGroup(role);
+
+        public void Validate()
         {
-            var groupPath = GetGroupPath(role);
-            return !User.IsInGroup(groupPath) ? throw AccessForbiddenException.MustBeInAllGroups(groupPath) : this;
+            foreach (var mustHaveOneOfGroup in _mustHaveOneOfGroups)
+            {
+                if (!mustHaveOneOfGroup.Any(User.IsInGroup))
+                    throw new AccessForbiddenException(mustHaveOneOfGroup);
+            }
+        }
+
+        public ClaimBuilder ForAccountingUnit(string key)
+        {
+            AccountingUnitKey = key;
+            return this;
         }
         
-        public AdministrationClaim MustBeAllOf(params AdministrationRole[] roles)
+        public ClaimBuilder MustBeOneOf(AdministrationRole[] administrationRoles, AccountingUnitRole[] accountingUnitRoles)
         {
-            var groupPaths = roles.Select(GetGroupPath).ToArray();
-            return !groupPaths.All(User.IsInGroup) ? throw AccessForbiddenException.MustBeInAllGroups(groupPaths) : this;
+            _mustHaveOneOfGroups.Add([
+                .. accountingUnitRoles.Select(GetAccountingUnitGroup),
+                .. administrationRoles.Select(GetAdministrationGroup)
+            ]);
+            return this;
+        }
+
+        public ClaimBuilder MustBe(AccountingUnitRole role) => MustBeAllOf(role);
+
+        public ClaimBuilder MustBeAllOf(params AccountingUnitRole[] roles)
+        {
+            _mustHaveOneOfGroups.AddRange(roles.Select(x => new[] { GetAccountingUnitGroup(x) }));
+            return this;
+        }
+
+        public ClaimBuilder MustBeOneOf(params AccountingUnitRole[] roles)
+        {
+            _mustHaveOneOfGroups.Add(roles.Select(GetAccountingUnitGroup).ToArray());
+            return this;
         }
         
-        public AdministrationClaim MustBeOneOf(params AdministrationRole[] roles)
+        
+        public ClaimBuilder MustBe(AdministrationRole role) => MustBeAllOf(role);
+
+        public ClaimBuilder MustBeAllOf(params AdministrationRole[] roles)
         {
-            var groupPaths = roles.Select(GetGroupPath).ToArray();
-            return groupPaths.Any(User.IsInGroup) ? this : throw AccessForbiddenException.MustBeInAnyGroups(groupPaths);
+            _mustHaveOneOfGroups.AddRange(roles.Select(x => new[] { GetAdministrationGroup(x) }));
+            return this;
         }
+
+        public ClaimBuilder MustBeOneOf(params AdministrationRole[] roles)
+        {
+            _mustHaveOneOfGroups.Add(roles.Select(GetAdministrationGroup).ToArray());
+            return this;
+        }
+        
+        
     }
 }
