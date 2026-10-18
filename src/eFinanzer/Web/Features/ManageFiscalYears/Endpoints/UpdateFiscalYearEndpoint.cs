@@ -45,7 +45,7 @@ public class UpdateFiscalYearEndpoint : IEndpoint
     {
         user.CreateClaimBuilder()
             .ForAccountingUnit(accountingUnitKey)
-            .MustBeOneOf([AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator], [AccountingUnitRole.FinanceOfficer])
+            .MustBeOneOf(GroupRules.GetManageFiscalYearGroups(accountingUnitKey))
             .Validate();
 
         var command = new UpdateFiscalYearCommand

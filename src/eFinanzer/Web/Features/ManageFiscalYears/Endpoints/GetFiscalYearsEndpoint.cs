@@ -28,7 +28,7 @@ public class GetFiscalYearsEndpoint : IEndpoint
     {
         user.CreateClaimBuilder()
             .ForAccountingUnit(accountingUnitKey)
-            .MustBeOneOf([AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator], [AccountingUnitRole.FinanceOfficer])
+            .MustBeOneOf(GroupRules.GetManageFiscalYearGroups(accountingUnitKey))
             .Validate();
 
         var result = await task.GetAll(accountingUnitKey, ct);

@@ -32,7 +32,7 @@ public class CreateFiscalYearEndpoint : IEndpoint
     {
         user.CreateClaimBuilder()
             .ForAccountingUnit(command.AccountingUnitKey)
-            .MustBeOneOf([AdministrationRole.HeadFinanceOfficer, AdministrationRole.FinanceAdministrator], [AccountingUnitRole.FinanceOfficer])
+            .MustBeOneOf(GroupRules.GetManageFiscalYearGroups(command.AccountingUnitKey))
             .Validate();
 
         var result = await task.Create(command, ct);
