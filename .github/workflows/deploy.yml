@@ -20,10 +20,10 @@ on:
 
 jobs:
   # Decides whether the image actually has to be rebuilt
-  changes:
+  changes-api:
     runs-on: ubuntu-latest
     outputs:
-      app: ${{ steps.filter.outputs.app }}
+      api: ${{ steps.filter.outputs.api }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -33,12 +33,12 @@ jobs:
         uses: dorny/paths-filter@v4
         with:
           filters: |
-            app:
+            api:
               - 'src/eFinanzer/**'
 
-  build:
-    needs: changes
-    if: needs.changes.outputs.app == 'true' || inputs.force_build
+  build-api:
+    needs: changes-api
+    if: needs.changes-api.outputs.api == 'true' || inputs.force_build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -56,7 +56,7 @@ jobs:
           username: ${{ vars.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
+      - name: Build and push API Docker image
         uses: docker/build-push-action@v7
         with:
           context: ./src/eFinanzer
@@ -65,15 +65,63 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}
 
+  changes-app:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            app:
+              - 'src/eFinanzerApp/**'
+
+  build-app:
+    needs: changes-app
+    if: needs.changes-app.outputs.app == 'true' || inputs.force_build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Extract Docker image metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ vars.DOCKER_USERNAME }}/efinanzer_app
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push APP Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./src/eFinanzerApp/efinanzer-app
+          file: ./src/eFinanzerApp/efinanzer-app/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+
   deploy:
-    needs: [ changes, build ]
-    # Runs even when "build" was skipped, but not when it failed or was cancelled
+    needs: [ changes-api, build-api, changes-app, build-app ]
+    # Runs even when a build was skipped (nothing changed), but not when one failed or was cancelled
     if: |
       always()
       && github.event_name != 'pull_request'
-      && needs.changes.result == 'success'
-      && needs.build.result != 'failure'
-      && needs.build.result != 'cancelled'
+      && needs.changes-api.result == 'success'
+      && needs.changes-app.result == 'success'
+      && needs.build-api.result != 'failure'
+      && needs.build-api.result != 'cancelled'
+      && needs.build-app.result != 'failure'
+      && needs.build-app.result != 'cancelled'
     runs-on: ubuntu-latest
     environment: Production
     steps:
