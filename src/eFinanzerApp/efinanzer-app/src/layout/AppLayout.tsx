@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { Button, Drawer, Grid, Layout, Typography } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import Logo from './Logo';
-import SideNav, { budgets, fiscalYears } from './SideNav';
+import { useUserAccess } from '../stores/UserAccessStore';
+import SideNav from './SideNav';
 import './AppLayout.css';
 
 const { Header, Sider, Content } = Layout;
@@ -22,8 +23,21 @@ function AppLayout({ children }: AppLayoutProps) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState('uebersicht');
-  const [budget, setBudget] = useState(budgets[0]);
-  const [fiscalYear, setFiscalYear] = useState(fiscalYears[0]);
+  const [budgetKey, setBudgetKey] = useState<string>();
+  const [fiscalYearKey, setFiscalYearKey] = useState<string>();
+
+  // Only Haushalte and fiscal years the user has access to can be selected. Without a valid choice the first one is
+  // used, e.g. right after the user access was loaded.
+  const { userAccess } = useUserAccess();
+  const budgets = userAccess?.accountingGroups ?? [];
+  const budget = budgets.find((group) => group.key === budgetKey) ?? budgets[0];
+  const fiscalYear = budget?.fiscalYears.find((year) => year.key === fiscalYearKey) ?? budget?.fiscalYears[0];
+
+  const handleBudgetChange = (key: string) => {
+    setBudgetKey(key);
+    // Every Haushalt has its own fiscal years
+    setFiscalYearKey(undefined);
+  };
 
   const handleSelect = (key: string) => {
     setSelectedKey(key);
@@ -34,10 +48,11 @@ function AppLayout({ children }: AppLayoutProps) {
     <SideNav
       selectedKey={selectedKey}
       onSelect={handleSelect}
+      budgets={budgets}
       budget={budget}
-      onBudgetChange={setBudget}
+      onBudgetChange={handleBudgetChange}
       fiscalYear={fiscalYear}
-      onFiscalYearChange={setFiscalYear}
+      onFiscalYearChange={setFiscalYearKey}
     />
   );
 

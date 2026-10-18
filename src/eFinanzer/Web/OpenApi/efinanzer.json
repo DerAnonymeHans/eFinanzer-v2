@@ -5,6 +5,224 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/manage-fiscal-years/create-fiscal-year": {
+      "post": {
+        "tags": [
+          "ManageFiscalYears"
+        ],
+        "operationId": "CreateFiscalYear",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFiscalYearCommand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearOverlapsExistingError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-fiscal-years/delete-fiscal-year": {
+      "delete": {
+        "tags": [
+          "ManageFiscalYears"
+        ],
+        "operationId": "DeleteFiscalYear",
+        "parameters": [
+          {
+            "name": "accountingUnitKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearHasBookingsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-fiscal-years/list-fiscal-years": {
+      "get": {
+        "tags": [
+          "ManageFiscalYears"
+        ],
+        "operationId": "GetFiscalYears",
+        "parameters": [
+          {
+            "name": "accountingUnitKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetFiscalYearManagementListDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-fiscal-years/update-fiscal-year": {
+      "put": {
+        "tags": [
+          "ManageFiscalYears"
+        ],
+        "operationId": "UpdateFiscalYear",
+        "parameters": [
+          {
+            "name": "accountingUnitKey",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Request"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalYearWithBookingsShortenedError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/manage-accounting-units/create-accounting-unit": {
       "post": {
         "tags": [
@@ -286,10 +504,64 @@
           }
         }
       }
+    },
+    "/api/get-user-access/my-user-access": {
+      "get": {
+        "tags": [
+          "GetUserAccess"
+        ],
+        "operationId": "GetUserAccess",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserAccess"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccountingGroupDto": {
+        "required": [
+          "key",
+          "accountingUnitRoles",
+          "fiscalYears"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "manageFiscalYears": {
+            "type": "boolean"
+          },
+          "accountingUnitRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountingUnitRole"
+            }
+          },
+          "fiscalYears": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FiscalYearDto"
+            }
+          }
+        }
+      },
       "AccountingUnitHasFiscalYearsError": {
         "required": [
           "key"
@@ -349,6 +621,13 @@
           "FinanceOfficer",
           "Treasurer",
           "FinanceAuthorizedUser"
+        ]
+      },
+      "AdministrationRole": {
+        "enum": [
+          "HeadFinanceOfficer",
+          "FinanceAdministrator",
+          "FinanceReviewer"
         ]
       },
       "ChangeUserRoleError": {
@@ -442,6 +721,37 @@
           }
         }
       },
+      "CreateFiscalYearCommand": {
+        "required": [
+          "key",
+          "accountingUnitKey",
+          "startDate",
+          "endDate"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
       "DeleteAccountingUnitGroupError": {
         "required": [
           "key",
@@ -473,6 +783,150 @@
       "Error": {
         "type": "object",
         "properties": {
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "FiscalYearDto": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "FiscalYearHasBookingsError": {
+        "required": [
+          "key",
+          "accountingUnitKey"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "FiscalYearOverlapsExistingError": {
+        "required": [
+          "key",
+          "accountingUnitKey",
+          "startDate",
+          "endDate",
+          "overlappingKey",
+          "overlappingStartDate",
+          "overlappingEndDate"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "overlappingKey": {
+            "type": "string"
+          },
+          "overlappingStartDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "overlappingEndDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "FiscalYearWithBookingsShortenedError": {
+        "required": [
+          "key",
+          "accountingUnitKey",
+          "startDate",
+          "endDate"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
           "message": {
             "type": "string"
           },
@@ -541,6 +995,55 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "GetFiscalYearManagementListDto": {
+        "required": [
+          "key",
+          "accountingUnitKey",
+          "startDate",
+          "endDate",
+          "receiptsCount",
+          "budgetsCount"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "receiptsCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "budgetsCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -732,8 +1235,8 @@
       "Request": {
         "required": [
           "name",
-          "description",
-          "usersWithRoles"
+          "startDate",
+          "endDate"
         ],
         "type": "object",
         "properties": {
@@ -743,17 +1246,13 @@
               "string"
             ]
           },
-          "description": {
-            "type": [
-              "null",
-              "string"
-            ]
+          "startDate": {
+            "type": "string",
+            "format": "date"
           },
-          "usersWithRoles": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserRoles"
-            }
+          "endDate": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -784,25 +1283,31 @@
           }
         }
       },
-      "UserDto": {
+      "UserAccess": {
         "required": [
-          "userName",
-          "roles"
+          "accountingGroups",
+          "administrationRoles"
         ],
         "type": "object",
         "properties": {
-          "userName": {
-            "type": "string"
-          },
-          "roles": {
+          "accountingGroups": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AccountingUnitRole"
+              "$ref": "#/components/schemas/AccountingGroupDto"
+            }
+          },
+          "manageAccountingUnits": {
+            "type": "boolean"
+          },
+          "administrationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdministrationRole"
             }
           }
         }
       },
-      "UserRoles": {
+      "UserDto": {
         "required": [
           "userName",
           "roles"
@@ -845,10 +1350,16 @@
   ],
   "tags": [
     {
+      "name": "ManageFiscalYears"
+    },
+    {
       "name": "ManageAccountingUnits"
     },
     {
       "name": "GetUsers"
+    },
+    {
+      "name": "GetUserAccess"
     }
   ]
 }

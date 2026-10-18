@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using eFinanzer;
 using eFinanzer.Common.Auth;
+using eFinanzer.Common.Cors;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
@@ -17,6 +18,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddMemoryCache();
 builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
 builder.Services.AddAuth(builder.Configuration, builder.Environment);
+builder.Services.AddFrontendCors(builder.Configuration);
 builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
@@ -37,6 +39,9 @@ app.UseRequestLogging();
 app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
+
+// Before authentication, so preflight requests (which never carry a token) are answered instead of rejected
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

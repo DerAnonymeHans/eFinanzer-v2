@@ -9,6 +9,7 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^6.6.6",
+    "keycloak-js": "^26.2.4",
     "openapi-fetch": "^0.17.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -44,10 +45,11 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@rc-component/(pagination|picker)/(locale|generate)/(.*)$": "<rootDir>/node_modules/@rc-component/$1/lib/$2/$3"
+      "^@rc-component/(pagination|picker)/(locale|generate)/(.*)$": "<rootDir>/node_modules/@rc-component/$1/lib/$2/$3",
+      "^keycloak-js$": "<rootDir>/node_modules/keycloak-js/lib/keycloak.js"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(antd|@ant-design|@rc-component|openapi-fetch)/)"
+      "node_modules/(?!(antd|@ant-design|@rc-component|openapi-fetch|keycloak-js)/)"
     ]
   },
   "devDependencies": {
