@@ -1,0 +1,25 @@
+{
+  "short_name": "eFinanzer",
+  "name": "eFinanzer – Finanzverwaltung der Studierendenschaft",
+  "icons": [
+    {
+      "src": "money-with-wings.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#17191C",
+  "background_color": "#F4F3EE"
+}

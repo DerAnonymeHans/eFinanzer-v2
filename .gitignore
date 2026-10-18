@@ -7,3 +7,4 @@
 /src/eFinanzer/Web.Tests/bin
 **/.idea
 /src/eFinanzer/eFinanzer.sln.DotSettings.user
+/src/eFinanzerApp/node_modules
