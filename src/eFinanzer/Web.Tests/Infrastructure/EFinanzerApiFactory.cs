@@ -1,4 +1,5 @@
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
+using eFinanzer.Common.Integrations.Keycloak.Constants;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -34,10 +35,16 @@ public class EFinanzerApiFactory(DatabaseFixture database) : WebApplicationFacto
     /// <summary>
     /// Client authenticated as a user in the given groups
     /// </summary>
-    public HttpClient CreateClientInGroups(params string[] groupPaths)
+    public HttpClient CreateAuthorizedClient(params string[] groupPaths)
     {
+        if (groupPaths.Length == 0)
+        {
+            // Any group is enough for a default authorized client
+            groupPaths = [KeycloakGroups.AccountingUnitsGroup];
+        }
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.GroupsHeader, string.Join(',', groupPaths));
         return client;
     }
+
 }

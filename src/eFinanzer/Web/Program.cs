@@ -4,6 +4,7 @@ using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
+using eFinanzer.Features.GetUsers;
 using eFinanzer.Features.ManageAccountingUnits;
 using Microsoft.AspNetCore.HttpLogging;
 using OpenTelemetry.Exporter;
@@ -34,11 +35,13 @@ builder.Logging.AddOpenTelemetry(options =>
 });
 
 builder.Services.AddProblemDetails();
+builder.Services.AddMemoryCache();
 builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
 builder.Services.AddAuth(builder.Configuration, builder.Environment);
 builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
+builder.Services.AddGetUsers();
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.ConfigureHttpJsonOptions(options =>
     // Enums are only accepted by name, so a number cannot smuggle in an undefined value
@@ -102,29 +105,4 @@ app.MapScalarApiReference((options, httpContext) =>
 
 app.MapEndpoints();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        logger.LogInformation("Created {count} forecast", forecast.Length);
-        return forecast;
-    })
-    .WithName("GetWeatherForecast");
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

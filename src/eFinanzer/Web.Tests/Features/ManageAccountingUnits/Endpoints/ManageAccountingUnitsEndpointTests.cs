@@ -71,7 +71,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     public async Task Endpoint_UserWithoutManagingRole_ReturnsForbidden(string method, string url)
     {
         // Arrange
-        var client = _factory.CreateClientInGroups(
+        var client = _factory.CreateAuthorizedClient(
             KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceReviewer),
             KeycloakGroups.GetAccountingUnitRoleGroup("fsr", AccountingUnitRole.FinanceOfficer));
 
@@ -89,7 +89,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     {
         // Arrange
         _factory.KeycloakUserClient.SetupGroupCreation();
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(role));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
         var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr" },
@@ -104,7 +104,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     public async Task Create_InvalidKey_ReturnsBadRequest()
     {
         // Arrange
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
         var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr inf" },
@@ -120,7 +120,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
         var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr" },
@@ -137,7 +137,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "FSR" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
         _factory.KeycloakUserClient.SetupRoleMembers("fsr", (AccountingUnitRole.Treasurer, ["alice"]));
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer));
 
         // Act
         var response = await client.GetAsync($"{BaseUrl}/get-accounting-unit?key=fsr", TestContext.Current.CancellationToken);
@@ -157,7 +157,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     public async Task Delete_UnknownKey_ReturnsNotFound()
     {
         // Arrange
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
         var response = await client.DeleteAsync($"{BaseUrl}/delete-accounting-unit?key=unknown", TestContext.Current.CancellationToken);
@@ -174,7 +174,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var client = _factory.CreateClientInGroups(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
         var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
