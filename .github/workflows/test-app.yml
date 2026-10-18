@@ -1,0 +1,43 @@
+name: build and test app
+
+on:
+  pull_request:
+    branches: [ staging ]
+    paths:
+      - 'src/eFinanzerApp/**'
+      - '.github/workflows/test-app.yml'
+
+env:
+  NODE_VERSION: '26.12.0' # Same as in src/eFinanzerApp/efinanzer-app/Dockerfile
+
+jobs:
+  build-and-test-app:
+
+    name: build-and-test-app
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./src/eFinanzerApp/efinanzer-app
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ./src/eFinanzerApp/efinanzer-app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test -- --run
+
+      # Includes the type check (tsc --noEmit)
+      - name: Build
+        run: npm run build

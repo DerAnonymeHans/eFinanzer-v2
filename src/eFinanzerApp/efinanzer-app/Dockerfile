@@ -15,7 +15,8 @@ COPY package.json package-lock.json ./
 # Install project dependencies using npm ci (ensures a clean, reproducible install)
 RUN --mount=type=cache,target=/root/.npm npm ci
 
-# Copy the rest of the application source code into the container
+# Copy the rest of the application source code into the container.
+# .env and .env.production are included, Vite builds their VITE_ values into the bundle (see .dockerignore)
 COPY . .
 
 # Build the React.js application (outputs to /app/dist)
@@ -23,42 +24,13 @@ RUN npm run build
 
 
 # =========================================
-# Stage 2: Serve static files with Node.js + `serve`
+# Stage 2: Serve the static files with nginx
 # =========================================
-FROM node:${NODE_VERSION} AS runner
+# Runs nginx as a non-root user, so it cannot bind port 80 and listens on 3000 instead (see nginx.conf)
+FROM nginxinc/nginx-unprivileged:alpine AS runner
 
-# Set the environment to production for smaller + optimized installs
-ENV NODE_ENV=production
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --link --from=builder /app/dist /usr/share/nginx/html
 
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy only the production build output from the builder stage
-COPY --link --from=builder /app/dist ./dist
-
-# Install only the `serve` package (no global install, pinned version)
-RUN --mount=type=cache,target=/root/.npm npm install serve@^14.2.6 --omit=dev
-
-# Run the container as a non-root user for security best practices
-USER node
-
-# Expose port 3000 (the same port configured in "serve -l 3000")
+# The reverse proxy forwards to efinanzer_app:3000 (see src/deploy/nginx.conf)
 EXPOSE 3000
-
-# Run `serve` directly to serve the built app
-CMD ["npx", "serve", "-s", "dist", "-l", "3000"]
-
-
-# Build Stage
-FROM node:26-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# Production Stage
-FROM nginx:stable-alpine AS production
-COPY --from=build /app/build /usr/share/nginx/html
-EXPOSE 3000
-CMD ["nginx", "-g", "daemon off;"]

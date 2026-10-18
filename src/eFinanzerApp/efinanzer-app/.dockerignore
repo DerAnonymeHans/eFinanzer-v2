@@ -24,8 +24,10 @@ reports/
 # =========================================
 # Environment and config files (sensitive)
 # =========================================
-*.env*
-!.env.production  # Allow production env file if needed
+# Only the shared build configuration (.env, .env.production) goes into the image. Local and development
+# overrides stay out, the VITE_ values of the included files are built into the bundle.
+.env.*
+!.env.production
 *.log
 
 # =========================================
