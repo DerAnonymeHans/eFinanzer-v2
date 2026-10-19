@@ -68,8 +68,8 @@ public class GetUserAccessTask(
         {
             ManageAccountingUnits = manageAccountingUnits,
             AdministrationRoles = administrationRoles,
-            AccountingGroups = accountingUnits
-                .Select(x => new UserAccess.AccountingGroupDto
+            AccountingUnits = accountingUnits
+                .Select(x => new UserAccess.AccountingUnitDto
                 {
                     Key = x.Key,
                     Name = x.Name,

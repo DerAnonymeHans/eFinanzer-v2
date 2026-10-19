@@ -70,7 +70,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
 
         // Assert
         Assert.NotNull(access);
-        Assert.Empty(access.AccountingGroups);
+        Assert.Empty(access.AccountingUnits);
         Assert.Empty(access.AdministrationRoles);
         Assert.False(access.ManageAccountingUnits);
     }
@@ -90,7 +90,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.NotNull(access);
         Assert.False(access.ManageAccountingUnits);
         Assert.Equal([AdministrationRole.FinanceReviewer], access.AdministrationRoles);
-        var fsr = Assert.Single(access.AccountingGroups);
+        var fsr = Assert.Single(access.AccountingUnits);
         Assert.Equal("fsr", fsr.Key);
         Assert.Equal("FSR", fsr.Name);
         Assert.True(fsr.ManageFiscalYears);
