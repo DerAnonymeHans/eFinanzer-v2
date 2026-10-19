@@ -200,7 +200,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        AccountingGroupDto: {
+        AccountingUnitDto: {
             key: string;
             name?: null | string;
             manageFiscalYears?: boolean;
@@ -371,7 +371,7 @@ export interface components {
             endDate: string;
         };
         UserAccess: {
-            accountingGroups: components["schemas"]["AccountingGroupDto"][];
+            accountingUnits: components["schemas"]["AccountingUnitDto"][];
             manageAccountingUnits?: boolean;
             administrationRoles: components["schemas"]["AdministrationRole"][];
         };

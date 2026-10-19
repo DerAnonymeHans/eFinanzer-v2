@@ -4,7 +4,7 @@ import { getRoleNames } from './roles';
 test('lists administration roles first, then the roles per accounting unit', () => {
   const userAccess: UserAccess = {
     administrationRoles: ['FinanceReviewer', 'HeadFinanceOfficer'],
-    accountingGroups: [
+    accountingUnits: [
       { key: 'fsr-dit', name: 'FSR DIT', accountingUnitRoles: ['Treasurer', 'FinanceOfficer'], fiscalYears: [] },
       { key: 'fsr-im', name: null, accountingUnitRoles: ['FinanceAuthorizedUser'], fiscalYears: [] },
     ],
@@ -20,5 +20,5 @@ test('lists administration roles first, then the roles per accounting unit', () 
 });
 
 test('returns no names without roles', () => {
-  expect(getRoleNames({ administrationRoles: [], accountingGroups: [] })).toEqual([]);
+  expect(getRoleNames({ administrationRoles: [], accountingUnits: [] })).toEqual([]);
 });
