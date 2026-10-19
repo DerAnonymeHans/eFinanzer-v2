@@ -16,7 +16,8 @@ public static class DatabaseServiceCollectionExtensions
                 // Registers the enums with the Npgsql data source and creates them as postgres enum types
                 .MapEnum<PaymentType>("payment_type")
                 .MapEnum<ReceiptPositionState>("receipt_position_state")
-                .MapEnum<Receipt.Type>("receipt_type"))
+                .MapEnum<Receipt.Type>("receipt_type")
+                .MapEnum<RoleChangeRequest.ResolutionStatus>("role_change_request_resolution"))
             // Changes are written with ExecuteUpdate/ExecuteDelete or Add, queries that need tracking opt in via AsTracking()
             .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 

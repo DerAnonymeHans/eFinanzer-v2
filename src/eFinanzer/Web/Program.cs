@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 using eFinanzer;
 using eFinanzer.Common.Auth;
-using eFinanzer.Common.Cors;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
@@ -9,6 +8,7 @@ using eFinanzer.Features.GetUserAccess;
 using eFinanzer.Features.GetUsers;
 using eFinanzer.Features.ManageAccountingUnits;
 using eFinanzer.Features.ManageFiscalYears;
+using eFinanzer.Features.ManageRoleChangeRequests;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +23,7 @@ builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
 builder.Services.AddManageFiscalYears();
+builder.Services.AddManageRoleChangeRequests();
 builder.Services.AddGetUsers();
 builder.Services.AddGetUserAccess();
 builder.Services.AddEndpoints(typeof(Program).Assembly);

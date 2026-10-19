@@ -19,6 +19,7 @@ public class TestAuthHandler(
 {
     public const string SchemeName = "Test";
     public const string GroupsHeader = "X-Test-Groups";
+    public const string Username = "test-user";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -28,7 +29,8 @@ public class TestAuthHandler(
         var claims = groupsHeader.ToString()
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(group => new Claim(UserClaims.GroupClaimType, group))
-            .Append(new Claim("sub", "test-user"));
+            .Append(new Claim("sub", "test-user"))
+            .Append(new Claim(UserClaims.UsernameClaimType, Username));
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, SchemeName));
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, SchemeName)));
