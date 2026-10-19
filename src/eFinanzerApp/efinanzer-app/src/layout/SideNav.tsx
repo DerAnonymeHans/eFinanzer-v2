@@ -1,7 +1,7 @@
 import { Button, ConfigProvider, Divider, Menu, Select, Typography, theme } from 'antd';
 import type { MenuProps } from 'antd';
 import { EditOutlined, LogoutOutlined } from '@ant-design/icons';
-import type { AccountingGroup, FiscalYear } from '../api/types';
+import type { AccountingUnit, FiscalYear } from '../api/types';
 import { useAuth } from '../auth/useAuth';
 import { getRoleNames } from '../constants/roles';
 import { useUserAccess } from '../stores/useUserAccess';
@@ -38,34 +38,33 @@ const navTheme = {
 
 interface SideNavProps {
   /** Undefined while a page outside of the menu is shown */
-  selectedKey: string | undefined;
-  onSelect: (key: string) => void;
-  /** Haushalte the user has access to */
-  budgets: AccountingGroup[];
-  budget: AccountingGroup | undefined;
-  onBudgetChange: (key: string) => void;
+  selectedPageKey: string | undefined;
+  onPageKeySelect: (key: string) => void;
+  accountingUnits: AccountingUnit[];
+  accountingUnit: AccountingUnit | undefined;
+  onAccountingUnitChange: (key: string) => void;
   fiscalYear: FiscalYear | undefined;
   onFiscalYearChange: (key: string) => void;
-  onEditBudget?: () => void;
+  onEditAccountingUnit?: () => void;
   onEditFiscalYear?: () => void;
 }
 
 // Content of the side navigation, shared by the desktop sider and the mobile drawer.
 function SideNav({
-  selectedKey,
-  onSelect,
-  budgets,
-  budget,
-  onBudgetChange,
+  selectedPageKey,
+  onPageKeySelect,
+  accountingUnits,
+  accountingUnit,
+  onAccountingUnitChange,
   fiscalYear,
   onFiscalYearChange,
-  onEditBudget,
+  onEditAccountingUnit,
   onEditFiscalYear,
 }: SideNavProps) {
   const { displayName, logout } = useAuth();
   const { userAccess, loading } = useUserAccess();
-  const canEditBudgets = userAccess?.manageAccountingUnits ?? false;
-  const canEditFiscalYears = budget?.manageFiscalYears ?? false;
+  const canEditAccountingUnits = userAccess?.manageAccountingUnits ?? false;
+  const canEditFiscalYears = accountingUnit?.manageFiscalYears ?? false;
   const roleNames = userAccess ? getRoleNames(userAccess).slice(0, MAX_SHOWN_ROLES) : [];
 
   return (
@@ -84,29 +83,29 @@ function SideNav({
         <div className="side-nav__context">
           <div className="side-nav__field">
             <div className="side-nav__label-row">
-              <label htmlFor="side-nav-budget" className="side-nav__label">
+              <label htmlFor="side-nav-accounting-unit" className="side-nav__label">
                 Haushalt
               </label>
-              {canEditBudgets && (
+              {canEditAccountingUnits && (
                 <Button
                   type="text"
                   size="small"
                   className="side-nav__edit"
                   icon={<EditOutlined />}
                   aria-label="Haushalt bearbeiten"
-                  onClick={onEditBudget}
+                  onClick={onEditAccountingUnit}
                 />
               )}
             </div>
             <Select
-              id="side-nav-budget"
+              id="side-nav-accounting-unit"
               className="side-nav__select"
-              value={budget?.key}
-              onChange={onBudgetChange}
+              value={accountingUnit?.key}
+              onChange={onAccountingUnitChange}
               loading={loading}
-              disabled={budgets.length === 0}
+              disabled={accountingUnits.length === 0}
               placeholder={loading ? 'Wird geladen…' : 'Kein Haushalt verfügbar'}
-              options={budgets.map((group) => ({ value: group.key, label: group.name ?? group.key }))}
+              options={accountingUnits.map((unit) => ({ value: unit.key, label: unit.name ?? unit.key }))}
             />
           </div>
           <div className="side-nav__field">
@@ -131,9 +130,9 @@ function SideNav({
               value={fiscalYear?.key}
               onChange={onFiscalYearChange}
               loading={loading}
-              disabled={!budget || budget.fiscalYears.length === 0}
+              disabled={!accountingUnit || accountingUnit.fiscalYears.length === 0}
               placeholder={loading ? 'Wird geladen…' : 'Kein Haushaltsjahr verfügbar'}
-              options={budget?.fiscalYears.map((year) => ({ value: year.key, label: year.name ?? year.key }))}
+              options={accountingUnit?.fiscalYears.map((year) => ({ value: year.key, label: year.name ?? year.key }))}
             />
           </div>
         </div>
@@ -146,8 +145,8 @@ function SideNav({
           mode="inline"
           inlineIndent={12}
           items={navItems}
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          onClick={({ key }) => onSelect(key)}
+          selectedKeys={selectedPageKey ? [selectedPageKey] : []}
+          onClick={({ key }) => onPageKeySelect(key)}
         />
 
         <div className="side-nav__user">

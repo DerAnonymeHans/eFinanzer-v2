@@ -47,7 +47,7 @@ test('shows at most two roles, administration roles first', async () => {
   (apiClient.GET as Mock).mockResolvedValue({
     data: {
       administrationRoles: ['FinanceReviewer'],
-      accountingGroups: [
+      accountingUnits: [
         { key: 'fsr-dit', name: 'FSR DIT', accountingUnitRoles: ['Treasurer'], fiscalYears: [] },
         { key: 'fsr-im', name: 'FSR IM', accountingUnitRoles: ['FinanceOfficer'], fiscalYears: [] },
       ],
@@ -68,7 +68,7 @@ test('offers only the accessible Haushalte and fiscal years, edit buttons only w
     data: {
       manageAccountingUnits: false,
       administrationRoles: [],
-      accountingGroups: [
+      accountingUnits: [
         {
           key: 'fsr-dit',
           name: 'FSR DIT',

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button, Drawer, Grid, Layout, Typography } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useMatch, useNavigate } from 'react-router';
 import Logo from './Logo';
 import { useUserAccess } from '../stores/useUserAccess';
 import SideNav from './SideNav';
@@ -23,47 +23,64 @@ function AppLayout({ children }: AppLayoutProps) {
   const isMobile = screens.md === false;
 
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedKey, setSelectedKey] = useState('uebersicht');
+  const [selectedPageKey, setSelectedPageKey] = useState('uebersicht');
   const navigate = useNavigate();
   // The menu entries are not routed yet, so they only count as selected outside of the routed pages
   const onRoutedPage = useLocation().pathname !== '/';
-  const [budgetKey, setBudgetKey] = useState<string>();
+  // The fiscal year page belongs to one Haushalt, which is then also the one selected in the navigation
+  const fiscalYearsPage = useMatch('/haushaltsjahre-verwalten/:accountingUnitKey');
+  const [accountingUnitKey, setAccountingUnitKey] = useState<string>();
   const [fiscalYearKey, setFiscalYearKey] = useState<string>();
 
   // Only Haushalte and fiscal years the user has access to can be selected. Without a valid choice the first one is
   // used, e.g. right after the user access was loaded.
   const { userAccess } = useUserAccess();
-  const budgets = userAccess?.accountingGroups ?? [];
-  const budget = budgets.find((group) => group.key === budgetKey) ?? budgets[0];
-  const fiscalYear = budget?.fiscalYears.find((year) => year.key === fiscalYearKey) ?? budget?.fiscalYears[0];
+  const accountingUnits = userAccess?.accountingUnits ?? [];
+  const selectedAccountingUnitKey = fiscalYearsPage?.params.accountingUnitKey ?? accountingUnitKey;
+  const accountingUnit = accountingUnits.find((unit) => unit.key === selectedAccountingUnitKey) ?? accountingUnits[0];
+  const fiscalYear = accountingUnit?.fiscalYears.find((year) => year.key === fiscalYearKey) ?? accountingUnit?.fiscalYears[0];
 
-  const handleBudgetChange = (key: string) => {
-    setBudgetKey(key);
+  const handleAccountingUnitChange = (key: string) => {
+    setAccountingUnitKey(key);
     // Every Haushalt has its own fiscal years
     setFiscalYearKey(undefined);
+    // Switches to the fiscal years of the new Haushalt, if the user may manage them
+    if (fiscalYearsPage) {
+      const canManage = accountingUnits.find((unit) => unit.key === key)?.manageFiscalYears ?? false;
+      navigate(canManage ? `/haushaltsjahre-verwalten/${encodeURIComponent(key)}` : '/');
+    }
   };
 
-  const handleSelect = (key: string) => {
-    setSelectedKey(key);
+  const handlePageKeySelect = (key: string) => {
+    setSelectedPageKey(key);
     setDrawerOpen(false);
     navigate('/');
   };
 
-  const handleEditBudget = () => {
+  const handleEditAccountingUnit = () => {
     setDrawerOpen(false);
     navigate('/haushalte-verwalten');
   };
 
+  const handleEditFiscalYear = () => {
+    if (!accountingUnit) return;
+    // Keeps the Haushalt selected after leaving the page
+    setAccountingUnitKey(accountingUnit.key);
+    setDrawerOpen(false);
+    navigate(`/haushaltsjahre-verwalten/${encodeURIComponent(accountingUnit.key)}`);
+  };
+
   const nav = (
     <SideNav
-      selectedKey={onRoutedPage ? undefined : selectedKey}
-      onSelect={handleSelect}
-      budgets={budgets}
-      budget={budget}
-      onBudgetChange={handleBudgetChange}
+      selectedPageKey={onRoutedPage ? undefined : selectedPageKey}
+      onPageKeySelect={handlePageKeySelect}
+      accountingUnits={accountingUnits}
+      accountingUnit={accountingUnit}
+      onAccountingUnitChange={handleAccountingUnitChange}
       fiscalYear={fiscalYear}
       onFiscalYearChange={setFiscalYearKey}
-      onEditBudget={handleEditBudget}
+      onEditAccountingUnit={handleEditAccountingUnit}
+      onEditFiscalYear={handleEditFiscalYear}
     />
   );
 

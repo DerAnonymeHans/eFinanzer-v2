@@ -1,0 +1,42 @@
+.manage-fiscal-years {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1100px;
+}
+
+.manage-fiscal-years__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-fiscal-years__title.ant-typography {
+  margin: 0;
+}
+
+.manage-fiscal-years__subtitle.ant-typography {
+  display: block;
+  margin-top: 4px;
+}
+
+.manage-fiscal-years__spinner {
+  display: block;
+  margin: 48px auto;
+}
+
+.manage-fiscal-years__period {
+  white-space: nowrap;
+}
+
+/* Names the action column for screen readers without showing a header */
+.manage-fiscal-years__visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

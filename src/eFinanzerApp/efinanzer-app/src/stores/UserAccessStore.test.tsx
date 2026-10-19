@@ -10,7 +10,7 @@ vi.mock('../api/client', () => ({ default: { GET: vi.fn() } }));
 const get = apiClient.GET as Mock;
 
 const userAccess: UserAccess = {
-  accountingGroups: [
+  accountingUnits: [
     {
       key: 'fsr-dit',
       name: 'FSR DIT',
@@ -27,7 +27,7 @@ function Consumer() {
     <>
       <span>{loading ? 'loading' : 'idle'}</span>
       <span>{error?.message ?? 'no error'}</span>
-      <span>{userAccess?.accountingGroups.map((group) => group.name).join(', ') ?? 'no access'}</span>
+      <span>{userAccess?.accountingUnits.map((unit) => unit.name).join(', ') ?? 'no access'}</span>
       <button onClick={() => reload()}>reload</button>
     </>
   );

@@ -571,7 +571,7 @@
   },
   "components": {
     "schemas": {
-      "AccountingGroupDto": {
+      "AccountingUnitDto": {
         "required": [
           "key",
           "accountingUnitRoles",
@@ -1356,15 +1356,15 @@
       },
       "UserAccess": {
         "required": [
-          "accountingGroups",
+          "accountingUnits",
           "administrationRoles"
         ],
         "type": "object",
         "properties": {
-          "accountingGroups": {
+          "accountingUnits": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AccountingGroupDto"
+              "$ref": "#/components/schemas/AccountingUnitDto"
             }
           },
           "manageAccountingUnits": {

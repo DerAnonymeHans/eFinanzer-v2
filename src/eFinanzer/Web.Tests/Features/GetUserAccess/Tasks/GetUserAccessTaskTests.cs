@@ -41,7 +41,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value.AccountingGroups);
+        Assert.Empty(result.Value.AccountingUnits);
         Assert.Empty(result.Value.AdministrationRoles);
         Assert.False(result.Value.ManageAccountingUnits);
     }
@@ -62,7 +62,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.ManageAccountingUnits);
         Assert.Empty(result.Value.AdministrationRoles);
-        Assert.Collection(result.Value.AccountingGroups,
+        Assert.Collection(result.Value.AccountingUnits,
             fsr =>
             {
                 Assert.Equal("fsr", fsr.Key);
@@ -89,7 +89,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value.AccountingGroups);
+        Assert.Empty(result.Value.AccountingUnits);
     }
 
     [Theory]
@@ -105,7 +105,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value.AccountingGroups);
+        Assert.Empty(result.Value.AccountingUnits);
     }
 
     [Theory]
@@ -125,9 +125,9 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.True(result.IsSuccess);
         Assert.True(result.Value.ManageAccountingUnits);
         Assert.Equal([role], result.Value.AdministrationRoles);
-        Assert.Equal(["fsr", "stura", "zuse"], result.Value.AccountingGroups.Select(x => x.Key));
-        Assert.Empty(result.Value.AccountingGroups.Single(x => x.Key == "fsr").AccountingUnitRoles);
-        Assert.Equal([AccountingUnitRole.Treasurer], result.Value.AccountingGroups.Single(x => x.Key == "stura").AccountingUnitRoles);
+        Assert.Equal(["fsr", "stura", "zuse"], result.Value.AccountingUnits.Select(x => x.Key));
+        Assert.Empty(result.Value.AccountingUnits.Single(x => x.Key == "fsr").AccountingUnitRoles);
+        Assert.Equal([AccountingUnitRole.Treasurer], result.Value.AccountingUnits.Single(x => x.Key == "stura").AccountingUnitRoles);
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
 
         // Assert
         Assert.True(result.IsSuccess);
-        Assert.All(result.Value.AccountingGroups, x => Assert.True(x.ManageFiscalYears));
+        Assert.All(result.Value.AccountingUnits, x => Assert.True(x.ManageFiscalYears));
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.ManageAccountingUnits);
         Assert.Equal([AdministrationRole.FinanceReviewer], result.Value.AdministrationRoles);
-        Assert.Empty(result.Value.AccountingGroups);
+        Assert.Empty(result.Value.AccountingUnits);
     }
 
     [Fact]
@@ -179,7 +179,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
 
         // Assert
         Assert.True(result.IsSuccess);
-        var fsr = Assert.Single(result.Value.AccountingGroups);
+        var fsr = Assert.Single(result.Value.AccountingUnits);
         Assert.Equal(["c", "b", "a"], fsr.FiscalYears.Select(x => x.Key));
         Assert.Equal("HJ 2026", fsr.FiscalYears[1].Name);
     }

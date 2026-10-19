@@ -21,7 +21,7 @@ const users: Record<string, { username: string; firstName: string; lastName: str
   eexample: { username: 'eexample', firstName: 'Erika', lastName: 'Example' },
   nneu: { username: 'nneu', firstName: 'Nina', lastName: 'Neu' },
 };
-const managerAccess: UserAccess = { accountingGroups: [], administrationRoles: [], manageAccountingUnits: true };
+const managerAccess: UserAccess = { accountingUnits: [], administrationRoles: [], manageAccountingUnits: true };
 
 function ok<T>(data?: T, status = 200) {
   return { data, response: { ok: true, status } };

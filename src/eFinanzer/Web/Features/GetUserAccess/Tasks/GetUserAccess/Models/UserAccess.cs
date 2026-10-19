@@ -4,18 +4,18 @@ namespace eFinanzer.Features.GetUserAccess.Tasks.GetUserAccess.Models;
 
 public record UserAccess
 {
-    public required List<AccountingGroupDto> AccountingGroups { get; init; }
+    public required List<AccountingUnitDto> AccountingUnits { get; init; }
     public bool ManageAccountingUnits { get; init; }
     public required AdministrationRole[] AdministrationRoles { get; init; }
 
     public static UserAccess NoAccess() => new()
     {
-        AccountingGroups = [],
+        AccountingUnits = [],
         ManageAccountingUnits = false,
         AdministrationRoles = []
     };
 
-    public record AccountingGroupDto
+    public record AccountingUnitDto
     {
         public required string Key { get; init; }
         public string? Name { get; init; }

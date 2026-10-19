@@ -30,10 +30,10 @@ export function getRoleNames(userAccess: UserAccess): string[] {
     .sort(byDisplayOrder(administrationRoleNames))
     .map((role) => administrationRoleNames[role]);
 
-  const accountingUnits = userAccess.accountingGroups.flatMap((group) =>
-    [...group.accountingUnitRoles]
+  const accountingUnits = userAccess.accountingUnits.flatMap((unit) =>
+    [...unit.accountingUnitRoles]
       .sort(byDisplayOrder(accountingUnitRoleNames))
-      .map((role) => formatAccountingUnitRole(group.name ?? group.key, role)),
+      .map((role) => formatAccountingUnitRole(unit.name ?? unit.key, role)),
   );
 
   return [...administration, ...accountingUnits];
