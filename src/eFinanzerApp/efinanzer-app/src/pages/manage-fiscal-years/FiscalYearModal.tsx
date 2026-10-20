@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { App, DatePicker, Form, Input, Modal } from 'antd';
 import dayjs from 'dayjs';
-import apiClient from '../../api/client';
-import type { FiscalYearListItem } from '../../api/types';
-import type { components } from '../../api/schema';
+import apiClient from '../../common/api/client';
+import type { FiscalYearListItem } from '../../common/api/types';
+import type { components } from '../../common/api/schema';
 import { emptyToNull } from '../manage-accounting-units/accountingUnitValidation';
 import {
   KEY_MAX_LENGTH,

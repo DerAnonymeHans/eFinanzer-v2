@@ -4,15 +4,18 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/de';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import theme from './theme';
-import AppLayout from './layout/AppLayout';
-import { AuthProvider } from './auth/AuthProvider';
-import { UserAccessProvider } from './stores/UserAccessStore';
-import { UserStoreProvider } from './stores/UserStore';
+import AppLayout from './common/layout/AppLayout';
+import { AuthProvider } from './common/auth/AuthProvider';
+import { UserAccessProvider } from './common/stores/UserAccessStore';
+import { UserStoreProvider } from './common/stores/UserStore';
 import RequireManageAccountingUnits from './pages/manage-accounting-units/RequireManageAccountingUnits';
 import ManageAccountingUnitsPage from './pages/manage-accounting-units/ManageAccountingUnitsPage';
 import AccountingUnitPage from './pages/manage-accounting-units/AccountingUnitPage';
 import RequireManageFiscalYears from './pages/manage-fiscal-years/RequireManageFiscalYears';
 import ManageFiscalYearsPage from './pages/manage-fiscal-years/ManageFiscalYearsPage';
+import ProfilePage from "./pages/profile-page/ProfilePage";
+import RequireResolveRoleChangeRequests from './pages/administration/RequireResolveRoleChangeRequests';
+import AdministrationPage from './pages/administration/AdministrationPage';
 
 // The date pickers start the week on Monday and show German month names, like the antd texts of deDE
 dayjs.locale('de');
@@ -35,6 +38,12 @@ function App() {
                     </Route>
                     <Route path="haushaltsjahre-verwalten/:accountingUnitKey" element={<RequireManageFiscalYears />}>
                       <Route index element={<ManageFiscalYearsPage />} />
+                    </Route>
+                    <Route path="administration" element={<RequireResolveRoleChangeRequests />}>
+                      <Route index element={<AdministrationPage />} />
+                    </Route>
+                    <Route path="profil">
+                      <Route index element={<ProfilePage />} />
                     </Route>
                     {/* The other pages do not exist yet */}
                     <Route path="*" element={null} />

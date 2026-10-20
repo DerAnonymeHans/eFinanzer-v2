@@ -1,6 +1,6 @@
 import { Result, Spin } from 'antd';
 import { Outlet } from 'react-router';
-import { useUserAccess } from '../../stores/useUserAccess';
+import { useUserAccess } from '../../common/stores/useUserAccess';
 import './ManageAccountingUnits.css';
 
 // Only users who may manage accounting units see these pages. The API checks it again for every request.

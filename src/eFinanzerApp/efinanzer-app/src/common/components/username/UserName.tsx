@@ -1,6 +1,6 @@
 import { Skeleton } from 'antd';
-import { formatUserName } from '../stores/userCache';
-import { useUser } from '../stores/useUser';
+import { formatUserName } from '../../stores/userCache';
+import { useUser } from '../../stores/useUser';
 import './UserName.css';
 
 interface UserNameProps {

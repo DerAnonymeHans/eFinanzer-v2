@@ -1,6 +1,6 @@
 import { Result, Spin } from 'antd';
 import { Outlet, useParams } from 'react-router';
-import { useUserAccess } from '../../stores/useUserAccess';
+import { useUserAccess } from '../../common/stores/useUserAccess';
 import './ManageFiscalYears.css';
 
 // Only users who may manage the fiscal years of this Haushalt see the page. The API checks it again for every request.

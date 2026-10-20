@@ -2,13 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, App, Button, Card, Empty, Form, Input, Select, Space, Spin, Typography } from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UserAddOutlined } from '@ant-design/icons';
 import { Link, useParams } from 'react-router';
-import apiClient from '../../api/client';
-import type { AccountingUnitDetails, AccountingUnitRole, User, UserRoles } from '../../api/types';
-import UserName from '../../components/UserName';
-import { accountingUnitRoleNames } from '../../constants/roles';
-import UserSearchSelect from '../../components/UserSearchSelect';
-import { useUserDisplayName } from '../../stores/useUser';
-import { useUserAccess } from '../../stores/useUserAccess';
+import apiClient from '../../common/api/client';
+import type { AccountingUnitDetails, AccountingUnitRole, User, UserRoles } from '../../common/api/types';
+import UserName from '../../common/components/username/UserName';
+import { accountingUnitRoleNames } from '../../common/constants/roles';
+import UserSearchSelect from '../../common/components/user-search-select/UserSearchSelect';
+import { useUserDisplayName } from '../../common/stores/useUser';
+import { useUserAccess } from '../../common/stores/useUserAccess';
 import {
   DESCRIPTION_MAX_LENGTH,
   NAME_MAX_LENGTH,

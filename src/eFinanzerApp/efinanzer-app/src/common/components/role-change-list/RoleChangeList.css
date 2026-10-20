@@ -1,0 +1,21 @@
+.role-change-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.role-change-list__group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.role-change-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.role-change-list__tags .ant-tag {
+  margin: 0;
+}

@@ -26,7 +26,9 @@ function AppLayout({ children }: AppLayoutProps) {
   const [selectedPageKey, setSelectedPageKey] = useState('uebersicht');
   const navigate = useNavigate();
   // The menu entries are not routed yet, so they only count as selected outside of the routed pages
-  const onRoutedPage = useLocation().pathname !== '/';
+  const { pathname } = useLocation();
+  const onRoutedPage = pathname !== '/';
+  const onAdministrationPage = pathname.startsWith('/administration');
   // The fiscal year page belongs to one Haushalt, which is then also the one selected in the navigation
   const fiscalYearsPage = useMatch('/haushaltsjahre-verwalten/:accountingUnitKey');
   const [accountingUnitKey, setAccountingUnitKey] = useState<string>();
@@ -70,6 +72,16 @@ function AppLayout({ children }: AppLayoutProps) {
     navigate(`/haushaltsjahre-verwalten/${encodeURIComponent(accountingUnit.key)}`);
   };
 
+  const handleOpenAdministration = () => {
+    setDrawerOpen(false);
+    navigate('/administration');
+  };
+
+  const handleOpenProfile = () => {
+    setDrawerOpen(false);
+    navigate('/profil');
+  };
+
   const nav = (
     <SideNav
       selectedPageKey={onRoutedPage ? undefined : selectedPageKey}
@@ -81,6 +93,9 @@ function AppLayout({ children }: AppLayoutProps) {
       onFiscalYearChange={setFiscalYearKey}
       onEditAccountingUnit={handleEditAccountingUnit}
       onEditFiscalYear={handleEditFiscalYear}
+      onOpenProfile={handleOpenProfile}
+      administrationSelected={onAdministrationPage}
+      onOpenAdministration={handleOpenAdministration}
     />
   );
 

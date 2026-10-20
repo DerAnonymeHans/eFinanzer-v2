@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Select, Spin } from 'antd';
-import apiClient from '../api/client';
-import type { User } from '../api/types';
-import { formatUserName } from '../stores/userCache';
-import { useUserCache } from '../stores/useUser';
+import apiClient from '../../api/client';
+import type { User } from '../../api/types';
+import { formatUserName } from '../../stores/userCache';
+import { useUserCache } from '../../stores/useUser';
 
 // Mirrors GetUserTask.SearchStringMinLength in the backend
 const MIN_SEARCH_LENGTH = 2;

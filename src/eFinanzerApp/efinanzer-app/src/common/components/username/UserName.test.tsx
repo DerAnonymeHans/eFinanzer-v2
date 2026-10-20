@@ -1,10 +1,10 @@
 import type { Mock } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import apiClient from '../api/client';
-import { UserStoreProvider } from '../stores/UserStore';
+import apiClient from '../../api/client';
+import { UserStoreProvider } from '../../stores/UserStore';
 import UserName from './UserName';
 
-vi.mock('../api/client', () => ({ default: { GET: vi.fn() } }));
+vi.mock('../../api/client', () => ({ default: { GET: vi.fn() } }));
 const get = apiClient.GET as Mock;
 
 beforeEach(() => get.mockReset());

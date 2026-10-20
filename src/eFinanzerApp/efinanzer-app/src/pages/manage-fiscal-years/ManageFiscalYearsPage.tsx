@@ -3,9 +3,9 @@ import { Alert, App, Button, Empty, Space, Spin, Table, Tag, Tooltip, Typography
 import type { TableColumnsType } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useParams } from 'react-router';
-import apiClient from '../../api/client';
-import type { FiscalYearListItem } from '../../api/types';
-import { useUserAccess } from '../../stores/useUserAccess';
+import apiClient from '../../common/api/client';
+import type { FiscalYearListItem } from '../../common/api/types';
+import { useUserAccess } from '../../common/stores/useUserAccess';
 import FiscalYearModal from './FiscalYearModal';
 import { formatDate, suggestNextPeriod } from './fiscalYearValidation';
 import './ManageFiscalYears.css';

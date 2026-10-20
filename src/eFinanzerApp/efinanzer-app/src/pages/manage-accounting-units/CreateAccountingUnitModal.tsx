@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { App, Form, Input, Modal } from 'antd';
-import apiClient from '../../api/client';
+import apiClient from '../../common/api/client';
 import {
   DESCRIPTION_MAX_LENGTH,
   KEY_MAX_LENGTH,

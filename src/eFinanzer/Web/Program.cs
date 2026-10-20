@@ -39,7 +39,10 @@ app.UseRequestLogging();
 // Inside the request logging above, so the logged status code is the one produced by the exception handlers
 app.UseExceptionHandler();
 
-app.UseHttpsRedirection();
+if (builder.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
 
 // Before authentication, so preflight requests (which never carry a token) are answered instead of rejected
 app.UseCors();

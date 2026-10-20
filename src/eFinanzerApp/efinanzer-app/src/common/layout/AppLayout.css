@@ -162,6 +162,23 @@
   gap: 6px;
   flex: 1;
   min-width: 0;
+  /* Resets the button look, the user block itself opens the profile */
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.side-nav__user-details:hover .side-nav__user-name.ant-typography {
+  color: #ffffff;
+}
+
+.side-nav__user-details:focus-visible {
+  outline: 2px solid #a9adb3;
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .side-nav__user-roles {

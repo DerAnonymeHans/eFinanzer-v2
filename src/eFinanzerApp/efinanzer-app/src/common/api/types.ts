@@ -13,3 +13,7 @@ export type AccountingUnitDetails = Schemas['GetAccountingUnitManagementDto'];
 export type UserRoles = Schemas['UserRoles'];
 export type User = Schemas['GetUserDto'];
 export type FiscalYearListItem = Schemas['GetFiscalYearManagementListDto'];
+export type RoleChangeRequest = Schemas['GetRoleChangeRequestDto'];
+export type RoleChangeRequestResolutionStatus = Schemas['ResolutionStatus'];
+export type RoleChangeRequestAccountingUnit = Schemas['RoleChangeRequestAccountingUnitDto'];
+export type RoleChange = Schemas['RoleChangeDto'];

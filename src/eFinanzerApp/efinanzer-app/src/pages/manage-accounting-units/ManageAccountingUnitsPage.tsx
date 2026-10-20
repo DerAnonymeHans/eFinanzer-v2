@@ -2,9 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, App, Button, Card, Empty, Spin, Tag, Typography } from 'antd';
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
-import apiClient from '../../api/client';
-import type { AccountingUnitListItem } from '../../api/types';
-import { useUserAccess } from '../../stores/useUserAccess';
+import apiClient from '../../common/api/client';
+import type { AccountingUnitListItem } from '../../common/api/types';
+import { useUserAccess } from '../../common/stores/useUserAccess';
 import CreateAccountingUnitModal from './CreateAccountingUnitModal';
 import './ManageAccountingUnits.css';
 

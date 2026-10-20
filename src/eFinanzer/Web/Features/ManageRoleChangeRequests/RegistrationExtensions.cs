@@ -1,5 +1,6 @@
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.CreateRoleChangeRequest;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.DeleteRoleChangeRequest;
+using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetAccountingUnits;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetRoleChangeRequests;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.ResolveRoleChangeRequest;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,6 +17,7 @@ public static class RegistrationExtensions
         services.AddScoped<IGetRoleChangeRequestsTask, GetRoleChangeRequestsTask>();
         services.AddScoped<IResolveRoleChangeRequestTask, ResolveRoleChangeRequestTask>();
         services.AddScoped<IDeleteRoleChangeRequestTask, DeleteRoleChangeRequestTask>();
+        services.AddScoped<IGetAccountingUnitsTask, GetAccountingUnitsTask>();
 
         return services;
     }

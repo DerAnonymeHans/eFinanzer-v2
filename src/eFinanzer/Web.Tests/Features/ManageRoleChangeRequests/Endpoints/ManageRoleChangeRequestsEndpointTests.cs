@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
+using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetAccountingUnits.Models;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetRoleChangeRequests.Models;
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -63,6 +64,7 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
         { "GET", $"{BaseUrl}/list-pending-role-change-requests" },
         { "PUT", $"{BaseUrl}/resolve-role-change-request?id=1" },
         { "DELETE", $"{BaseUrl}/delete-role-change-request?id=1" },
+        { "GET", $"{BaseUrl}/list-accounting-units" },
     };
 
     [Theory]
@@ -217,5 +219,19 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAccountingUnits_UserWithoutRoles_ReturnsAllAccountingUnits()
+    {
+        // Arrange
+        var client = _factory.CreateAuthorizedClient();
+
+        // Act
+        var accountingUnits = await client.GetFromJsonAsync<List<RoleChangeRequestAccountingUnitDto>>(
+            $"{BaseUrl}/list-accounting-units", JsonOptions, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(["fsr"], accountingUnits!.Select(x => x.Key));
     }
 }

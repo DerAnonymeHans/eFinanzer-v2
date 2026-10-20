@@ -4,6 +4,102 @@
  */
 
 export interface paths {
+    "/api/manage-role-change-requests/create-role-change-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CreateRoleChangeRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-role-change-requests/delete-role-change-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["DeleteRoleChangeRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-role-change-requests/list-accounting-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetRoleChangeRequestAccountingUnits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-role-change-requests/list-own-role-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetOwnRoleChangeRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-role-change-requests/list-pending-role-change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetPendingRoleChangeRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-role-change-requests/resolve-role-change-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ResolveRoleChangeRequest"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/manage-fiscal-years/create-fiscal-year": {
         parameters: {
             query?: never;
@@ -210,26 +306,33 @@ export interface components {
         AccountingUnitHasFiscalYearsError: {
             key: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         AccountingUnitKeyAlreadyExistsError: {
             key: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         /** @enum {unknown} */
         AccountingUnitRole: "FinanceOfficer" | "Treasurer" | "FinanceAuthorizedUser";
         /** @enum {unknown} */
         AdministrationRole: "HeadFinanceOfficer" | "FinanceAdministrator" | "FinanceReviewer";
+        ApplyRoleChangeError: {
+            /** Format: int32 */
+            id: number | string;
+            accountingUnitKey: string;
+            userName: string;
+            role: components["schemas"]["AccountingUnitRole"];
+            isAdded: boolean;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+        };
         ChangeUserRoleError: {
             key: string;
             userName: string;
             role: components["schemas"]["AccountingUnitRole"];
             added: boolean;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError: null | components["schemas"]["Error"];
         };
         CreateAccountingUnitCommand: {
@@ -240,7 +343,6 @@ export interface components {
         CreateAccountingUnitGroupsError: {
             key: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError: null | components["schemas"]["Error"];
         };
         CreateFiscalYearCommand: {
@@ -252,15 +354,17 @@ export interface components {
             /** Format: date */
             endDate: string;
         };
+        CreateRoleChangeRequestBody: {
+            comment?: null | string;
+            roleChanges: components["schemas"]["RoleChange"][];
+        };
         DeleteAccountingUnitGroupError: {
             key: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError: null | components["schemas"]["Error"];
         };
         Error: {
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         FiscalYearDto: {
@@ -271,7 +375,6 @@ export interface components {
             key: string;
             accountingUnitKey: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         FiscalYearOverlapsExistingError: {
@@ -287,7 +390,6 @@ export interface components {
             /** Format: date */
             overlappingEndDate: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         FiscalYearWithBookingsShortenedError: {
@@ -298,7 +400,6 @@ export interface components {
             /** Format: date */
             endDate: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         GetAccountingUnitManagementDto: {
@@ -325,37 +426,103 @@ export interface components {
             /** Format: int32 */
             budgetsCount: number | string;
         };
+        GetRoleChangeRequestDto: {
+            /** Format: int32 */
+            id: number | string;
+            requestedBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            requestComment?: null | string;
+            roleChanges: components["schemas"]["RoleChangeDto"][];
+            resolvedBy?: null | string;
+            /** Format: date-time */
+            resolvedAt?: null | string;
+            resolution?: null | components["schemas"]["ResolutionStatus"];
+            resolutionComment?: null | string;
+        };
         GetUserDto: {
             username: string;
             firstName?: null | string;
             lastName?: null | string;
         };
-        /** @enum {unknown} */
-        HttpStatusCode: "Continue" | "SwitchingProtocols" | "Processing" | "EarlyHints" | "OK" | "Created" | "Accepted" | "NonAuthoritativeInformation" | "NoContent" | "ResetContent" | "PartialContent" | "MultiStatus" | "AlreadyReported" | "IMUsed" | "MultipleChoices" | "Ambiguous" | "MovedPermanently" | "Moved" | "Found" | "Redirect" | "SeeOther" | "RedirectMethod" | "NotModified" | "UseProxy" | "Unused" | "TemporaryRedirect" | "RedirectKeepVerb" | "PermanentRedirect" | "BadRequest" | "Unauthorized" | "PaymentRequired" | "Forbidden" | "NotFound" | "MethodNotAllowed" | "NotAcceptable" | "ProxyAuthenticationRequired" | "RequestTimeout" | "Conflict" | "Gone" | "LengthRequired" | "PreconditionFailed" | "RequestEntityTooLarge" | "RequestUriTooLong" | "UnsupportedMediaType" | "RequestedRangeNotSatisfiable" | "ExpectationFailed" | "MisdirectedRequest" | "UnprocessableEntity" | "UnprocessableContent" | "Locked" | "FailedDependency" | "UpgradeRequired" | "PreconditionRequired" | "TooManyRequests" | "RequestHeaderFieldsTooLarge" | "UnavailableForLegalReasons" | "InternalServerError" | "NotImplemented" | "BadGateway" | "ServiceUnavailable" | "GatewayTimeout" | "HttpVersionNotSupported" | "VariantAlsoNegotiates" | "InsufficientStorage" | "LoopDetected" | "NotExtended" | "NetworkAuthenticationRequired";
         InvalidInputError: {
             field: string;
             message: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
+            parentError?: null | components["schemas"]["Error"];
+        };
+        InvalidOffsetPaginationError: {
+            pagination: components["schemas"]["OffsetPagination"];
+            /** Format: int32 */
+            maxPageSize: number | string;
+            message?: string;
             parentError?: null | components["schemas"]["Error"];
         };
         LoadAccountingUnitRoleMembersError: {
             key: string;
             groupPath: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError: null | components["schemas"]["Error"];
         };
         NotFoundError: {
             entity: string;
             key: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
+        };
+        OffsetPagination: {
+            /** Format: int32 */
+            pageSize: number | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            offset: number | string;
+        };
+        PageOfGetRoleChangeRequestDto: {
+            items: components["schemas"]["GetRoleChangeRequestDto"][];
+            /** Format: int32 */
+            totalCount: number | string;
+        };
+        PendingRoleChangeRequestAlreadyExistsError: {
+            message?: string;
+            parentError?: null | components["schemas"]["Error"];
+        };
+        /** @enum {unknown} */
+        ResolutionStatus: "Dismissed" | "Approved" | null;
+        ResolveRoleChangeRequestRequest: {
+            resolution: components["schemas"]["ResolutionStatus"];
+            comment?: null | string;
+        };
+        RoleChange: {
+            accountingUnitKey: string;
+            accountingUnitRole: components["schemas"]["AccountingUnitRole"];
+            isAdded?: boolean;
+        };
+        RoleChangeDto: {
+            accountingUnitKey: string;
+            accountingUnitRole: components["schemas"]["AccountingUnitRole"];
+            isAdded: boolean;
+        };
+        RoleChangeRequestAccountingUnitDto: {
+            key: string;
+            name?: null | string;
+        };
+        RoleChangeRequestAlreadyResolvedError: {
+            /** Format: int32 */
+            id: number | string;
+            message?: string;
+            parentError?: null | components["schemas"]["Error"];
+        };
+        RoleChangeRequestNotApplicableError: {
+            /** Format: int32 */
+            id: number | string;
+            reason: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
         };
         UnknownUserError: {
             userName: string;
             message?: string;
-            statusCode?: components["schemas"]["HttpStatusCode"];
             parentError?: null | components["schemas"]["Error"];
         };
         UpdateAccountingUnitRequest: {
@@ -373,6 +540,7 @@ export interface components {
         UserAccess: {
             accountingUnits: components["schemas"]["AccountingUnitDto"][];
             manageAccountingUnits?: boolean;
+            resolveRoleChangeRequests?: boolean;
             administrationRoles: components["schemas"]["AdministrationRole"][];
         };
         UserDto: {
@@ -392,6 +560,225 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    CreateRoleChangeRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoleChangeRequestBody"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidInputError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingRoleChangeRequestAlreadyExistsError"];
+                };
+            };
+        };
+    };
+    DeleteRoleChangeRequest: {
+        parameters: {
+            query: {
+                id: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleChangeRequestAlreadyResolvedError"];
+                };
+            };
+        };
+    };
+    GetRoleChangeRequestAccountingUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleChangeRequestAccountingUnitDto"][];
+                };
+            };
+        };
+    };
+    GetOwnRoleChangeRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetRoleChangeRequestDto"][];
+                };
+            };
+        };
+    };
+    GetPendingRoleChangeRequests: {
+        parameters: {
+            query: {
+                PageSize: number | string;
+                Offset?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageOfGetRoleChangeRequestDto"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidOffsetPaginationError"];
+                };
+            };
+        };
+    };
+    ResolveRoleChangeRequest: {
+        parameters: {
+            query: {
+                id: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRoleChangeRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvalidInputError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleChangeRequestNotApplicableError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyRoleChangeError"];
+                };
+            };
+        };
+    };
     CreateFiscalYear: {
         parameters: {
             query?: never;

@@ -3,13 +3,13 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from 'antd';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import apiClient from '../../api/client';
-import type { FiscalYearListItem, UserAccess } from '../../api/types';
-import { UserAccessContext } from '../../stores/useUserAccess';
+import apiClient from '../../common/api/client';
+import type { FiscalYearListItem, UserAccess } from '../../common/api/types';
+import { UserAccessContext } from '../../common/stores/useUserAccess';
 import RequireManageFiscalYears from './RequireManageFiscalYears';
 import ManageFiscalYearsPage from './ManageFiscalYearsPage';
 
-vi.mock('../../api/client', () => ({ default: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() } }));
+vi.mock('../../common/api/client', () => ({ default: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() } }));
 const api = apiClient as unknown as Record<'GET' | 'POST' | 'PUT' | 'DELETE', Mock>;
 
 const reloadUserAccess = vi.fn();

@@ -20,8 +20,8 @@
     "test": "vitest",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "generate:api": "openapi-typescript ../../eFinanzer/Web/OpenApi/efinanzer.json --output src/api/schema.d.ts",
-    "generate:api:url": "openapi-typescript --output src/api/schema.d.ts"
+    "generate:api": "openapi-typescript ../../eFinanzer/Web/OpenApi/efinanzer.json --output src/common/api/schema.d.ts",
+    "generate:api:url": "openapi-typescript --output src/common/api/schema.d.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
