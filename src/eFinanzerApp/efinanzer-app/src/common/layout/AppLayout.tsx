@@ -4,7 +4,7 @@ import { Button, Drawer, Grid, Layout, Typography } from 'antd';
 import { MenuOutlined } from '@ant-design/icons';
 import { useLocation, useMatch, useNavigate } from 'react-router';
 import Logo from './Logo';
-import { useUserAccess } from '../stores/useUserAccess';
+import { useUserAccess } from '../stores/userAccess/useUserAccess';
 import SideNav from './SideNav';
 import './AppLayout.css';
 

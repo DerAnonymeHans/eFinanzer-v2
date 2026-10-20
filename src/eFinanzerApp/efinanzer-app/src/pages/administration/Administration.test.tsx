@@ -6,15 +6,13 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import apiClient from '../../common/api/client';
 import type { RoleChangeRequest, UserAccess } from '../../common/api/types';
 import { AuthContext } from '../../common/auth/useAuth';
-import { UserAccessContext } from '../../common/stores/useUserAccess';
-import { UserStoreProvider } from '../../common/stores/UserStore';
-import RequireResolveRoleChangeRequests from './RequireResolveRoleChangeRequests';
+import { Provider } from 'react-redux';
+import { makeStore } from '../../common/stores/store';
+import RequireAdministrationRights from './RequireAdministrationRights';
 import AdministrationPage from './AdministrationPage';
 
 vi.mock('../../common/api/client', () => ({ default: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() } }));
 const api = apiClient as unknown as Record<'GET' | 'POST' | 'PUT' | 'DELETE', Mock>;
-
-const reloadUserAccess = vi.fn();
 
 const administratorAccess: UserAccess = {
   administrationRoles: ['FinanceAdministrator'],
@@ -58,26 +56,23 @@ function mockPending(requests: RoleChangeRequest[], totalCount = requests.length
 
 function renderPage(userAccess: UserAccess = administratorAccess) {
   return render(
-    <UserStoreProvider>
+    <Provider store={makeStore({ userAccess: { userAccess, status: 'loaded' } })}>
       <App>
         <AuthContext.Provider value={{ username: 'admin', displayName: 'Ada Admin', logout: vi.fn() }}>
-          <UserAccessContext.Provider value={{ userAccess, loading: false, error: undefined, reload: reloadUserAccess }}>
-            <MemoryRouter initialEntries={['/administration']}>
-              <Routes>
-                <Route path="administration" element={<RequireResolveRoleChangeRequests />}>
-                  <Route index element={<AdministrationPage />} />
-                </Route>
-              </Routes>
-            </MemoryRouter>
-          </UserAccessContext.Provider>
+          <MemoryRouter initialEntries={['/administration']}>
+            <Routes>
+              <Route path="administration" element={<RequireAdministrationRights />}>
+                <Route index element={<AdministrationPage />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
         </AuthContext.Provider>
       </App>
-    </UserStoreProvider>,
+    </Provider>,
   );
 }
 
 beforeEach(() => {
-  reloadUserAccess.mockResolvedValue(undefined);
   mockPending([request]);
 });
 
@@ -133,7 +128,7 @@ test('approves a request with a comment', async () => {
   );
   expect(await screen.findByText('Antrag wurde angenommen')).toBeInTheDocument();
   // Only the roles of the requesting user changed
-  expect(reloadUserAccess).not.toHaveBeenCalled();
+  expect(api.GET).not.toHaveBeenCalledWith('/api/get-user-access/my-user-access');
 });
 
 test('dismisses a request without a comment', async () => {

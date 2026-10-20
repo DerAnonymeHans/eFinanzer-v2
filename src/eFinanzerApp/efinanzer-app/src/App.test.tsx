@@ -3,6 +3,8 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import apiClient from './common/api/client';
 import keycloak, { initKeycloak } from './common/auth/keycloak';
+import { Provider } from 'react-redux';
+import { makeStore } from './common/stores/store';
 import App from './App';
 
 // Keeps the user access store from calling the real API
@@ -17,6 +19,14 @@ vi.mock('./common/auth/keycloak', () => ({
   },
 }));
 
+function renderApp() {
+  return render(
+    <Provider store={makeStore()}>
+      <App />
+    </Provider>,
+  );
+}
+
 // Set per test, so every test starts with the same responses
 beforeEach(() => {
   (apiClient.GET as Mock).mockResolvedValue({ data: undefined, response: { ok: false, status: 401 } });
@@ -26,13 +36,13 @@ beforeEach(() => {
 
 // The matchMedia mock in setupTests matches no breakpoint, so the mobile layout is rendered.
 test('opens the navigation drawer on mobile', async () => {
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
   expect(await screen.findByRole('navigation', { name: 'Hauptnavigation' })).toBeInTheDocument();
 });
 
 test('shows the logged-in user and logs out', async () => {
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
 
   expect(await screen.findByText('Max Muster')).toBeInTheDocument();
@@ -55,7 +65,7 @@ test('shows at most two roles, administration roles first', async () => {
     response: { ok: true, status: 200 },
   });
 
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
 
   expect(await screen.findByText('Finanzprüfung')).toBeInTheDocument();
@@ -91,7 +101,7 @@ test('offers only the accessible Haushalte and fiscal years, edit buttons only w
     response: { ok: true, status: 200 },
   });
 
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
   const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' });
 
@@ -120,7 +130,7 @@ test.each([
     response: { ok: true, status: 200 },
   });
 
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
   const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' });
 

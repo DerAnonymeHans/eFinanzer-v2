@@ -1,7 +1,7 @@
 import { Skeleton } from 'antd';
-import { formatUserName } from '../../stores/userCache';
-import { useUser } from '../../stores/useUser';
 import './UserName.css';
+import {useUserCache} from "../../stores/userCache/useUserCache";
+import {getUserDisplayName} from "../../texts/usernames";
 
 interface UserNameProps {
   /** Keycloak user name, cryptic (e.g. the HTWK login), so only shown if the full name is unknown */
@@ -11,9 +11,9 @@ interface UserNameProps {
 
 /** Full name of a user, loaded through the user store. Falls back to the user name if there is none. */
 function UserName({ username, className }: UserNameProps) {
-  const entry = useUser(username);
+  const userEntry = useUserCache(username)
 
-  if (!entry || entry.status === 'loading') {
+  if (!userEntry || userEntry.status === 'loading') {
     return (
       <span className={className} role="status" aria-label="Name wird geladen">
         <Skeleton.Input className="user-name__skeleton" size="small" active />
@@ -21,8 +21,8 @@ function UserName({ username, className }: UserNameProps) {
     );
   }
 
-  const name = entry.status === 'loaded' ? formatUserName(entry.user) : undefined;
-  return <span className={className}>{name ?? username}</span>;
+  const displayName = userEntry.status === 'loaded' ? getUserDisplayName(userEntry.user) : undefined;
+  return <span className={className}>{displayName ?? username}</span>;
 }
 
 export default UserName;
