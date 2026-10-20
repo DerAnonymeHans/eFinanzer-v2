@@ -45,7 +45,7 @@ function ManageFiscalYearsPage() {
     let result: FiscalYearListItem[] | undefined;
     let failure: string | undefined;
     try {
-      const { data, response } = await apiClient.GET('/api/manageFiscalYears/list-fiscal-years', {
+      const { data, response } = await apiClient.GET('/api/manage-fiscal-years/list-fiscal-years', {
         params: { query: { accountingUnitKey } },
       });
       if (response.ok && data) result = data;
@@ -85,7 +85,7 @@ function ManageFiscalYearsPage() {
       cancelText: 'Abbrechen',
       onOk: async () => {
         try {
-          const { response } = await apiClient.DELETE('/api/manageFiscalYears/delete-fiscal-year', {
+          const { response } = await apiClient.DELETE('/api/manage-fiscal-years/delete-fiscal-year', {
             params: { query: { accountingUnitKey, key: fiscalYear.key } },
           });
 

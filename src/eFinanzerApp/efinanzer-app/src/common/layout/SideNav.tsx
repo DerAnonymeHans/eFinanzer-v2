@@ -88,23 +88,26 @@ function SideNav({
           <Text className="side-nav__subtitle">Finanzverwaltung der Studierendenschaft</Text>
         </div>
 
-        <Divider className="side-nav__divider" />
+        {/* Grouped, so the menu item sits closer to its dividers than the 20px between the sections */}
+        <div className="side-nav__administration">
+          <Divider className="side-nav__divider" />
 
-        {canAdministrate && (
-          <>
-            <Menu
-              className="side-nav__menu"
-              theme="dark"
-              mode="inline"
-              inlineIndent={12}
-              items={administrationItems}
-              selectedKeys={administrationSelected ? [ADMINISTRATION_KEY] : []}
-              onClick={() => onOpenAdministration?.()}
-            />
+          {canAdministrate && (
+            <>
+              <Menu
+                className="side-nav__menu"
+                theme="dark"
+                mode="inline"
+                inlineIndent={12}
+                items={administrationItems}
+                selectedKeys={administrationSelected ? [ADMINISTRATION_KEY] : []}
+                onClick={() => onOpenAdministration?.()}
+              />
 
-            <Divider className="side-nav__divider" />
-          </>
-        )}
+              <Divider className="side-nav__divider" />
+            </>
+          )}
+        </div>
 
         <div className="side-nav__context">
           <div className="side-nav__field">

@@ -32,7 +32,7 @@ function CreateAccountingUnitModal({ open, onClose, onCreated }: CreateAccountin
   const handleSubmit = async (values: CreateAccountingUnitFormValues) => {
     setSaving(true);
     try {
-      const { response } = await apiClient.POST('/api/manageAccountingUnits/create-accounting-unit', {
+      const { response } = await apiClient.POST('/api/manage-accounting-units/create-accounting-unit', {
         body: { key: values.key, name: emptyToNull(values.name), description: emptyToNull(values.description) },
       });
 

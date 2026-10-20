@@ -93,6 +93,12 @@
   border-color: #33373d;
 }
 
+.side-nav__administration {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .side-nav__context {
   display: flex;
   flex-direction: column;

@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageFiscalYears/create-fiscal-year": {
+    "/api/manage-fiscal-years/create-fiscal-year": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +116,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageFiscalYears/delete-fiscal-year": {
+    "/api/manage-fiscal-years/delete-fiscal-year": {
         parameters: {
             query?: never;
             header?: never;
@@ -132,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageFiscalYears/list-fiscal-years": {
+    "/api/manage-fiscal-years/list-fiscal-years": {
         parameters: {
             query?: never;
             header?: never;
@@ -148,7 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageFiscalYears/update-fiscal-year": {
+    "/api/manage-fiscal-years/update-fiscal-year": {
         parameters: {
             query?: never;
             header?: never;
@@ -164,7 +164,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageAccountingUnits/create-accounting-unit": {
+    "/api/manage-accounting-units/create-accounting-unit": {
         parameters: {
             query?: never;
             header?: never;
@@ -180,7 +180,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageAccountingUnits/delete-accounting-unit": {
+    "/api/manage-accounting-units/delete-accounting-unit": {
         parameters: {
             query?: never;
             header?: never;
@@ -196,7 +196,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageAccountingUnits/get-accounting-unit": {
+    "/api/manage-accounting-units/get-accounting-unit": {
         parameters: {
             query?: never;
             header?: never;
@@ -212,7 +212,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageAccountingUnits/list-accounting-units": {
+    "/api/manage-accounting-units/list-accounting-units": {
         parameters: {
             query?: never;
             header?: never;
@@ -228,7 +228,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manageAccountingUnits/update-accounting-unit": {
+    "/api/manage-accounting-units/update-accounting-unit": {
         parameters: {
             query?: never;
             header?: never;

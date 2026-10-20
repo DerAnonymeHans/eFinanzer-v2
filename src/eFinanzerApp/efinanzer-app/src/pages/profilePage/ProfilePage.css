@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1100px;
 }
 
 .profile__title.ant-typography {
@@ -22,60 +21,4 @@
 
 .profile__roles {
   margin-top: 8px;
-}
-
-.profile__spinner {
-  display: block;
-  margin: 24px auto;
-}
-
-.profile__requests {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.profile__history-title.ant-typography {
-  margin: 12px 0 0;
-}
-
-/* Request */
-.profile__request-title {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-weight: normal;
-}
-
-.profile__request-title .ant-tag {
-  margin: 0;
-}
-
-.profile__request {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.profile__comment.ant-typography {
-  margin: 2px 0 0;
-  white-space: pre-wrap;
-}
-
-.profile__resolution {
-  padding-top: 12px;
-  border-top: 1px solid var(--ant-color-border-secondary, #dedcd4);
-}
-
-/* Dialog */
-.profile__modal {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.profile__modal .ant-typography h5,
-.profile__modal h5.ant-typography {
-  margin-bottom: 8px;
 }

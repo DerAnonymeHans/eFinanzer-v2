@@ -77,12 +77,12 @@ function FiscalYearModal({ open, accountingUnitKey, fiscalYear, suggestedPeriod,
     const endDate = toApiDate(values.period[1]);
 
     if (isEdit) {
-      return apiClient.PUT('/api/manageFiscalYears/update-fiscal-year', {
+      return apiClient.PUT('/api/manage-fiscal-years/update-fiscal-year', {
         params: { query: { accountingUnitKey, key: fiscalYear.key } },
         body: { name, startDate, endDate },
       });
     }
-    return apiClient.POST('/api/manageFiscalYears/create-fiscal-year', {
+    return apiClient.POST('/api/manage-fiscal-years/create-fiscal-year', {
       body: { key: values.key, accountingUnitKey, name, startDate, endDate },
     });
   };

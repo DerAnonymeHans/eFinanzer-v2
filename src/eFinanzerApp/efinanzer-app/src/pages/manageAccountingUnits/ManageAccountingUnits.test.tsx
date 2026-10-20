@@ -48,7 +48,7 @@ function renderAt(path: string, userAccess: UserAccess = managerAccess) {
 
 beforeEach(() => {
   api.GET.mockImplementation((path: string, options?: unknown) => {
-    if (path === '/api/manageAccountingUnits/list-accounting-units') {
+    if (path === '/api/manage-accounting-units/list-accounting-units') {
       return Promise.resolve(
         ok([
           { key: 'fsr-dit', name: 'FSR DIT', description: 'Fachschaftsrat DIT' },
@@ -56,7 +56,7 @@ beforeEach(() => {
         ]),
       );
     }
-    if (path === '/api/manageAccountingUnits/get-accounting-unit') {
+    if (path === '/api/manage-accounting-units/get-accounting-unit') {
       return Promise.resolve(
         ok({
           key: 'fsr-dit',
@@ -127,7 +127,7 @@ test('deletes an accounting unit only after confirming', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Löschen' }));
 
   await waitFor(() =>
-    expect(api.DELETE).toHaveBeenCalledWith('/api/manageAccountingUnits/delete-accounting-unit', {
+    expect(api.DELETE).toHaveBeenCalledWith('/api/manage-accounting-units/delete-accounting-unit', {
       params: { query: { key: 'fsr-dit' } },
     }),
   );
@@ -158,7 +158,7 @@ test('creates an accounting unit from the dialog', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Anlegen' }));
 
   await waitFor(() =>
-    expect(api.POST).toHaveBeenCalledWith('/api/manageAccountingUnits/create-accounting-unit', {
+    expect(api.POST).toHaveBeenCalledWith('/api/manage-accounting-units/create-accounting-unit', {
       body: { key: 'fsr-new', name: 'FSR Neu', description: null },
     }),
   );
@@ -194,7 +194,7 @@ test('shows the general info and the users with their roles', async () => {
   renderAt('/haushalte-verwalten/fsr-dit');
 
   expect(await screen.findByRole('heading', { name: 'FSR DIT' })).toBeInTheDocument();
-  expect(api.GET).toHaveBeenCalledWith('/api/manageAccountingUnits/get-accounting-unit', {
+  expect(api.GET).toHaveBeenCalledWith('/api/manage-accounting-units/get-accounting-unit', {
     params: { query: { key: 'fsr-dit' } },
   });
   expect(screen.getByLabelText('Name')).toHaveValue('FSR DIT');
@@ -233,7 +233,7 @@ test('saves the changed users only after confirming', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Speichern' }));
 
   await waitFor(() =>
-    expect(api.PUT).toHaveBeenCalledWith('/api/manageAccountingUnits/update-accounting-unit', {
+    expect(api.PUT).toHaveBeenCalledWith('/api/manage-accounting-units/update-accounting-unit', {
       params: { query: { key: 'fsr-dit' } },
       body: {
         name: 'FSR DIT',

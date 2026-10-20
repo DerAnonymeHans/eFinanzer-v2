@@ -68,7 +68,7 @@ function renderAt(path: string, userAccess: UserAccess = officerAccess) {
 
 beforeEach(() => {
   api.GET.mockImplementation((path: string) =>
-    Promise.resolve(path === '/api/manageFiscalYears/list-fiscal-years' ? ok(fiscalYears) : failed(404)),
+    Promise.resolve(path === '/api/manage-fiscal-years/list-fiscal-years' ? ok(fiscalYears) : failed(404)),
   );
 });
 
@@ -83,7 +83,7 @@ test('lists the fiscal years of the Haushalt', async () => {
   renderAt('/haushaltsjahre-verwalten/fsr-dit');
 
   expect(await screen.findByText('HHJ 26')).toBeInTheDocument();
-  expect(api.GET).toHaveBeenCalledWith('/api/manageFiscalYears/list-fiscal-years', {
+  expect(api.GET).toHaveBeenCalledWith('/api/manage-fiscal-years/list-fiscal-years', {
     params: { query: { accountingUnitKey: 'fsr-dit' } },
   });
   expect(screen.getByText('Haushalt FSR DIT')).toBeInTheDocument();
@@ -113,7 +113,7 @@ test('deletes a fiscal year only after confirming', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Löschen' }));
 
   await waitFor(() =>
-    expect(api.DELETE).toHaveBeenCalledWith('/api/manageFiscalYears/delete-fiscal-year', {
+    expect(api.DELETE).toHaveBeenCalledWith('/api/manage-fiscal-years/delete-fiscal-year', {
       params: { query: { accountingUnitKey: 'fsr-dit', key: '2026' } },
     }),
   );
@@ -136,7 +136,7 @@ test('creates a fiscal year following the latest one', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Anlegen' }));
 
   await waitFor(() =>
-    expect(api.POST).toHaveBeenCalledWith('/api/manageFiscalYears/create-fiscal-year', {
+    expect(api.POST).toHaveBeenCalledWith('/api/manage-fiscal-years/create-fiscal-year', {
       body: { key: '2027', accountingUnitKey: 'fsr-dit', name: 'HHJ 27', startDate: '2027-01-01', endDate: '2027-12-31' },
     }),
   );
@@ -206,7 +206,7 @@ test('updates the name of a fiscal year', async () => {
   userEvent.click(within(dialog).getByRole('button', { name: 'Speichern' }));
 
   await waitFor(() =>
-    expect(api.PUT).toHaveBeenCalledWith('/api/manageFiscalYears/update-fiscal-year', {
+    expect(api.PUT).toHaveBeenCalledWith('/api/manage-fiscal-years/update-fiscal-year', {
       params: { query: { accountingUnitKey: 'fsr-dit', key: '2025' } },
       body: { name: 'HHJ 25', startDate: '2025-01-01', endDate: '2025-12-31' },
     }),

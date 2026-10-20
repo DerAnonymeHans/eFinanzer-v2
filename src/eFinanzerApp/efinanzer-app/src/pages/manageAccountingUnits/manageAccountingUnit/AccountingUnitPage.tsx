@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, App, Button, Card, Empty, Form, Input, Select, Space, Spin, Typography } from 'antd';
+import {Alert, App, Button, Card, Empty, Flex, Form, Input, Select, Space, Spin, Typography} from 'antd';
 import { ArrowLeftOutlined, DeleteOutlined, SaveOutlined, UserAddOutlined } from '@ant-design/icons';
 import { Link, useParams } from 'react-router';
 import apiClient from '../../../common/api/client';
@@ -91,7 +91,7 @@ function AccountingUnitPage() {
     let result: AccountingUnitDetails | undefined;
     let failure: string | undefined;
     try {
-      const { data, response } = await apiClient.GET('/api/manageAccountingUnits/get-accounting-unit', {
+      const { data, response } = await apiClient.GET('/api/manage-accounting-units/get-accounting-unit', {
         params: { query: { key } },
       });
       if (response.ok && data) result = data;
@@ -133,7 +133,7 @@ function AccountingUnitPage() {
 
   const save = async (values: GeneralInfoFormValues) => {
     try {
-      const { response } = await apiClient.PUT('/api/manageAccountingUnits/update-accounting-unit', {
+      const { response } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
         params: { query: { key } },
         body: {
           name: emptyToNull(values.name),
@@ -234,12 +234,14 @@ function AccountingUnitPage() {
 
       <Card title="Allgemein">
         <Form form={form} layout="vertical" className="manage-units__form">
-          <Form.Item label="Schlüssel">
-            <Input value={accountingUnit.key} disabled />
-          </Form.Item>
-          <Form.Item name="name" label="Name" rules={nameRules}>
-            <Input maxLength={NAME_MAX_LENGTH} />
-          </Form.Item>
+          <Flex gap={"medium"}>
+            <Form.Item label="Schlüssel">
+              <Input value={accountingUnit.key} disabled />
+            </Form.Item>
+            <Form.Item name="name" label="Name" rules={nameRules}>
+              <Input maxLength={NAME_MAX_LENGTH} />
+            </Form.Item>
+          </Flex>
           <Form.Item name="description" label="Beschreibung" rules={descriptionRules}>
             <Input.TextArea maxLength={DESCRIPTION_MAX_LENGTH} showCount autoSize={{ minRows: 2, maxRows: 6 }} />
           </Form.Item>

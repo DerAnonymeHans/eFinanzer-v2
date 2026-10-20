@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Alert, App, Checkbox, Input, Modal, Table, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
-import apiClient from '../../common/api/client';
-import type { AccountingUnitRole, RoleChange, RoleChangeRequestAccountingUnit } from '../../common/api/types';
-import { accountingUnitRoleNames } from '../../common/texts/roles';
+import apiClient from '../../../common/api/client';
+import type { AccountingUnitRole, RoleChange, RoleChangeRequestAccountingUnit } from '../../../common/api/types';
+import { accountingUnitRoleNames } from '../../../common/texts/roles';
 
 const { Title, Text } = Typography;
 
@@ -167,7 +167,7 @@ function RoleChangeRequestModal({ open, accountingUnits, currentRoles, onClose, 
       width={760}
       destroyOnHidden
     >
-      <div className="profile__modal">
+      <div className="own-role-change-requests__modal">
         <Text type="secondary">
           Rollen auswählen, die hinzukommen oder wegfallen sollen. Der Antrag wird anschließend von der Finanzverwaltung geprüft.
         </Text>

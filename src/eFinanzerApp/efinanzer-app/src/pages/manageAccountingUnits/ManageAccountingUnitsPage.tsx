@@ -29,7 +29,7 @@ function ManageAccountingUnitsPage() {
     let result: AccountingUnitListItem[] | undefined;
     let failure: string | undefined;
     try {
-      const { data, response } = await apiClient.GET('/api/manageAccountingUnits/list-accounting-units');
+      const { data, response } = await apiClient.GET('/api/manage-accounting-units/list-accounting-units');
       if (response.ok && data) result = data;
       else failure = `Haushalte konnten nicht geladen werden (HTTP ${response.status})`;
     } catch {
@@ -61,7 +61,7 @@ function ManageAccountingUnitsPage() {
       cancelText: 'Abbrechen',
       onOk: async () => {
         try {
-          const { response } = await apiClient.DELETE('/api/manageAccountingUnits/delete-accounting-unit', {
+          const { response } = await apiClient.DELETE('/api/manage-accounting-units/delete-accounting-unit', {
             params: { query: { key: accountingUnit.key } },
           });
 
