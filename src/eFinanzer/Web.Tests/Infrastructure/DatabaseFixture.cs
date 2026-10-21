@@ -48,7 +48,8 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task ResetAsync()
     {
         await using var context = CreateContext();
-        await context.Database.ExecuteSqlRawAsync("TRUNCATE \"AccountingUnits\", \"RoleChangeRequests\" CASCADE");
+        await context.Database.ExecuteSqlRawAsync("TRUNCATE \"AccountingUnits\" CASCADE");
+        await context.RoleChangeRequests.ExecuteDeleteAsync();
     }
 
     public async ValueTask DisposeAsync()

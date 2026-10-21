@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
+using eFinanzer.Common.Pagination;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetAccountingUnits.Models;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.GetRoleChangeRequests.Models;
 using eFinanzer.Tests.Infrastructure;
@@ -28,22 +29,25 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
 
     private readonly EFinanzerApiFactory _factory = new(database);
 
-    private int _ownRequestId;
-
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
-        var ownRequest = Pending(TestAuthHandler.Username, FixedTimeProvider.DefaultNow);
-        Context.RoleChangeRequests.AddRange(ownRequest, Pending("bob", FixedTimeProvider.DefaultNow));
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        _ownRequestId = ownRequest.Id;
     }
 
     public override async ValueTask DisposeAsync()
     {
         await _factory.DisposeAsync();
         await base.DisposeAsync();
+    }
+
+    private async Task<int> AddPendingRequest(string requestedBy)
+    {
+        var request = Pending(requestedBy, FixedTimeProvider.DefaultNow);
+        Context.RoleChangeRequests.Add(request);
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        return request.Id;
     }
 
     private static HttpRequestMessage CreateRequest(string method, string url) => new(new HttpMethod(method), url)
@@ -61,7 +65,7 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
     {
         { "POST", $"{BaseUrl}/create-role-change-request" },
         { "GET", $"{BaseUrl}/list-own-role-change-requests" },
-        { "GET", $"{BaseUrl}/list-pending-role-change-requests" },
+        { "GET", $"{BaseUrl}/list-pending-role-change-requests?pageSize=10" },
         { "PUT", $"{BaseUrl}/resolve-role-change-request?id=1" },
         { "DELETE", $"{BaseUrl}/delete-role-change-request?id=1" },
         { "GET", $"{BaseUrl}/list-accounting-units" },
@@ -83,7 +87,7 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
 
     public static TheoryData<string, string> ResolverEndpoints => new()
     {
-        { "GET", $"{BaseUrl}/list-pending-role-change-requests" },
+        { "GET", $"{BaseUrl}/list-pending-role-change-requests?pageSize=10" },
         { "PUT", $"{BaseUrl}/resolve-role-change-request?id=1" },
     };
 
@@ -118,29 +122,33 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
     public async Task GetPending_UserWithResolvingRole_ReturnsAllPendingRequests(AdministrationRole role)
     {
         // Arrange
+        await AddPendingRequest(TestAuthHandler.Username);
+        await AddPendingRequest("bob");
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
-        var requests = await client.GetFromJsonAsync<List<GetRoleChangeRequestDto>>(
-            $"{BaseUrl}/list-pending-role-change-requests", JsonOptions, TestContext.Current.CancellationToken);
+        var page = await client.GetFromJsonAsync<Page<GetRoleChangeRequestDto>>(
+            $"{BaseUrl}/list-pending-role-change-requests?pageSize=10", JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal(2, requests!.Count);
+        Assert.Equal(2, page!.Items.Count);
+        Assert.Equal(2, page.TotalCount);
     }
 
     [Fact]
     public async Task Resolve_UserWithResolvingRole_StoresUserFromToken()
     {
         // Arrange
+        var ownRequestId = await AddPendingRequest(TestAuthHandler.Username);
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
-        var response = await client.SendAsync(CreateRequest("PUT", $"{BaseUrl}/resolve-role-change-request?id={_ownRequestId}"),
+        var response = await client.SendAsync(CreateRequest("PUT", $"{BaseUrl}/resolve-role-change-request?id={ownRequestId}"),
             TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var stored = await Context.RoleChangeRequests.SingleAsync(x => x.Id == _ownRequestId, TestContext.Current.CancellationToken);
+        var stored = await Context.RoleChangeRequests.SingleAsync(x => x.Id == ownRequestId, TestContext.Current.CancellationToken);
         Assert.Equal(RoleChangeRequest.ResolutionStatus.Dismissed, stored.Resolution);
         Assert.Equal(TestAuthHandler.Username, stored.ResolvedBy);
     }
@@ -157,7 +165,7 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.Equal(2, await Context.RoleChangeRequests.CountAsync(x => x.RequestedBy == TestAuthHandler.Username,
+        Assert.True(await Context.RoleChangeRequests.AnyAsync(x => x.RequestedBy == TestAuthHandler.Username,
             TestContext.Current.CancellationToken));
     }
 
@@ -180,6 +188,8 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
     public async Task GetOwn_UserWithoutRoles_ReturnsOnlyRequestsOfUserFromToken()
     {
         // Arrange
+        var ownRequestId = await AddPendingRequest(TestAuthHandler.Username);
+        await AddPendingRequest("bob");
         var client = _factory.CreateAuthorizedClient();
 
         // Act
@@ -187,30 +197,30 @@ public class ManageRoleChangeRequestsEndpointTests(DatabaseFixture database) : D
             $"{BaseUrl}/list-own-role-change-requests", JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
-        Assert.Equal([_ownRequestId], requests!.Select(x => x.Id));
+        Assert.Equal([ownRequestId], requests!.Select(x => x.Id));
     }
 
     [Fact]
     public async Task Delete_OwnRequest_ReturnsNoContent()
     {
         // Arrange
+        var ownRequestId = await AddPendingRequest(TestAuthHandler.Username);
         var client = _factory.CreateAuthorizedClient();
 
         // Act
-        var response = await client.DeleteAsync($"{BaseUrl}/delete-role-change-request?id={_ownRequestId}",
+        var response = await client.DeleteAsync($"{BaseUrl}/delete-role-change-request?id={ownRequestId}",
             TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.False(await Context.RoleChangeRequests.AnyAsync(x => x.Id == _ownRequestId, TestContext.Current.CancellationToken));
+        Assert.False(await Context.RoleChangeRequests.AnyAsync(x => x.Id == ownRequestId, TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task Delete_RequestOfOtherUser_ReturnsNotFound()
     {
         // Arrange
-        var otherId = await Context.RoleChangeRequests.Where(x => x.RequestedBy == "bob").Select(x => x.Id)
-            .SingleAsync(TestContext.Current.CancellationToken);
+        var otherId = await AddPendingRequest("bob");
         var client = _factory.CreateAuthorizedClient();
 
         // Act
