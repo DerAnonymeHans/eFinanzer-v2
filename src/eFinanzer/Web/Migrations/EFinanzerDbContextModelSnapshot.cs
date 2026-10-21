@@ -26,6 +26,7 @@ namespace eFinanzer.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "payment_type", new[] { "bank", "cash" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "receipt_position_state", new[] { "disbursed", "planned", "spent" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "receipt_type", new[] { "booking", "budget_installment", "carry_over" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "role_change_request_resolution", new[] { "approved", "dismissed" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.AccountingUnit", b =>
@@ -42,7 +43,7 @@ namespace eFinanzer.Migrations
 
                     b.HasKey("Key");
 
-                    b.ToTable("AccountingUnits");
+                    b.ToTable("AccountingUnits", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.BudgetAttachment", b =>
@@ -68,7 +69,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("BudgetId");
 
-                    b.ToTable("BudgetAttachments");
+                    b.ToTable("BudgetAttachments", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptAttachment", b =>
@@ -94,7 +95,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("ReceiptId");
 
-                    b.ToTable("ReceiptAttachments");
+                    b.ToTable("ReceiptAttachments", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptPositionAttachment", b =>
@@ -120,7 +121,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("ReceiptPositionId");
 
-                    b.ToTable("ReceiptPositionAttachments");
+                    b.ToTable("ReceiptPositionAttachments", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Budget", b =>
@@ -157,7 +158,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("AccountingUnitKey", "FiscalYearKey");
 
-                    b.ToTable("Budgets");
+                    b.ToTable("Budgets", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetGroup", b =>
@@ -178,7 +179,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("BudgetId");
 
-                    b.ToTable("BudgetGroups");
+                    b.ToTable("BudgetGroups", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetPosition", b =>
@@ -209,7 +210,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("DeficitBudgetPositionId");
 
-                    b.ToTable("BudgetPositions");
+                    b.ToTable("BudgetPositions", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.FiscalYear", b =>
@@ -233,7 +234,7 @@ namespace eFinanzer.Migrations
 
                     b.HasKey("AccountingUnitKey", "Key");
 
-                    b.ToTable("FiscalYears");
+                    b.ToTable("FiscalYears", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Receipt", b =>
@@ -311,7 +312,7 @@ namespace eFinanzer.Migrations
                     b.HasIndex("AccountingUnitKey", "FiscalYearKey", "Key")
                         .IsUnique();
 
-                    b.ToTable("Receipts");
+                    b.ToTable("Receipts", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.ReceiptPosition", b =>
@@ -346,7 +347,60 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("ReceiptId");
 
-                    b.ToTable("ReceiptPositions");
+                    b.ToTable("ReceiptPositions", (string)null);
+                });
+
+            modelBuilder.Entity("eFinanzer.Common.Database.Models.RoleChangeRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RequestComment")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RequestedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<RoleChangeRequest.ResolutionStatus?>("Resolution")
+                        .HasColumnType("role_change_request_resolution");
+
+                    b.Property<string>("ResolutionComment")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ResolvedBy")
+                        .HasColumnType("text");
+
+                    b.ComplexCollection(typeof(List<Dictionary<string, object>>), "RoleChanges", "eFinanzer.Common.Database.Models.RoleChangeRequest.RoleChanges#RoleChange", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("AccountingUnitKey")
+                                .IsRequired();
+
+                            b1.Property<int>("AccountingUnitRole");
+
+                            b1.Property<bool>("IsAdded");
+
+                            b1
+                                .ToJson("RoleChanges")
+                                .HasColumnType("jsonb");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedBy");
+
+                    b.ToTable("RoleChangeRequests", (string)null);
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.BudgetAttachment", b =>

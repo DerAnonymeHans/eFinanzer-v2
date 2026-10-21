@@ -19,6 +19,8 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
     public DbSet<BudgetAttachment> BudgetAttachments => Set<BudgetAttachment>();
     public DbSet<ReceiptAttachment> ReceiptAttachments => Set<ReceiptAttachment>();
     public DbSet<ReceiptPositionAttachment> ReceiptPositionAttachments => Set<ReceiptPositionAttachment>();
+    
+    public DbSet<RoleChangeRequest> RoleChangeRequests => Set<RoleChangeRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,7 +34,7 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithOne(f => f.AccountingUnit)
                 .HasForeignKey(f => f.AccountingUnitKey)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.HasMany(a => a.Receipts)
                 .WithOne(r => r.AccountingUnit)
                 .HasForeignKey(r => r.AccountingUnitKey)
@@ -119,6 +121,13 @@ public class EFinanzerDbContext(DbContextOptions<EFinanzerDbContext> options) : 
                 .WithOne(a => a.ReceiptPosition)
                 .HasForeignKey(a => a.ReceiptPositionId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RoleChangeRequest>(entity =>
+        {
+            entity.ComplexCollection(r => r.RoleChanges, roleChanges => roleChanges.ToJson());
+
+            entity.HasIndex(r => r.RequestedBy);
         });
     }
 }

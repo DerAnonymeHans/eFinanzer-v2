@@ -1,21 +1,31 @@
 import type { Mock } from 'vitest';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import apiClient from './api/client';
-import keycloak, { initKeycloak } from './auth/keycloak';
+import apiClient from './common/api/client';
+import keycloak, { initKeycloak } from './common/auth/keycloak';
+import { Provider } from 'react-redux';
+import { makeStore } from './common/stores/store';
 import App from './App';
 
 // Keeps the user access store from calling the real API
-vi.mock('./api/client', () => ({ default: { GET: vi.fn() } }));
+vi.mock('./common/api/client', () => ({ default: { GET: vi.fn() } }));
 
 // Pretends an existing Keycloak session instead of redirecting to the login page
-vi.mock('./auth/keycloak', () => ({
+vi.mock('./common/auth/keycloak', () => ({
   initKeycloak: vi.fn(),
   default: {
     tokenParsed: { preferred_username: 'mmuster', name: 'Max Muster' },
     logout: vi.fn(),
   },
 }));
+
+function renderApp() {
+  return render(
+    <Provider store={makeStore()}>
+      <App />
+    </Provider>,
+  );
+}
 
 // Set per test, so every test starts with the same responses
 beforeEach(() => {
@@ -26,13 +36,13 @@ beforeEach(() => {
 
 // The matchMedia mock in setupTests matches no breakpoint, so the mobile layout is rendered.
 test('opens the navigation drawer on mobile', async () => {
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
   expect(await screen.findByRole('navigation', { name: 'Hauptnavigation' })).toBeInTheDocument();
 });
 
 test('shows the logged-in user and logs out', async () => {
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
 
   expect(await screen.findByText('Max Muster')).toBeInTheDocument();
@@ -55,7 +65,7 @@ test('shows at most two roles, administration roles first', async () => {
     response: { ok: true, status: 200 },
   });
 
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
 
   expect(await screen.findByText('Finanzprüfung')).toBeInTheDocument();
@@ -91,7 +101,7 @@ test('offers only the accessible Haushalte and fiscal years, edit buttons only w
     response: { ok: true, status: 200 },
   });
 
-  render(<App />);
+  renderApp();
   userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
   const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' });
 
@@ -109,4 +119,23 @@ test('offers only the accessible Haushalte and fiscal years, edit buttons only w
 
   expect(await within(nav).findByTitle('2024')).toBeInTheDocument();
   expect(within(nav).queryByRole('button', { name: 'Haushaltsjahr bearbeiten' })).not.toBeInTheDocument();
+});
+
+test.each([
+  { resolveRoleChangeRequests: true, shown: true },
+  { resolveRoleChangeRequests: false, shown: false },
+])('shows the administration only to users who may resolve role change requests ($shown)', async ({ resolveRoleChangeRequests, shown }) => {
+  (apiClient.GET as Mock).mockResolvedValue({
+    data: { resolveRoleChangeRequests, administrationRoles: [], accountingUnits: [] },
+    response: { ok: true, status: 200 },
+  });
+
+  renderApp();
+  userEvent.click(await screen.findByRole('button', { name: 'Navigation öffnen' }));
+  const nav = await screen.findByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Waits until the user access is loaded, the Haushalt select is then no longer loading
+  expect(await within(nav).findByText('Kein Haushalt verfügbar')).toBeInTheDocument();
+  if (shown) expect(within(nav).getByRole('menuitem', { name: 'Administration' })).toBeInTheDocument();
+  else expect(within(nav).queryByRole('menuitem', { name: 'Administration' })).not.toBeInTheDocument();
 });

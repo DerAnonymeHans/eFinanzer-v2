@@ -5,6 +5,289 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/manage-role-change-requests/create-role-change-request": {
+      "post": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "CreateRoleChangeRequest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleChangeRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingRoleChangeRequestAlreadyExistsError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-role-change-requests/delete-role-change-request": {
+      "delete": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "DeleteRoleChangeRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleChangeRequestAlreadyResolvedError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-role-change-requests/list-accounting-units": {
+      "get": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "GetRoleChangeRequestAccountingUnits",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleChangeRequestAccountingUnitDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-role-change-requests/list-own-role-change-requests": {
+      "get": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "GetOwnRoleChangeRequests",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetRoleChangeRequestDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-role-change-requests/list-pending-role-change-requests": {
+      "get": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "GetPendingRoleChangeRequests",
+        "parameters": [
+          {
+            "name": "PageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32",
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageOfGetRoleChangeRequestDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidOffsetPaginationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/manage-role-change-requests/resolve-role-change-request": {
+      "put": {
+        "tags": [
+          "ManageRoleChangeRequests"
+        ],
+        "operationId": "ResolveRoleChangeRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveRoleChangeRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidInputError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotFoundError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleChangeRequestNotApplicableError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyRoleChangeError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/manage-fiscal-years/create-fiscal-year": {
       "post": {
         "tags": [
@@ -617,9 +900,6 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
-          },
           "parentError": {
             "oneOf": [
               {
@@ -643,9 +923,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -673,6 +950,52 @@
           "FinanceReviewer"
         ]
       },
+      "ApplyRoleChangeError": {
+        "required": [
+          "id",
+          "accountingUnitKey",
+          "userName",
+          "role",
+          "isAdded",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/AccountingUnitRole"
+          },
+          "isAdded": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
       "ChangeUserRoleError": {
         "required": [
           "key",
@@ -697,9 +1020,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -749,9 +1069,6 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
-          },
           "parentError": {
             "oneOf": [
               {
@@ -795,6 +1112,26 @@
           }
         }
       },
+      "CreateRoleChangeRequestBody": {
+        "required": [
+          "roleChanges"
+        ],
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "roleChanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleChange"
+            }
+          }
+        }
+      },
       "DeleteAccountingUnitGroupError": {
         "required": [
           "key",
@@ -807,9 +1144,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -828,9 +1162,6 @@
         "properties": {
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -876,9 +1207,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -932,9 +1260,6 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
-          },
           "parentError": {
             "oneOf": [
               {
@@ -972,9 +1297,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -1090,6 +1412,73 @@
           }
         }
       },
+      "GetRoleChangeRequestDto": {
+        "required": [
+          "id",
+          "requestedBy",
+          "createdAt",
+          "roleChanges"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "requestedBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestComment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "roleChanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleChangeDto"
+            }
+          },
+          "resolvedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "resolvedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "resolution": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResolutionStatus"
+              }
+            ]
+          },
+          "resolutionComment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "GetUserDto": {
         "required": [
           "username"
@@ -1113,77 +1502,6 @@
           }
         }
       },
-      "HttpStatusCode": {
-        "enum": [
-          "Continue",
-          "SwitchingProtocols",
-          "Processing",
-          "EarlyHints",
-          "OK",
-          "Created",
-          "Accepted",
-          "NonAuthoritativeInformation",
-          "NoContent",
-          "ResetContent",
-          "PartialContent",
-          "MultiStatus",
-          "AlreadyReported",
-          "IMUsed",
-          "MultipleChoices",
-          "Ambiguous",
-          "MovedPermanently",
-          "Moved",
-          "Found",
-          "Redirect",
-          "SeeOther",
-          "RedirectMethod",
-          "NotModified",
-          "UseProxy",
-          "Unused",
-          "TemporaryRedirect",
-          "RedirectKeepVerb",
-          "PermanentRedirect",
-          "BadRequest",
-          "Unauthorized",
-          "PaymentRequired",
-          "Forbidden",
-          "NotFound",
-          "MethodNotAllowed",
-          "NotAcceptable",
-          "ProxyAuthenticationRequired",
-          "RequestTimeout",
-          "Conflict",
-          "Gone",
-          "LengthRequired",
-          "PreconditionFailed",
-          "RequestEntityTooLarge",
-          "RequestUriTooLong",
-          "UnsupportedMediaType",
-          "RequestedRangeNotSatisfiable",
-          "ExpectationFailed",
-          "MisdirectedRequest",
-          "UnprocessableEntity",
-          "UnprocessableContent",
-          "Locked",
-          "FailedDependency",
-          "UpgradeRequired",
-          "PreconditionRequired",
-          "TooManyRequests",
-          "RequestHeaderFieldsTooLarge",
-          "UnavailableForLegalReasons",
-          "InternalServerError",
-          "NotImplemented",
-          "BadGateway",
-          "ServiceUnavailable",
-          "GatewayTimeout",
-          "HttpVersionNotSupported",
-          "VariantAlsoNegotiates",
-          "InsufficientStorage",
-          "LoopDetected",
-          "NotExtended",
-          "NetworkAuthenticationRequired"
-        ]
-      },
       "InvalidInputError": {
         "required": [
           "field",
@@ -1197,8 +1515,38 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "InvalidOffsetPaginationError": {
+        "required": [
+          "pagination",
+          "maxPageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/OffsetPagination"
+          },
+          "maxPageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
           },
           "parentError": {
             "oneOf": [
@@ -1229,9 +1577,6 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
-          },
           "parentError": {
             "oneOf": [
               {
@@ -1260,8 +1605,212 @@
           "message": {
             "type": "string"
           },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "OffsetPagination": {
+        "required": [
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offset": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32",
+            "default": 0
+          }
+        }
+      },
+      "PageOfGetRoleChangeRequestDto": {
+        "required": [
+          "items",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GetRoleChangeRequestDto"
+            }
+          },
+          "totalCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PendingRoleChangeRequestAlreadyExistsError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "ResolutionStatus": {
+        "enum": [
+          "Dismissed",
+          "Approved",
+          null
+        ]
+      },
+      "ResolveRoleChangeRequestRequest": {
+        "required": [
+          "resolution"
+        ],
+        "type": "object",
+        "properties": {
+          "resolution": {
+            "$ref": "#/components/schemas/ResolutionStatus"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RoleChange": {
+        "required": [
+          "accountingUnitKey",
+          "accountingUnitRole"
+        ],
+        "type": "object",
+        "properties": {
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "accountingUnitRole": {
+            "$ref": "#/components/schemas/AccountingUnitRole"
+          },
+          "isAdded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RoleChangeDto": {
+        "required": [
+          "accountingUnitKey",
+          "accountingUnitRole",
+          "isAdded"
+        ],
+        "type": "object",
+        "properties": {
+          "accountingUnitKey": {
+            "type": "string"
+          },
+          "accountingUnitRole": {
+            "$ref": "#/components/schemas/AccountingUnitRole"
+          },
+          "isAdded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RoleChangeRequestAccountingUnitDto": {
+        "required": [
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RoleChangeRequestAlreadyResolvedError": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "parentError": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Error"
+              }
+            ]
+          }
+        }
+      },
+      "RoleChangeRequestNotApplicableError": {
+        "required": [
+          "id",
+          "reason",
+          "parentError"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
           },
           "parentError": {
             "oneOf": [
@@ -1286,9 +1835,6 @@
           },
           "message": {
             "type": "string"
-          },
-          "statusCode": {
-            "$ref": "#/components/schemas/HttpStatusCode"
           },
           "parentError": {
             "oneOf": [
@@ -1370,6 +1916,9 @@
           "manageAccountingUnits": {
             "type": "boolean"
           },
+          "resolveRoleChangeRequests": {
+            "type": "boolean"
+          },
           "administrationRoles": {
             "type": "array",
             "items": {
@@ -1438,6 +1987,9 @@
     }
   ],
   "tags": [
+    {
+      "name": "ManageRoleChangeRequests"
+    },
     {
       "name": "ManageFiscalYears"
     },

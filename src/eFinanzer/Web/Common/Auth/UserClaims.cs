@@ -12,8 +12,14 @@ namespace eFinanzer.Common.Auth;
 public static class UserClaims
 {
     public const string GroupClaimType = "groups";
+    public const string UsernameClaimType = "preferred_username";
 
-    
+    /// <summary>
+    /// Keycloak username of the user, which Keycloak always stores in lower case
+    /// </summary>
+    public static string GetUsername(this ClaimsPrincipal user)
+        => user.FindFirst(UsernameClaimType)?.Value
+           ?? throw new InvalidOperationException($"The token of user '{user.FindFirst("sub")?.Value}' contains no '{UsernameClaimType}' claim");
 
     /// <summary>
     /// Whether the user is a direct member of the group. Membership in a subgroup does not count for its parent.

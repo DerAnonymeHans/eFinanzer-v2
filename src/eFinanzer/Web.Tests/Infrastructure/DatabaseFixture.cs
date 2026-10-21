@@ -42,12 +42,14 @@ public class DatabaseFixture : IAsyncLifetime
         => _serviceProvider.CreateScope().ServiceProvider.GetRequiredService<EFinanzerDbContext>();
 
     /// <summary>
-    /// Deletes all data. Every table depends on the accounting units, so truncating them cascades to all others.
+    /// Deletes all data. Every table except the role change requests depends on the accounting units, so truncating
+    /// them cascades to all others.
     /// </summary>
     public async Task ResetAsync()
     {
         await using var context = CreateContext();
         await context.Database.ExecuteSqlRawAsync("TRUNCATE \"AccountingUnits\" CASCADE");
+        await context.RoleChangeRequests.ExecuteDeleteAsync();
     }
 
     public async ValueTask DisposeAsync()

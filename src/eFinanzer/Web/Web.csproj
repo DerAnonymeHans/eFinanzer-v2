@@ -42,4 +42,8 @@
       <Folder Include="Features\ManageFiscalYears\Endpoints\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="OpenApi\efinanzer.json" />
+    </ItemGroup>
+
 </Project>

@@ -4,12 +4,14 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
+    "@reduxjs/toolkit": "^2.13.0",
     "antd": "^6.6.6",
     "dayjs": "^1.11.23",
     "keycloak-js": "^26.2.4",
     "openapi-fetch": "^0.17.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
+    "react-redux": "^9.3.0",
     "react-router": "^8.4.0"
   },
   "scripts": {
@@ -20,8 +22,8 @@
     "test": "vitest",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "generate:api": "openapi-typescript ../../eFinanzer/Web/OpenApi/efinanzer.json --output src/api/schema.d.ts",
-    "generate:api:url": "openapi-typescript --output src/api/schema.d.ts"
+    "generate:api": "openapi-typescript ../../eFinanzer/Web/OpenApi/efinanzer.json --output src/common/api/schema.d.ts",
+    "generate:api:url": "openapi-typescript --output src/common/api/schema.d.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

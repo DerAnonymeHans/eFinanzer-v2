@@ -24,4 +24,12 @@ public static class GroupRules
         .. ManageFiscalYearGroups,
         .. ManageFiscalYearAccountingUnitRoles.Select(role => KeycloakGroups.GetAccountingUnitRoleGroup(accountingUnitKey, role))
     ];
+    
+    
+    private static readonly string[] ResolveRoleChangeRequestsGroups =
+    [
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator),
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer),
+    ];
+    public static IReadOnlyList<string> GetResolveRoleChangeRequestsGroups() => ResolveRoleChangeRequestsGroups;
 }

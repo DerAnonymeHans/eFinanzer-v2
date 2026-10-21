@@ -1,4 +1,3 @@
-using System.Net;
 using eFinanzer.Common.Models;
 
 namespace eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Errors;
@@ -8,5 +7,4 @@ namespace eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Er
 /// </summary>
 public record ChangeUserRoleError(string Key, string UserName, AccountingUnitRole Role, bool Added, Error ParentError)
     : Error($"Could not {(Added ? "add" : "remove")} the role {Role} {(Added ? "to" : "from")} user '{UserName}' " +
-            $"in accounting unit '{Key}'. Role changes before this one were applied.",
-        HttpStatusCode.InternalServerError, ParentError);
+            $"in accounting unit '{Key}'. Role changes before this one were applied.", ParentError);
