@@ -12,6 +12,11 @@ using eFinanzer.Features.ManageRoleChangeRequests;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.secrets.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables()
+    .AddCommandLine(args);
+    
 builder.AddOpenTelemetry();
 
 builder.Services.AddProblemDetails();

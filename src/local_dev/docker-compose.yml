@@ -1,0 +1,89 @@
+services:
+  efinanzer_postgres:
+    image: postgres:16-alpine
+    container_name: efinanzer_postgres
+    environment:
+      POSTGRES_DB: efinanzer
+      POSTGRES_USER: efinanzer
+      POSTGRES_PASSWORD: efinanzer
+    volumes:
+      - ./container_data/efinanzer_pgdata:/var/lib/postgresql/data
+    networks:
+      - web-net
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak_postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: localhost
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: "true"
+    depends_on:
+      - keycloak_postgres
+    volumes:
+      - ./config/keycloak:/opt/keycloak/data/import
+    networks:
+      - web-net
+      - keycloak-net
+    restart: unless-stopped
+    ports:
+      - "5532:8080"
+
+  keycloak_postgres:
+    image: postgres:16-alpine
+    container_name: keycloak_postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - ./container_data/keycloak_pgdata:/var/lib/postgresql/data
+    networks:
+      - keycloak-net
+    restart: unless-stopped
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    container_name: victorialogs
+    volumes:
+      - ./container_data/victorialogs:/victoria-logs-data
+    command:
+      - "-retentionPeriod=6M"
+      - "-http.pathPrefix=/logs"
+    networks:
+      - web-net
+    restart: unless-stopped
+    ports:
+      - "5632:9428"
+
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    command: ["--config", "/etc/vector/vector.yaml", "--watch-config"]
+    environment:
+      VECTOR_WATCH_CONFIG_METHOD: poll
+    volumes:
+      - ./vector.yaml:/etc/vector/vector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./container_data/vector_data:/vector-data
+    depends_on:
+      - victorialogs
+    networks:
+      - web-net
+    restart: unless-stopped
+    
+networks:
+  web-net:
+    driver: bridge
+  keycloak-net:
+    driver: bridge
