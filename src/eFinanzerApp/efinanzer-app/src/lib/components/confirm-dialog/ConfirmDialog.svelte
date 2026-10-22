@@ -2,7 +2,7 @@
 	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
-	import { confirmState } from '#lib/confirm.svelte.js';
+	import { confirmState } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 
 	const options = $derived(confirmState.options);
 	const description = $derived(options?.description);

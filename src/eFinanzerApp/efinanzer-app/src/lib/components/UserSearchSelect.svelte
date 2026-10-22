@@ -9,7 +9,7 @@
 	import type { User } from '#lib/api/types.js';
 	import { userCache } from '#lib/stores/user-cache.svelte.js';
 	import { getUserDisplayName } from '#lib/texts/usernames.js';
-	import { cn } from '#lib/utils.js';
+	import { cn } from '#lib/type-utils.js';
 
 	// Mirrors GetUserTask.SearchStringMinLength in the backend
 	const MIN_SEARCH_LENGTH = 2;

@@ -5,7 +5,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Design tokens of the "Finanzverwaltung Studierendenschaft" design: ink on paper with a teal accent */
 :root {
 	--radius: 0.5rem;
 	--background: #f4f3ee;

@@ -6,7 +6,7 @@
 	import * as Popover from '#lib/components/ui/popover/index.js';
 	import { RangeCalendar } from '#lib/components/ui/range-calendar/index.js';
 	import { formatDate } from '#lib/texts/date-time.js';
-	import { cn } from '#lib/utils.js';
+	import { cn } from '#lib/type-utils.js';
 
 	interface Props {
 		/** Start and end date, both inclusive */

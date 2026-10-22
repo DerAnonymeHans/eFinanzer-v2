@@ -27,10 +27,11 @@
 	import UserSearchSelect from '#lib/components/UserSearchSelect.svelte';
 	import apiClient from '#lib/api/client.js';
 	import type { AccountingUnitDetails, User, UserRoles } from '#lib/api/types.js';
-	import { confirm } from '#lib/confirm.svelte.js';
+	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { userCache } from '#lib/stores/user-cache.svelte.js';
-	import { emptyToNull, toFieldErrors, validateMaxLength } from '#lib/validation.js';
+	import { emptyToNull, toFieldErrors } from '#lib/utils.js';
+	import { validateMaxLength } from '#lib/texts/validation.js';
 	import { DESCRIPTION_MAX_LENGTH, NAME_MAX_LENGTH } from '../accounting-unit-validation.js';
 
 	let { params }: PageProps = $props();
@@ -74,7 +75,7 @@
 
 	// Loads again when another Haushalt is opened
 	$effect(() => {
-		void load(params.key);
+		void load(params.accountingUnitKey);
 	});
 
 	const errors = $derived({
@@ -99,7 +100,7 @@
 	async function save() {
 		try {
 			const { response } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
-				params: { query: { key: params.key } },
+				params: { query: { key: params.accountingUnitKey } },
 				body: {
 					name: emptyToNull(name),
 					description: emptyToNull(description),
@@ -109,7 +110,7 @@
 
 			if (response.ok) {
 				toast.success('Änderungen wurden gespeichert');
-				void load(params.key);
+				void load(params.accountingUnitKey);
 				// The side navigation shows the name of the Haushalt and the roles of the logged-in user
 				void access.reload();
 			} else if (response.status === 400) {
@@ -119,7 +120,7 @@
 			} else {
 				// Role changes are applied one after another, so some of them may have been saved
 				toast.error(`Änderungen konnten nicht vollständig gespeichert werden (HTTP ${response.status})`);
-				void load(params.key);
+				void load(params.accountingUnitKey);
 			}
 		} catch {
 			toast.error('Änderungen konnten nicht gespeichert werden');
@@ -162,7 +163,7 @@
 	</a>
 
 	{#if error}
-		<ErrorAlert message={error} onRetry={() => void load(params.key)} />
+		<ErrorAlert message={error} onRetry={() => void load(params.accountingUnitKey)} />
 	{:else if !accountingUnit}
 		<PageSpinner />
 	{:else}

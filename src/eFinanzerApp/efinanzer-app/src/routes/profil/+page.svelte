@@ -4,7 +4,7 @@
 	import { getAuth } from '#lib/auth/auth.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { getRoleNames } from '#lib/texts/roles.js';
-	import OwnRoleChangeRequests from './OwnRoleChangeRequests.svelte';
+	import RoleChangeRequestsList from './RoleChangeRequestsList.svelte';
 
 	const auth = getAuth();
 	const access = useUserAccess();
@@ -26,5 +26,5 @@
 		</div>
 	</div>
 
-	<OwnRoleChangeRequests />
+	<RoleChangeRequestsList />
 </div>

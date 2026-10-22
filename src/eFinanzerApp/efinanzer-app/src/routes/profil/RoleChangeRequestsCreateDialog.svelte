@@ -34,7 +34,7 @@
 		onChanged: () => void;
 	}
 
-	// Recreated for every opening (see OwnRoleChangeRequests), so no selection of an earlier opening is left
+	// Recreated for every opening (see RoleChangeRequestsList), so no selection of an earlier opening is left
 	let { open = $bindable(), accountingUnits, currentRoles, onChanged }: Props = $props();
 
 	const added = new SvelteSet<string>();
@@ -129,7 +129,7 @@
 						{#each roles as role (role)}
 							{@const key = roleKey(unit.key, role)}
 							{@const selectable = isSelectable(unit.key, role)}
-							<Table.Cell class="text-center">
+							<Table.Cell class="justify-items-center">
 								<Checkbox
 									aria-label={`${caption}: ${unitName} · ${accountingUnitRoleNames[role]}`}
 									title={selectable ? undefined : notSelectableReason}

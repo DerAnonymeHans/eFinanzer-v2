@@ -1,8 +1,10 @@
-export { cn } from "cn";
+﻿/** The API stores missing texts as null, an emptied input should not end up as "" */
+export function emptyToNull(value: string | undefined | null): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, "children"> : T;
-export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
-export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
+/** The errors of a form as needed by Field.Error, nothing for a valid field */
+export function toFieldErrors(message: string | undefined): { message: string }[] | undefined {
+  return message ? [{ message }] : undefined;
+}

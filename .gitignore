@@ -10,3 +10,4 @@
 /src/eFinanzerApp/node_modules
 /src/local_dev/container_data
 /src/eFinanzer/Web/appsettings.**.secrets.json
+!/src/eFinanzer/Web/appsettings.TEMPLATE.secrets.json

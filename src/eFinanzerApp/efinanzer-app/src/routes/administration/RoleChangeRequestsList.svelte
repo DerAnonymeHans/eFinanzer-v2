@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	import apiClient from '#lib/api/client.js';
 	import type { RoleChangeRequest } from '#lib/api/types.js';
-	import type { OffsetPagination, Page } from '#lib/pagination.js';
+	import type { OffsetPagination, Page } from '#lib/components/pagination/pagination.js';
 
 	/** The API allows at most 50 */
 	const PAGE_SIZES = [10, 20, 50];
@@ -42,13 +42,13 @@
 	import ErrorAlert from '#lib/components/ErrorAlert.svelte';
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import RoleChangeList from '#lib/components/RoleChangeList.svelte';
-	import TablePagination from '#lib/components/TablePagination.svelte';
+	import TablePagination from '#lib/components/pagination/TablePagination.svelte';
 	import UserName from '#lib/components/UserName.svelte';
 	import type { RoleChangeRequestAccountingUnit } from '#lib/api/types.js';
 	import { getAuth } from '#lib/auth/auth.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { formatDateTime } from '#lib/texts/date-time.js';
-	import ResolveRoleChangeRequestDialog, { type Resolution } from './ResolveRoleChangeRequestDialog.svelte';
+	import RoleChangeRequestResolveDialog, { type Resolution } from './RoleChangeRequestResolveDialog.svelte';
 
 	interface DialogState {
 		/** Changes for every opening, so the dialog starts without the comment of an earlier opening */
@@ -196,7 +196,7 @@
 
 {#if dialogState}
 	{#key dialogState.id}
-		<ResolveRoleChangeRequestDialog
+		<RoleChangeRequestResolveDialog
 			bind:open={dialogOpen}
 			request={dialogState.request}
 			resolution={dialogState.resolution}

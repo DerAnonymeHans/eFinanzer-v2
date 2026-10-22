@@ -36,7 +36,7 @@
 		onChanged: () => void;
 	}
 
-	// Recreated for every opening (see PendingRoleChangeRequests), so no comment of an earlier opening is left
+	// Recreated for every opening (see RoleChangeRequestsList), so no comment of an earlier opening is left
 	let { open = $bindable(), request, resolution, getAccountingUnitName, onChanged }: Props = $props();
 
 	let comment = $state('');

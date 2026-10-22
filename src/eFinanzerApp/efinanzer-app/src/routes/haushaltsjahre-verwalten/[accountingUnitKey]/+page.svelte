@@ -13,7 +13,7 @@
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import apiClient from '#lib/api/client.js';
 	import type { FiscalYearListItem } from '#lib/api/types.js';
-	import { confirm } from '#lib/confirm.svelte.js';
+	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { formatDate } from '#lib/texts/date-time.js';
 	import FiscalYearDialog from './FiscalYearDialog.svelte';
@@ -32,9 +32,9 @@
 
 	let { params }: PageProps = $props();
 
-	const access = useUserAccess();
+	const userAccessStore = useUserAccess();
 	const accountingUnitName = $derived(
-		access.userAccess?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)?.name ??
+		userAccessStore.userAccess?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)?.name ??
 			params.accountingUnitKey
 	);
 
@@ -73,12 +73,12 @@
 	});
 
 	// The side navigation lists the fiscal years too, so it is updated after every change
-	function handleChanged() {
+	function handleFiscalYearsChanged() {
 		void load(params.accountingUnitKey);
-		void access.reload();
+		void userAccessStore.reload();
 	}
 
-	function openDialog(fiscalYear?: FiscalYearListItem) {
+	function openCreateDialog(fiscalYear?: FiscalYearListItem) {
 		dialogState = { id: (dialogState?.id ?? 0) + 1, fiscalYear };
 		dialogOpen = true;
 	}
@@ -99,13 +99,13 @@
 
 					if (response.ok) {
 						toast.success(`Haushaltsjahr „${name}“ wurde gelöscht`);
-						handleChanged();
+						handleFiscalYearsChanged();
 					} else if (response.status === 409) {
 						toast.error('Das Haushaltsjahr hat noch Budgets oder Belege und kann daher nicht gelöscht werden');
 						void load(accountingUnitKey);
 					} else if (response.status === 404) {
 						toast.error('Das Haushaltsjahr existiert nicht mehr');
-						handleChanged();
+						handleFiscalYearsChanged();
 					} else {
 						toast.error(`Haushaltsjahr konnte nicht gelöscht werden (HTTP ${response.status})`);
 					}
@@ -123,7 +123,7 @@
 			<h1 class="text-3xl font-semibold tracking-tight">Haushaltsjahre verwalten</h1>
 			<p class="mt-1 text-muted-foreground">Haushalt {accountingUnitName}</p>
 		</div>
-		<Button disabled={!fiscalYears} onclick={() => openDialog()}>
+		<Button disabled={!fiscalYears} onclick={() => openCreateDialog()}>
 			<PlusIcon />
 			Haushaltsjahr anlegen
 		</Button>
@@ -176,7 +176,7 @@
 										size="icon"
 										aria-label={`Haushaltsjahr ${name} bearbeiten`}
 										title="Bearbeiten"
-										onclick={() => openDialog(fiscalYear)}
+										onclick={() => openCreateDialog(fiscalYear)}
 									>
 										<PencilIcon />
 									</Button>
@@ -218,7 +218,7 @@
 			accountingUnitKey={params.accountingUnitKey}
 			fiscalYear={dialogState.fiscalYear}
 			suggestedPeriod={suggestNextPeriod(fiscalYears?.[0]?.endDate)}
-			onSaved={handleChanged}
+			onSaved={handleFiscalYearsChanged}
 		/>
 	{/key}
 {/if}

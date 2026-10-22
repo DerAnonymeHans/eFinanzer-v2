@@ -4,11 +4,11 @@ import { render } from 'vitest-browser-svelte';
 import { toast } from 'svelte-sonner';
 import apiClient from '#lib/api/client.js';
 import type { UserAccess } from '#lib/api/types.js';
-import { confirmState } from '#lib/confirm.svelte.js';
+import { confirmState } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 import { childrenText, failed, ok, renderAppOverlays, resetApp } from '../../test-utils';
 import Layout from './+layout.svelte';
 import ListPage from './+page.svelte';
-import DetailPage from './[key]/+page.svelte';
+import DetailPage from './[accountingUnitKey]/+page.svelte';
 
 vi.mock('#lib/api/client.js', () => ({ default: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() } }));
 const api = apiClient as unknown as Record<'GET' | 'POST' | 'PUT' | 'DELETE', Mock>;

@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
-	import { mobile } from '#lib/hooks/is-mobile.svelte.js';
+	import { mobile } from '#lib/reactivity/is-mobile.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import Logo from './Logo.svelte';
 	import SideNav from './SideNav.svelte';

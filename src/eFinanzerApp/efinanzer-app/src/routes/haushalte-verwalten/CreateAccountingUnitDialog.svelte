@@ -7,7 +7,8 @@
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import CountedTextarea from '#lib/components/CountedTextarea.svelte';
 	import apiClient from '#lib/api/client.js';
-	import { emptyToNull, toFieldErrors, validateKey, validateMaxLength } from '#lib/validation.js';
+	import { emptyToNull, toFieldErrors } from '#lib/utils.js';
+	import { validateKey, validateMaxLength } from '#lib/texts/validation.js';
 	import { DESCRIPTION_MAX_LENGTH, KEY_MAX_LENGTH, NAME_MAX_LENGTH } from './accounting-unit-validation.js';
 
 	interface Props {

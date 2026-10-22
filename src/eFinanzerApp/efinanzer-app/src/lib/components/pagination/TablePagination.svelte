@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Pagination from '#lib/components/ui/pagination/index.js';
 	import * as Select from '#lib/components/ui/select/index.js';
-	import type { OffsetPagination } from '#lib/pagination.js';
+	import type { OffsetPagination } from '#lib/components/pagination/pagination.js';
 
 	interface Props {
 		pagination: OffsetPagination;

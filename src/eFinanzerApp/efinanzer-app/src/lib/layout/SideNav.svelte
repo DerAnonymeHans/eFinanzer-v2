@@ -17,7 +17,7 @@
 	import { getAuth } from '#lib/auth/auth.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { getRoleNames } from '#lib/texts/roles.js';
-	import { cn } from '#lib/utils.js';
+	import { cn } from '#lib/type-utils.js';
 	import Logo from './Logo.svelte';
 
 	const MAX_SHOWN_ROLES = 2;
@@ -73,10 +73,10 @@
 <!-- Content of the side navigation, shared by the desktop sidebar and the mobile drawer -->
 <nav class="flex min-h-full flex-col gap-5 px-4.5 py-7 text-sidebar-foreground" aria-label="Hauptnavigation">
 	<div class="flex flex-col gap-1 px-2.5">
-		<span class="inline-flex items-center gap-2 text-[19px] font-bold tracking-[-0.01em]">
+		<a href="/" class="inline-flex items-center gap-2 text-[19px] font-bold tracking-[-0.01em]">
 			<Logo size={24} />
 			eFinanzer
-		</span>
+		</a>
 		<span class="text-[13px] text-sidebar-muted-foreground">Finanzverwaltung der Studierendenschaft</span>
 	</div>
 

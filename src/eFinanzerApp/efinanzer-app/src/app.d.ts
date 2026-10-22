@@ -14,7 +14,7 @@ declare global {
 		readonly VITE_KEYCLOAK_URL: string;
 		readonly VITE_KEYCLOAK_REALM: string;
 		readonly VITE_KEYCLOAK_CLIENT_ID: string;
-		/** Base URL of the API, empty for the same origin (default) */
+		/** empty for the same origin (default) */
 		readonly VITE_API_BASE_URL?: string;
 	}
 }

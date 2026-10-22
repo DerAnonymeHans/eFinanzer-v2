@@ -11,7 +11,7 @@
 		dismissed: { label: 'Abgelehnt', icon: CircleXIcon, pill: 'bg-destructive', comment: 'border-danger-border' }
 	};
 
-	function getStatus(request: RoleChangeRequest): keyof typeof statuses {
+	function getStatusKey(request: RoleChangeRequest): keyof typeof statuses {
 		if (request.resolution === 'Approved') return 'approved';
 		if (request.resolution === 'Dismissed') return 'dismissed';
 		return 'pending';
@@ -35,7 +35,7 @@
 
 	let { request, getAccountingUnitName, action }: Props = $props();
 
-	const status = $derived(statuses[getStatus(request)]);
+	const status = $derived(statuses[getStatusKey(request)]);
 </script>
 
 <!-- A comment with its label, shown as a quote so it stands out from the generated texts -->
@@ -46,7 +46,6 @@
 	</div>
 {/snippet}
 
-<!-- A role change request of the user with its changes and, once resolved, the decision -->
 <Card.Root size="sm">
 	<Card.Header class="border-b">
 		<Card.Title class="flex flex-wrap items-center gap-2.5 font-medium">

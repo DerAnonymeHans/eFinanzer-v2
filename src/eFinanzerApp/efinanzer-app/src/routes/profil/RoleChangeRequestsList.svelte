@@ -15,15 +15,15 @@
 		RoleChangeRequest,
 		RoleChangeRequestAccountingUnit
 	} from '#lib/api/types.js';
-	import { confirm } from '#lib/confirm.svelte.js';
-	import { mobile } from '#lib/hooks/is-mobile.svelte.js';
+	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
+	import { mobile } from '#lib/reactivity/is-mobile.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
-	import RoleChangeRequestCard from './RoleChangeRequestCard.svelte';
-	import RoleChangeRequestDialog from './RoleChangeRequestDialog.svelte';
+	import RoleChangeRequestsListItem from './RoleChangeRequestsListItem.svelte';
+	import RoleChangeRequestsCreateDialog from './RoleChangeRequestsCreateDialog.svelte';
 
 	interface LoadedData {
 		/** Newest first */
-		requests: RoleChangeRequest[];
+		existingRequests: RoleChangeRequest[];
 		accountingUnits: RoleChangeRequestAccountingUnit[];
 	}
 
@@ -31,9 +31,8 @@
 
 	let data = $state<LoadedData>();
 	let error = $state<string>();
-	/** Changes for every opening, so the dialog starts without the selection of an earlier opening */
-	let dialogId = $state(0);
-	let dialogOpen = $state(false);
+	let createRoleChangeRequestDialogId = $state(0);
+	let createRoleChangeRequestDialogOpen = $state(false);
 
 	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
 	let latestRequest = 0;
@@ -44,14 +43,14 @@
 		let result: LoadedData | undefined;
 		let failure: string | undefined;
 		try {
-			const [requests, accountingUnits] = await Promise.all([
+			const [roleChangeRequests, accountingUnits] = await Promise.all([
 				apiClient.GET('/api/manage-role-change-requests/list-own-role-change-requests'),
 				apiClient.GET('/api/manage-role-change-requests/list-accounting-units')
 			]);
-			if (requests.response.ok && requests.data && accountingUnits.response.ok && accountingUnits.data) {
-				result = { requests: requests.data, accountingUnits: accountingUnits.data };
+			if (roleChangeRequests.response.ok && roleChangeRequests.data && accountingUnits.response.ok && accountingUnits.data) {
+				result = { existingRequests: roleChangeRequests.data, accountingUnits: accountingUnits.data };
 			} else {
-				const status = requests.response.ok ? accountingUnits.response.status : requests.response.status;
+				const status = roleChangeRequests.response.ok ? accountingUnits.response.status : roleChangeRequests.response.status;
 				failure = `Rollenänderungsanträge konnten nicht geladen werden (HTTP ${status})`;
 			}
 		} catch {
@@ -71,16 +70,15 @@
 		)
 	);
 
-	// Requests can name accounting units the user has no role in, so the names come from the list of all of them
 	const getAccountingUnitName = (key: string) =>
 		data?.accountingUnits.find((unit) => unit.key === key)?.name ?? key;
 
-	const pendingRequest = $derived(data?.requests.find((request) => !request.resolution));
-	const resolvedRequests = $derived(data?.requests.filter((request) => request.resolution) ?? []);
+	const pendingRequest = $derived(data?.existingRequests.find((request) => !request.resolution));
+	const resolvedRequests = $derived(data?.existingRequests.filter((request) => request.resolution) ?? []);
 
 	function openDialog() {
-		dialogId++;
-		dialogOpen = true;
+		createRoleChangeRequestDialogId++;
+		createRoleChangeRequestDialogOpen = true;
 	}
 
 	function confirmWithdraw(request: RoleChangeRequest) {
@@ -120,7 +118,6 @@
 		<Card.Title class="text-base">Rollenänderungsanträge</Card.Title>
 		{#if data && !pendingRequest}
 			<Card.Action>
-				<!-- The text does not fit into the header on small screens, so only the icon is shown there -->
 				<Button
 					onclick={openDialog}
 					aria-label={mobile.current ? 'Neuer Rollenänderungsantrag' : undefined}
@@ -143,7 +140,7 @@
 		{/if}
 
 		{#if pendingRequest}
-			<RoleChangeRequestCard request={pendingRequest} {getAccountingUnitName}>
+			<RoleChangeRequestsListItem request={pendingRequest} {getAccountingUnitName}>
 				{#snippet action()}
 					<Button
 						variant="ghost"
@@ -157,26 +154,26 @@
 						{#if !mobile.current}Zurückziehen{/if}
 					</Button>
 				{/snippet}
-			</RoleChangeRequestCard>
+			</RoleChangeRequestsListItem>
 		{/if}
 
-		{#if data && data.requests.length === 0}
+		{#if data && data.existingRequests.length === 0}
 			<EmptyState description="Noch keine Rollenänderungsanträge gestellt" />
 		{/if}
 
 		{#if resolvedRequests.length > 0}
 			<h3 class="mt-3 font-semibold">Frühere Anträge</h3>
 			{#each resolvedRequests as request (request.id)}
-				<RoleChangeRequestCard {request} {getAccountingUnitName} />
+				<RoleChangeRequestsListItem {request} {getAccountingUnitName} />
 			{/each}
 		{/if}
 	</Card.Content>
 </Card.Root>
 
-{#if data && dialogId > 0}
-	{#key dialogId}
-		<RoleChangeRequestDialog
-			bind:open={dialogOpen}
+{#if data && createRoleChangeRequestDialogId > 0}
+	{#key createRoleChangeRequestDialogId}
+		<RoleChangeRequestsCreateDialog
+			bind:open={createRoleChangeRequestDialogOpen}
 			accountingUnits={data.accountingUnits}
 			{currentRoles}
 			onChanged={() => void load()}

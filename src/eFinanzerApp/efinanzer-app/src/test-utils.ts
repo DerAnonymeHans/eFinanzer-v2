@@ -3,7 +3,7 @@ import { createRawSnippet } from 'svelte';
 import { vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { Toaster } from 'svelte-sonner';
-import ConfirmDialog from '#lib/components/ConfirmDialog.svelte';
+import ConfirmDialog from '#lib/components/confirm-dialog/ConfirmDialog.svelte';
 import type { UserAccess } from '#lib/api/types.js';
 import { setAuth } from '#lib/auth/auth.svelte.js';
 import { userAccessStore } from '#lib/stores/user-access.svelte.js';

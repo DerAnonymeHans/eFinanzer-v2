@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { Textarea } from '#lib/components/ui/textarea/index.js';
-	import { cn } from '#lib/utils.js';
+	import { cn } from '#lib/type-utils.js';
 
 	type Props = Omit<HTMLTextareaAttributes, 'value' | 'maxlength'> & {
 		value: string;

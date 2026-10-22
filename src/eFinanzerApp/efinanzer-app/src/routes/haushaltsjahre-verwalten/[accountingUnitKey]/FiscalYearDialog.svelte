@@ -6,7 +6,6 @@
 	type OverlapsExistingError = components['schemas']['FiscalYearOverlapsExistingError'];
 	type FieldName = 'key' | 'name' | 'period';
 
-	// Field names of the API's InvalidInputError mapped to the form fields
 	const formFieldsByApiField: Record<string, FieldName> = {
 		Key: 'key',
 		Name: 'name',
@@ -14,7 +13,6 @@
 		EndDate: 'period'
 	};
 
-	// Both conflicts of the create and the update endpoint share the status code, only the overlap names another year
 	function isOverlapError(error: unknown): error is OverlapsExistingError {
 		return typeof error === 'object' && error !== null && 'overlappingKey' in error;
 	}
@@ -36,7 +34,8 @@
 	import apiClient from '#lib/api/client.js';
 	import type { FiscalYearListItem } from '#lib/api/types.js';
 	import { formatDate } from '#lib/texts/date-time.js';
-	import { emptyToNull, toFieldErrors, validateKey, validateMaxLength } from '#lib/validation.js';
+	import { emptyToNull, toFieldErrors } from '#lib/utils.js';
+	import { validateKey, validateMaxLength } from '#lib/texts/validation.js';
 	import {
 		KEY_MAX_LENGTH,
 		MIN_DATE,
@@ -57,24 +56,21 @@
 		onSaved: () => void;
 	}
 
-	// Recreated for every opening (see the page), so the initial values always match the shown fiscal year
 	let { open = $bindable(), accountingUnitKey, fiscalYear, suggestedPeriod, onSaved }: Props = $props();
 
 	// The initial values are taken once, the dialog is recreated for another fiscal year
-	const initial = untrack(() => fiscalYear);
-	const isEdit = initial !== undefined;
-	const hasReceipts = Number(initial?.receiptsCount ?? 0) > 0;
+	const initialFiscalYear = untrack(() => fiscalYear);
+	const isEdit = initialFiscalYear !== undefined;
+	const hasReceipts = Number(initialFiscalYear?.receiptsCount ?? 0) > 0;
 
-	let key = $state(initial?.key ?? '');
-	let name = $state(initial?.name ?? '');
+	let key = $state(initialFiscalYear?.key ?? '');
+	let name = $state(initialFiscalYear?.name ?? '');
 	let period = $state<Period | undefined>(
-		initial
-			? { start: parseDate(initial.startDate), end: parseDate(initial.endDate) }
+		initialFiscalYear
+			? { start: parseDate(initialFiscalYear.startDate), end: parseDate(initialFiscalYear.endDate) }
 			: untrack(() => suggestedPeriod)
 	);
-	/** The errors are only shown once the user tried to submit, not while typing the first characters */
 	let submitted = $state(false);
-	/** Errors reported by the API, each removed once its field is changed */
 	let serverErrors = $state<Partial<Record<FieldName, string>>>({});
 	let saving = $state(false);
 
@@ -87,9 +83,9 @@
 
 	function send(start: string, end: string) {
 		const body = { name: emptyToNull(name), startDate: start, endDate: end };
-		if (initial) {
+		if (initialFiscalYear) {
 			return apiClient.PUT('/api/manage-fiscal-years/update-fiscal-year', {
-				params: { query: { accountingUnitKey, key: initial.key } },
+				params: { query: { accountingUnitKey, key: initialFiscalYear.key } },
 				body
 			});
 		}
@@ -150,7 +146,7 @@
 		<form class="flex flex-col gap-6" onsubmit={handleSubmit} novalidate>
 			<Dialog.Header>
 				<Dialog.Title>
-					{initial ? `Haushaltsjahr „${initial.name ?? initial.key}“ bearbeiten` : 'Haushaltsjahr anlegen'}
+					{initialFiscalYear ? `Haushaltsjahr „${initialFiscalYear.name ?? initialFiscalYear.key}“ bearbeiten` : 'Haushaltsjahr anlegen'}
 				</Dialog.Title>
 			</Dialog.Header>
 

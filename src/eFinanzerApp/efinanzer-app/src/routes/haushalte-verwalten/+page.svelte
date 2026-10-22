@@ -13,7 +13,7 @@
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import apiClient from '#lib/api/client.js';
 	import type { AccountingUnitListItem } from '#lib/api/types.js';
-	import { confirm } from '#lib/confirm.svelte.js';
+	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import CreateAccountingUnitDialog from './CreateAccountingUnitDialog.svelte';
 
@@ -136,7 +136,7 @@
 						<Button
 							variant="ghost"
 							class="h-11 rounded-none"
-							href={resolve('/haushalte-verwalten/[key]', { key: accountingUnit.key })}
+							href={resolve('/haushalte-verwalten/[accountingUnitKey]', { accountingUnitKey: accountingUnit.key })}
 							aria-label={`Haushalt ${name} bearbeiten`}
 						>
 							<PencilIcon />
