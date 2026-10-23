@@ -7,9 +7,9 @@ SvelteKit single page app with Svelte 5 runes, Tailwind and shadcn-svelte. See R
 - Build the UI from the shadcn-svelte components in `src/lib/components/ui`. Missing ones are added with
   `npx shadcn-svelte@latest add <name>`; afterwards translate their English texts (e.g. "Close") to German.
 - All texts shown to users are German.
-- Messages go through `toast` from `svelte-sonner`, confirmations through `confirm()` from `#lib/confirm.svelte.js`.
-- Requests use `apiClient` from `#lib/api/client.js`. A page that loads data keeps a request counter, so a slow
-  earlier response cannot overwrite a newer one (see any `load()` function).
+- Messages go through `toast` from `svelte-sonner`, confirmations through `confirm()` from `#lib/components/confirm-dialog/confirmDialog.svelte.js`.
+- Requests use `apiClient` from `#lib/api/client.js`. A page loads its data through a `DataLoader` from
+  `#lib/api/data-loading.svelte.js`, which keeps the loading and error state and drops responses of outdated requests.
 
 ## Prefer full names over user names
 

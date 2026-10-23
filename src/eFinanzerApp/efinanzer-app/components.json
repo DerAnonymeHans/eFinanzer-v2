@@ -6,9 +6,9 @@
 	},
 	"aliases": {
 		"components": "#lib/components",
-		"utils": "#lib/utils",
+		"utils": "#lib/type-utils",
 		"ui": "#lib/components/ui",
-		"hooks": "#lib/hooks",
+		"hooks": "#lib/reactivity",
 		"lib": "#lib"
 	},
 	"typescript": true,

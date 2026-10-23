@@ -6,7 +6,7 @@ import { Toaster } from 'svelte-sonner';
 import ConfirmDialog from '#lib/components/confirm-dialog/ConfirmDialog.svelte';
 import type { UserAccess } from '#lib/api/types.js';
 import { setAuth } from '#lib/auth/auth.svelte.js';
-import { userAccessStore } from '#lib/stores/user-access.svelte.js';
+import { userAccessLoader } from '#lib/stores/user-access.svelte.js';
 import { userCache } from '#lib/stores/user-cache.svelte.js';
 
 /** A successful response of the mocked API client */
@@ -25,7 +25,7 @@ export function failed(status: number, error: unknown = {}) {
  */
 export function resetApp(userAccess?: UserAccess) {
 	setAuth({ username: 'mmuster', displayName: 'Max Muster', logout: vi.fn().mockResolvedValue(undefined) });
-	userAccessStore.reset(userAccess);
+	userAccessLoader.reset(userAccess);
 	userCache.clear();
 }
 

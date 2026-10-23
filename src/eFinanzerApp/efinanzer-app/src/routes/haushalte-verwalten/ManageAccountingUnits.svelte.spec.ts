@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi, type Mock } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
+import type { ComponentProps } from 'svelte';
 import { render } from 'vitest-browser-svelte';
 import { toast } from 'svelte-sonner';
 import apiClient from '#lib/api/client.js';
@@ -70,7 +71,9 @@ function renderList() {
 
 function renderDetails() {
 	renderAppOverlays();
-	return render(DetailPage, { params: { key: 'fsr-dit' } } as never);
+	// Typed, so a renamed route parameter fails the type check. The cast leaves out the other page props.
+	const props: Pick<ComponentProps<typeof DetailPage>, 'params'> = { params: { accountingUnitKey: 'fsr-dit' } };
+	return render(DetailPage, props as never);
 }
 
 /** Opens the user search, types into it and waits for the search request */

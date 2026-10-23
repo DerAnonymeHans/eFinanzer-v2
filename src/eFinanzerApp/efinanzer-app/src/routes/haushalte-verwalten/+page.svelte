@@ -15,43 +15,28 @@
 	import type { AccountingUnitListItem } from '#lib/api/types.js';
 	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
+	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import CreateAccountingUnitDialog from './CreateAccountingUnitDialog.svelte';
 
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 
-	let accountingUnits = $state<AccountingUnitListItem[]>();
-	let error = $state<string>();
+	async function fetchAccountingUnits(): LoadFunctionResult<AccountingUnitListItem[]> {
+		const { data, response } = await apiClient.GET('/api/manage-accounting-units/list-accounting-units');
+		return response.ok && data ? { value: data } : { error: response };
+	}
+
+	const accountingUnitsLoader = useDataLoader(fetchAccountingUnits, 'Haushalte konnten nicht geladen werden');
+
 	/** Changes for every opening, so the dialog starts with an empty form */
 	let createId = $state(0);
 	let createOpen = $state(false);
 
-	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
-	let latestRequest = 0;
-
-	async function load() {
-		const request = ++latestRequest;
-
-		let result: AccountingUnitListItem[] | undefined;
-		let failure: string | undefined;
-		try {
-			const { data, response } = await apiClient.GET('/api/manage-accounting-units/list-accounting-units');
-			if (response.ok && data) result = data;
-			else failure = `Haushalte konnten nicht geladen werden (HTTP ${response.status})`;
-		} catch {
-			failure = 'Haushalte konnten nicht geladen werden';
-		}
-
-		if (request !== latestRequest) return;
-		accountingUnits = result;
-		error = failure;
-	}
-
-	onMount(() => void load());
+	onMount(() => void accountingUnitsLoader.load());
 
 	// The side navigation lists the Haushalte too, so it is updated after every change
 	function handleChanged() {
-		void load();
-		void access.reload();
+		void accountingUnitsLoader.load();
+		void userAccess.load();
 	}
 
 	function openCreate() {
@@ -101,21 +86,21 @@
 		</Button>
 	</div>
 
-	{#if error}
-		<ErrorAlert message={error} onRetry={() => void load()} />
+	{#if accountingUnitsLoader.error}
+		<ErrorAlert message={accountingUnitsLoader.error} onRetry={() => void accountingUnitsLoader.load()} />
 	{/if}
 
-	{#if !accountingUnits && !error}
+	{#if accountingUnitsLoader.initialLoading}
 		<PageSpinner />
 	{/if}
 
-	{#if accountingUnits?.length === 0}
+	{#if accountingUnitsLoader.value?.length === 0}
 		<EmptyState description="Noch keine Haushalte angelegt" />
 	{/if}
 
-	{#if accountingUnits && accountingUnits.length > 0}
+	{#if accountingUnitsLoader.value && accountingUnitsLoader.value.length > 0}
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
-			{#each accountingUnits as accountingUnit (accountingUnit.key)}
+			{#each accountingUnitsLoader.value as accountingUnit (accountingUnit.key)}
 				{@const name = accountingUnit.name ?? accountingUnit.key}
 				<Card.Root class="pb-0">
 					<Card.Header>

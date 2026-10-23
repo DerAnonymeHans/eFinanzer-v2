@@ -10,6 +10,7 @@
 	import ErrorAlert from '#lib/components/ErrorAlert.svelte';
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import apiClient from '#lib/api/client.js';
+	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import type {
 		AccountingUnitRole,
 		RoleChangeRequest,
@@ -27,46 +28,29 @@
 		accountingUnits: RoleChangeRequestAccountingUnit[];
 	}
 
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 
-	let data = $state<LoadedData>();
-	let error = $state<string>();
+	async function fetchData(): LoadFunctionResult<LoadedData> {
+		const [roleChangeRequests, accountingUnits] = await Promise.all([
+			apiClient.GET('/api/manage-role-change-requests/list-own-role-change-requests'),
+			apiClient.GET('/api/manage-role-change-requests/list-accounting-units')
+		]);
+		if (!roleChangeRequests.response.ok || !roleChangeRequests.data) return { error: roleChangeRequests.response };
+		if (!accountingUnits.response.ok || !accountingUnits.data) return { error: accountingUnits.response };
+		return { value: { existingRequests: roleChangeRequests.data, accountingUnits: accountingUnits.data } };
+	}
+
+	const roleChangeRequestsLoader = useDataLoader(fetchData, 'Rollenänderungsanträge konnten nicht geladen werden');
+	const data = $derived(roleChangeRequestsLoader.value);
+
 	let createRoleChangeRequestDialogId = $state(0);
 	let createRoleChangeRequestDialogOpen = $state(false);
 
-	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
-	let latestRequest = 0;
-
-	async function load() {
-		const request = ++latestRequest;
-
-		let result: LoadedData | undefined;
-		let failure: string | undefined;
-		try {
-			const [roleChangeRequests, accountingUnits] = await Promise.all([
-				apiClient.GET('/api/manage-role-change-requests/list-own-role-change-requests'),
-				apiClient.GET('/api/manage-role-change-requests/list-accounting-units')
-			]);
-			if (roleChangeRequests.response.ok && roleChangeRequests.data && accountingUnits.response.ok && accountingUnits.data) {
-				result = { existingRequests: roleChangeRequests.data, accountingUnits: accountingUnits.data };
-			} else {
-				const status = roleChangeRequests.response.ok ? accountingUnits.response.status : roleChangeRequests.response.status;
-				failure = `Rollenänderungsanträge konnten nicht geladen werden (HTTP ${status})`;
-			}
-		} catch {
-			failure = 'Rollenänderungsanträge konnten nicht geladen werden';
-		}
-
-		if (request !== latestRequest) return;
-		data = result;
-		error = failure;
-	}
-
-	onMount(() => void load());
+	onMount(() => void roleChangeRequestsLoader.load());
 
 	const currentRoles = $derived(
 		new SvelteMap<string, AccountingUnitRole[]>(
-			access.userAccess?.accountingUnits.map((unit) => [unit.key, unit.accountingUnitRoles]) ?? []
+			userAccess.value?.accountingUnits.map((unit) => [unit.key, unit.accountingUnitRoles]) ?? []
 		)
 	);
 
@@ -104,7 +88,7 @@
 						toast.error(`Antrag konnte nicht zurückgezogen werden (HTTP ${response.status})`);
 						return;
 					}
-					void load();
+					void roleChangeRequestsLoader.load();
 				} catch {
 					toast.error('Antrag konnte nicht zurückgezogen werden');
 				}
@@ -131,11 +115,11 @@
 		{/if}
 	</Card.Header>
 	<Card.Content class="flex flex-col gap-3">
-		{#if error}
-			<ErrorAlert message={error} onRetry={() => void load()} />
+		{#if roleChangeRequestsLoader.error}
+			<ErrorAlert message={roleChangeRequestsLoader.error} onRetry={() => void roleChangeRequestsLoader.load()} />
 		{/if}
 
-		{#if !data && !error}
+		{#if roleChangeRequestsLoader.initialLoading}
 			<PageSpinner class="py-6" />
 		{/if}
 
@@ -176,7 +160,7 @@
 			bind:open={createRoleChangeRequestDialogOpen}
 			accountingUnits={data.accountingUnits}
 			{currentRoles}
-			onChanged={() => void load()}
+			onChanged={() => void roleChangeRequestsLoader.load()}
 		/>
 	{/key}
 {/if}

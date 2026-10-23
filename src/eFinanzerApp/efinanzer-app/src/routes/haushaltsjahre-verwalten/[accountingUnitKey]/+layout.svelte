@@ -7,13 +7,13 @@
 	let { children, params }: LayoutProps = $props();
 
 	// Only users who may manage the fiscal years of this Haushalt see the page.
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 	const accountingUnit = $derived(
-		access.userAccess?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)
+		userAccess.value?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)
 	);
 </script>
 
-{#if access.loading && !access.userAccess}
+{#if userAccess.loading && !userAccess.value}
 	<PageSpinner />
 {:else if !accountingUnit?.manageFiscalYears}
 	<NoAccess description="Für die Verwaltung der Haushaltsjahre dieses Haushalts fehlt die Berechtigung." />

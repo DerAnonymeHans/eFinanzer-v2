@@ -1,34 +1,38 @@
 <script lang="ts" module>
 	import apiClient from '#lib/api/client.js';
+	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import type { RoleChangeRequest } from '#lib/api/types.js';
 	import type { OffsetPagination, Page } from '#lib/components/pagination/pagination.js';
 
 	/** The API allows at most 50 */
 	const PAGE_SIZES = [10, 20, 50];
 
-	interface LoadResult {
-		/** The pagination the result was loaded for, a newer one means the page is still loading */
-		requested: OffsetPagination;
-		/** Differs from the requested one if the requested page does not exist (anymore) */
+	interface LoadedPage {
+		/** Differs from the requested pagination if the requested page does not exist (anymore) */
 		shown: OffsetPagination;
-		page?: Page<RoleChangeRequest>;
-		error?: string;
+		page: Page<RoleChangeRequest>;
 	}
 
-	async function fetchPage({
-		page,
-		pageSize
-	}: OffsetPagination): Promise<{ page?: Page<RoleChangeRequest>; error?: string }> {
-		try {
-			const { data, response } = await apiClient.GET(
-				'/api/manage-role-change-requests/list-pending-role-change-requests',
-				{ params: { query: { PageSize: pageSize, Offset: (page - 1) * pageSize } } }
-			);
-			if (response.ok && data) return { page: { items: data.items, totalCount: Number(data.totalCount) } };
-			return { error: `Offene Rollenänderungsanträge konnten nicht geladen werden (HTTP ${response.status})` };
-		} catch {
-			return { error: 'Offene Rollenänderungsanträge konnten nicht geladen werden' };
-		}
+	async function fetchPage({ page, pageSize }: OffsetPagination): LoadFunctionResult<Page<RoleChangeRequest>> {
+		const { data, response } = await apiClient.GET(
+			'/api/manage-role-change-requests/list-pending-role-change-requests',
+			{ params: { query: { PageSize: pageSize, Offset: (page - 1) * pageSize } } }
+		);
+		if (response.ok && data) return { value: { items: data.items, totalCount: Number(data.totalCount) } };
+		return { error: response };
+	}
+
+	// After the last request of a page was resolved, the page before is shown instead of an empty one
+	async function fetchShownPage(requested: OffsetPagination): LoadFunctionResult<LoadedPage> {
+		const result = await fetchPage(requested);
+		if (!('value' in result)) return result;
+
+		const lastPage = Math.max(1, Math.ceil(result.value.totalCount / requested.pageSize));
+		if (requested.page <= lastPage) return { value: { shown: requested, page: result.value } };
+
+		const shown = { ...requested, page: lastPage };
+		const lastPageResult = await fetchPage(shown);
+		return 'value' in lastPageResult ? { value: { shown, page: lastPageResult.value } } : lastPageResult;
 	}
 </script>
 
@@ -58,42 +62,21 @@
 	}
 
 	const auth = getAuth();
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 
-	// Raw, so the loaded result can be matched to the pagination it was loaded for by identity
 	let pagination = $state.raw<OffsetPagination>({ page: 1, pageSize: PAGE_SIZES[1] });
-	let loadResult = $state.raw<LoadResult>();
+	const pageLoader = useDataLoader(fetchShownPage, 'Offene Rollenänderungsanträge konnten nicht geladen werden');
 	let accountingUnits = $state<RoleChangeRequestAccountingUnit[]>([]);
 	let dialogState = $state<DialogState>();
 	let dialogOpen = $state(false);
 
-	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
-	let latestRequest = 0;
-
-	async function load(requested: OffsetPagination) {
-		const request = ++latestRequest;
-
-		let shown = requested;
-		let result = await fetchPage(shown);
-
-		// After the last request of a page was resolved, the page before is shown instead of an empty one
-		const lastPage = Math.max(1, Math.ceil((result.page?.totalCount ?? 0) / requested.pageSize));
-		if (result.page && requested.page > lastPage) {
-			shown = { ...requested, page: lastPage };
-			result = await fetchPage(shown);
-		}
-
-		if (request !== latestRequest) return;
-		loadResult = { requested, shown, ...result };
-	}
-
 	function changePagination(next: OffsetPagination) {
 		pagination = next;
-		void load(next);
+		void pageLoader.load(next);
 	}
 
 	onMount(() => {
-		void load(pagination);
+		void pageLoader.load(pagination);
 
 		// Only needed for the names of the accounting units, so the requests are still shown if it fails
 		apiClient
@@ -104,10 +87,10 @@
 			.catch(() => undefined);
 	});
 
-	const loadedPage = $derived(loadResult?.page);
-	const error = $derived(loadResult?.error);
-	const loading = $derived(loadResult?.requested !== pagination);
-	const shownPagination = $derived(loadResult?.shown ?? pagination);
+	const loadedPage = $derived(pageLoader.value?.page);
+	const error = $derived(pageLoader.error);
+	const loading = $derived(pageLoader.loading);
+	const shownPagination = $derived(pageLoader.value?.shown ?? pagination);
 
 	const getAccountingUnitName = (key: string) => accountingUnits.find((unit) => unit.key === key)?.name ?? key;
 
@@ -120,7 +103,7 @@
 		// Loads the shown page again
 		changePagination({ ...shownPagination });
 		// Resolving an own request changes the roles of the logged-in user
-		if (dialogState?.request.requestedBy === auth.username) void access.reload();
+		if (dialogState?.request.requestedBy === auth.username) void userAccess.load();
 	}
 </script>
 
@@ -130,7 +113,7 @@
 	</Card.Header>
 	<Card.Content class="flex flex-col gap-4">
 		{#if error}
-			<ErrorAlert message={error} onRetry={() => void load(pagination)} />
+			<ErrorAlert message={error} onRetry={() => void pageLoader.load(pagination)} />
 		{:else if !loadedPage}
 			<PageSpinner />
 		{:else}

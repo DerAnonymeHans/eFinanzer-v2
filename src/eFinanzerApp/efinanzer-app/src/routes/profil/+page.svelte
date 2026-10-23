@@ -7,15 +7,15 @@
 	import RoleChangeRequestsList from './RoleChangeRequestsList.svelte';
 
 	const auth = getAuth();
-	const access = useUserAccess();
-	const roleNames = $derived(access.userAccess ? getRoleNames(access.userAccess) : []);
+	const userAccess = useUserAccess();
+	const roleNames = $derived(userAccess.value ? getRoleNames(userAccess.value) : []);
 </script>
 
 <div class="flex flex-col gap-6">
 	<div>
 		<h1 class="text-3xl font-semibold tracking-tight">{auth.displayName}</h1>
 		<div class="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Aktuelle Rollen">
-			{#if access.loading}
+			{#if userAccess.loading}
 				<Spinner />
 			{:else if roleNames.length === 0}
 				<span class="text-muted-foreground">Keine Rollen</span>

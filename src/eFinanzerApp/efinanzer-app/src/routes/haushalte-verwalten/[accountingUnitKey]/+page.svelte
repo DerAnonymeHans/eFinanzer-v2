@@ -26,6 +26,7 @@
 	import UserName from '#lib/components/UserName.svelte';
 	import UserSearchSelect from '#lib/components/UserSearchSelect.svelte';
 	import apiClient from '#lib/api/client.js';
+	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import type { AccountingUnitDetails, User, UserRoles } from '#lib/api/types.js';
 	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
@@ -36,41 +37,34 @@
 
 	let { params }: PageProps = $props();
 
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 
-	let accountingUnit = $state<AccountingUnitDetails>();
-	let error = $state<string>();
+	async function fetchAccountingUnit(key: string): LoadFunctionResult<AccountingUnitDetails> {
+		const { data, response } = await apiClient.GET('/api/manage-accounting-units/get-accounting-unit', {
+			params: { query: { key } }
+		});
+		if (response.ok && data) return { value: data };
+		if (response.status === 404) return { error: `Den Haushalt „${key}“ gibt es nicht` };
+		return { error: response };
+	}
+
+	const accountingUnitLoader = useDataLoader(fetchAccountingUnit, 'Haushalt konnte nicht geladen werden');
+	const accountingUnit = $derived(accountingUnitLoader.value);
+
 	let name = $state('');
 	let description = $state('');
 	let users = $state<UserRoles[]>([]);
 	let newUser = $state<User>();
 	let submitted = $state(false);
 
-	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
-	let latestRequest = 0;
-
+	// Loads the Haushalt and fills the form with its values, unless a newer load was started meanwhile
 	async function load(key: string) {
-		const request = ++latestRequest;
-
-		let result: AccountingUnitDetails | undefined;
-		let failure: string | undefined;
-		try {
-			const { data, response } = await apiClient.GET('/api/manage-accounting-units/get-accounting-unit', {
-				params: { query: { key } }
-			});
-			if (response.ok && data) result = data;
-			else if (response.status === 404) failure = `Den Haushalt „${key}“ gibt es nicht`;
-			else failure = `Haushalt konnte nicht geladen werden (HTTP ${response.status})`;
-		} catch {
-			failure = 'Haushalt konnte nicht geladen werden';
-		}
-
-		if (request !== latestRequest) return;
-		accountingUnit = result;
-		error = failure;
+		if (!(await accountingUnitLoader.load(key))) return;
+		const result = accountingUnitLoader.value;
 		name = result?.name ?? '';
 		description = result?.description ?? '';
-		users = result?.usersWithRoles ?? [];
+		// A copy, so the edits do not change the loaded Haushalt
+		users = structuredClone(result?.usersWithRoles ?? []);
 	}
 
 	// Loads again when another Haushalt is opened
@@ -112,7 +106,7 @@
 				toast.success('Änderungen wurden gespeichert');
 				void load(params.accountingUnitKey);
 				// The side navigation shows the name of the Haushalt and the roles of the logged-in user
-				void access.reload();
+				void userAccess.load();
 			} else if (response.status === 400) {
 				toast.error('Die Eingaben sind ungültig, eventuell gibt es einen Benutzer nicht');
 			} else if (response.status === 404) {
@@ -162,8 +156,8 @@
 		Alle Haushalte
 	</a>
 
-	{#if error}
-		<ErrorAlert message={error} onRetry={() => void load(params.accountingUnitKey)} />
+	{#if accountingUnitLoader.error}
+		<ErrorAlert message={accountingUnitLoader.error} onRetry={() => void load(params.accountingUnitKey)} />
 	{:else if !accountingUnit}
 		<PageSpinner />
 	{:else}

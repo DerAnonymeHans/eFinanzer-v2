@@ -28,8 +28,8 @@
 
 	// Only Haushalte and fiscal years the user has access to can be selected. Without a valid choice the first one is
 	// used, e.g. right after the user access was loaded.
-	const access = useUserAccess();
-	const accountingUnits = $derived(access.userAccess?.accountingUnits ?? []);
+	const userAccess = useUserAccess();
+	const accountingUnits = $derived(userAccess.value?.accountingUnits ?? []);
 	const accountingUnit = $derived.by(() => {
 		const selectedKey = fiscalYearsPageKey ?? accountingUnitKey;
 		return accountingUnits.find((unit) => unit.key === selectedKey) ?? accountingUnits[0];

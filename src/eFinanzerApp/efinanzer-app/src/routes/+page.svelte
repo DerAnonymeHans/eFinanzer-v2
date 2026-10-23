@@ -2,12 +2,13 @@
   import * as Card from '#lib/components/ui/card/index.js';
   import {useUserAccess} from "#lib/stores/user-access.svelte.ts";
   import {Button} from "#lib/components/ui/button/index.js";
+  import {resolve} from "$app/paths";
 
-  const userAccessStore = useUserAccess()
+  const userAccess = useUserAccess()
   const hasAnyAccess = $derived<boolean>(
-    userAccessStore.userAccess !== undefined
-    && (userAccessStore.userAccess.administrationRoles.length > 0
-      || userAccessStore.userAccess.accountingUnits.some(accountingUnit => accountingUnit.accountingUnitRoles.length > 0))
+    userAccess.value !== undefined
+    && (userAccess.value.administrationRoles.length > 0
+      || userAccess.value.accountingUnits.some(accountingUnit => accountingUnit.accountingUnitRoles.length > 0))
   )
 
 </script>
@@ -21,8 +22,8 @@
     {#if !hasAnyAccess}
       <Card.Description>Du besitzt zur Zeit keine Berechtigungen. Um Berechtigungen zu erhalten, klicke auf den Button und erstelle anschließend einen Rollenänderungsantrag.</Card.Description>
       <div>
-        <Button>
-          <a href="./profil">Zum Berechtigungen beantragen</a>
+        <Button href={resolve('/profil')}>
+          Zum Berechtigungen beantragen
         </Button>
       </div>
     {/if}

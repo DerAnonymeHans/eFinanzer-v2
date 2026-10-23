@@ -12,6 +12,7 @@
 	import ErrorAlert from '#lib/components/ErrorAlert.svelte';
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import apiClient from '#lib/api/client.js';
+	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import type { FiscalYearListItem } from '#lib/api/types.js';
 	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
@@ -32,50 +33,36 @@
 
 	let { params }: PageProps = $props();
 
-	const userAccessStore = useUserAccess();
+	const userAccess = useUserAccess();
 	const accountingUnitName = $derived(
-		userAccessStore.userAccess?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)?.name ??
+		userAccess.value?.accountingUnits.find((unit) => unit.key === params.accountingUnitKey)?.name ??
 			params.accountingUnitKey
 	);
 
-	let fiscalYears = $state<FiscalYearListItem[]>();
-	let error = $state<string>();
+	async function fetchFiscalYears(accountingUnitKey: string): LoadFunctionResult<FiscalYearListItem[]> {
+		const { data, response } = await apiClient.GET('/api/manage-fiscal-years/list-fiscal-years', {
+			params: { query: { accountingUnitKey } }
+		});
+		if (response.ok && data) return { value: data };
+		if (response.status === 404) return { error: `Den Haushalt „${accountingUnitKey}“ gibt es nicht` };
+		return { error: response };
+	}
+
+	const fiscalYearsLoader = useDataLoader(fetchFiscalYears, 'Haushaltsjahre konnten nicht geladen werden');
+	const fiscalYears = $derived(fiscalYearsLoader.value);
+
 	let dialogState = $state<DialogState>();
 	let dialogOpen = $state(false);
 
-	// Only the latest request may update the state, so a slow earlier response cannot overwrite a newer one
-	let latestRequest = 0;
-
-	async function load(accountingUnitKey: string) {
-		const request = ++latestRequest;
-
-		let result: FiscalYearListItem[] | undefined;
-		let failure: string | undefined;
-		try {
-			const { data, response } = await apiClient.GET('/api/manage-fiscal-years/list-fiscal-years', {
-				params: { query: { accountingUnitKey } }
-			});
-			if (response.ok && data) result = data;
-			else if (response.status === 404) failure = `Den Haushalt „${accountingUnitKey}“ gibt es nicht`;
-			else failure = `Haushaltsjahre konnten nicht geladen werden (HTTP ${response.status})`;
-		} catch {
-			failure = 'Haushaltsjahre konnten nicht geladen werden';
-		}
-
-		if (request !== latestRequest) return;
-		fiscalYears = result;
-		error = failure;
-	}
-
 	// Loads again when another Haushalt is selected in the navigation
 	$effect(() => {
-		void load(params.accountingUnitKey);
+		void fiscalYearsLoader.load(params.accountingUnitKey);
 	});
 
 	// The side navigation lists the fiscal years too, so it is updated after every change
 	function handleFiscalYearsChanged() {
-		void load(params.accountingUnitKey);
-		void userAccessStore.reload();
+		void fiscalYearsLoader.load(params.accountingUnitKey);
+		void userAccess.load();
 	}
 
 	function openCreateDialog(fiscalYear?: FiscalYearListItem) {
@@ -102,7 +89,7 @@
 						handleFiscalYearsChanged();
 					} else if (response.status === 409) {
 						toast.error('Das Haushaltsjahr hat noch Budgets oder Belege und kann daher nicht gelöscht werden');
-						void load(accountingUnitKey);
+						void fiscalYearsLoader.load(accountingUnitKey);
 					} else if (response.status === 404) {
 						toast.error('Das Haushaltsjahr existiert nicht mehr');
 						handleFiscalYearsChanged();
@@ -129,11 +116,14 @@
 		</Button>
 	</div>
 
-	{#if error}
-		<ErrorAlert message={error} onRetry={() => void load(params.accountingUnitKey)} />
+	{#if fiscalYearsLoader.error}
+		<ErrorAlert
+			message={fiscalYearsLoader.error}
+			onRetry={() => void fiscalYearsLoader.load(params.accountingUnitKey)}
+		/>
 	{/if}
 
-	{#if !fiscalYears && !error}
+	{#if fiscalYearsLoader.initialLoading}
 		<PageSpinner />
 	{/if}
 

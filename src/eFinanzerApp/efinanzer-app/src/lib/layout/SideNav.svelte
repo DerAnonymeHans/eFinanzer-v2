@@ -51,12 +51,12 @@
 	}: Props = $props();
 
 	const auth = getAuth();
-	const access = useUserAccess();
-	const canEditAccountingUnits = $derived(access.userAccess?.manageAccountingUnits ?? false);
+	const userAccess = useUserAccess();
+	const canEditAccountingUnits = $derived(userAccess.value?.manageAccountingUnits ?? false);
 	const canEditFiscalYears = $derived(accountingUnit?.manageFiscalYears ?? false);
-	const canAdministrate = $derived(access.userAccess?.resolveRoleChangeRequests ?? false);
+	const canAdministrate = $derived(userAccess.value?.resolveRoleChangeRequests ?? false);
 	const roleNames = $derived(
-		access.userAccess ? getRoleNames(access.userAccess).slice(0, MAX_SHOWN_ROLES) : []
+		userAccess.value ? getRoleNames(userAccess.value).slice(0, MAX_SHOWN_ROLES) : []
 	);
 	const fiscalYears = $derived(accountingUnit?.fiscalYears ?? []);
 
@@ -73,7 +73,7 @@
 <!-- Content of the side navigation, shared by the desktop sidebar and the mobile drawer -->
 <nav class="flex min-h-full flex-col gap-5 px-4.5 py-7 text-sidebar-foreground" aria-label="Hauptnavigation">
 	<div class="flex flex-col gap-1 px-2.5">
-		<a href="/" class="inline-flex items-center gap-2 text-[19px] font-bold tracking-[-0.01em]">
+		<a href={resolve('/')} class="inline-flex items-center gap-2 text-[19px] font-bold tracking-[-0.01em]">
 			<Logo size={24} />
 			eFinanzer
 		</a>
@@ -122,7 +122,7 @@
 				<Select.Trigger id="side-nav-accounting-unit" class={selectTriggerClass}>
 					{accountingUnit
 						? (accountingUnit.name ?? accountingUnit.key)
-						: access.loading
+						: userAccess.loading
 							? 'Wird geladen…'
 							: 'Kein Haushalt verfügbar'}
 				</Select.Trigger>
@@ -158,7 +158,7 @@
 				<Select.Trigger id="side-nav-fiscal-year" class={selectTriggerClass}>
 					{fiscalYear
 						? (fiscalYear.name ?? fiscalYear.key)
-						: access.loading
+						: userAccess.loading
 							? 'Wird geladen…'
 							: 'Kein Haushaltsjahr verfügbar'}
 				</Select.Trigger>

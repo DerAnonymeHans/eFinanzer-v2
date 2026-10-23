@@ -7,13 +7,13 @@
 	let { children }: LayoutProps = $props();
 
 	// Only users who may manage accounting units see these pages. The API checks it again for every request.
-	const access = useUserAccess();
+	const userAccess = useUserAccess();
 </script>
 
 <!-- Keeps the page while the user access is reloaded after a change, so its state survives -->
-{#if access.loading && !access.userAccess}
+{#if userAccess.loading && !userAccess.value}
 	<PageSpinner />
-{:else if !access.userAccess?.manageAccountingUnits}
+{:else if !userAccess.value?.manageAccountingUnits}
 	<NoAccess description="Für die Verwaltung der Haushalte fehlt die Berechtigung." />
 {:else}
 	{@render children()}
