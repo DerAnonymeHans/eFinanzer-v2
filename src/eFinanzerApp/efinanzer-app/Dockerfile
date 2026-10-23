@@ -1,5 +1,5 @@
 ﻿# =========================================
-# Stage 1: Build the React (Vite) Application
+# Stage 1: Build the SvelteKit Application
 # =========================================
 
 ARG NODE_VERSION=26.12.0-alpine
@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 # .env and .env.production are included, Vite builds their VITE_ values into the bundle (see .dockerignore)
 COPY . .
 
-# Build the React.js application (outputs to /app/dist)
+# Build the SvelteKit application (adapter-static, outputs to /app/build)
 RUN npm run build
 
 
@@ -30,7 +30,7 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:alpine AS runner
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --link --from=builder /app/dist /usr/share/nginx/html
+COPY --link --from=builder /app/build /usr/share/nginx/html
 
 # The reverse proxy forwards to efinanzer_app:3000 (see src/deploy/nginx.conf)
 EXPOSE 3000

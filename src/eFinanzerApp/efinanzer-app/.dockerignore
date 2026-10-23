@@ -3,12 +3,14 @@
 # =========================================
 node_modules/
 dist/
+build/
+.svelte-kit/
 out/
 .tmp/
 .cache/
 
 # =========================================
-# Vite, Webpack, and React-specific artifacts
+# Vite and SvelteKit artifacts
 # =========================================
 .vite/
 .vitepress/
