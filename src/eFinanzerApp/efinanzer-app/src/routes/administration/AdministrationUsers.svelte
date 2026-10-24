@@ -17,6 +17,7 @@
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { useDataLoader } from '#lib/api/data-loading.svelte.js';
+	import { isApiError } from '#lib/api/errors.js';
 	import { getAuth } from '#lib/auth/auth.svelte.js';
 	import UsersWithRolesList from '#lib/components/users-with-roles-list/UsersWithRolesList.svelte';
 	import type { UserWithRoles } from '#lib/components/users-with-roles-list/user-with-roles.js';
@@ -50,18 +51,30 @@
 		texts: { success: string; partialFailure: string; failure: string }
 	): Promise<boolean> {
 		try {
-			const { response } = await apiClient.PUT('/api/manage-administration-roles/update-administration-roles', {
+			const { response, error } = await apiClient.PUT('/api/manage-administration-roles/update-administration-roles', {
 				body: { username, administrationRoles }
 			});
 
 			if (response.ok) {
 				toast.success(texts.success);
+			} else if (response.status === 500 && isApiError(error, 'ChangeUserRoleError')) {
+				// Role changes are applied one after another, so the ones before the failed one were saved
+				const change = error.added ? 'hinzugefügt' : 'entfernt';
+				toast.error(`${texts.partialFailure}: Die Rolle ${error.role} konnte nicht ${change} werden`);
+			} else if (response.status === 400 && isApiError(error, 'UnknownUserError')) {
+				toast.error(`Den Benutzer ${userCache.getDisplayName(error.userName)} gibt es nicht mehr`);
+				return false;
+			} else if (response.status === 400 && isApiError(error, 'InvalidInputError') && username === auth.username) {
+				// The only rule the form cannot break on its own
+				toast.error('Du kannst dir die Rolle Finanzverwaltung nicht selbst entziehen');
+				return false;
 			} else if (response.status === 400) {
-				toast.error('Die Eingaben sind ungültig, eventuell gibt es den Benutzer nicht mehr');
+				toast.error('Die Eingaben sind ungültig');
 				return false;
 			} else {
-				// Role changes are applied one after another, so some of them may have been saved
-				toast.error(`${texts.partialFailure} (HTTP ${response.status})`);
+				// Nothing was changed, e.g. the current roles could not be loaded or the user may no longer edit them
+				toast.error(`${texts.failure} (HTTP ${response.status})`);
+				return false;
 			}
 			handleChanged(username);
 			return true;

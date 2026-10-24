@@ -219,7 +219,7 @@ public class HandleRoleChangesTaskTests
 
         // Assert
         Assert.Equal(
-            new ChangeUserRoleError("alice", AdministrationRole.FinanceAdministrator, Added: false, keycloakError),
+            new ChangeUserRoleError("alice", nameof(AdministrationRole.FinanceAdministrator), Added: false, keycloakError),
             result.Error);
         await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }

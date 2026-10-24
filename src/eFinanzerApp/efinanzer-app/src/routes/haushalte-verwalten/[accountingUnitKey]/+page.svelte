@@ -24,6 +24,7 @@
 	import type { UserWithRoles } from '#lib/components/users-with-roles-list/user-with-roles.js';
 	import apiClient from '#lib/api/client.js';
 	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
+	import { isApiError } from '#lib/api/errors.js';
 	import type { AccountingUnitDetails } from '#lib/api/types.js';
 	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
@@ -96,7 +97,7 @@
 
 	async function save() {
 		try {
-			const { response } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
+			const { response, error } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
 				params: { query: { key: params.accountingUnitKey } },
 				body: {
 					name: emptyToNull(name),
@@ -113,14 +114,23 @@
 				void load(params.accountingUnitKey);
 				// The side navigation shows the name of the Haushalt and the roles of the logged-in user
 				void userAccess.load();
+			} else if (response.status === 500 && isApiError(error, 'ChangeUserRoleError')) {
+				// Role changes are applied one after another, so the ones before the failed one were saved
+				const change = error.added ? 'hinzugefügt' : 'entfernt';
+				toast.error(
+					`Änderungen konnten nicht vollständig gespeichert werden: Die Rolle ${error.role} von ` +
+						`${userCache.getDisplayName(error.userName)} konnte nicht ${change} werden`
+				);
+				void load(params.accountingUnitKey);
+			} else if (response.status === 400 && isApiError(error, 'UnknownUserError')) {
+				toast.error(`Den Benutzer ${userCache.getDisplayName(error.userName)} gibt es nicht mehr`);
 			} else if (response.status === 400) {
-				toast.error('Die Eingaben sind ungültig, eventuell gibt es einen Benutzer nicht');
+				toast.error('Die Eingaben sind ungültig');
 			} else if (response.status === 404) {
 				toast.error('Der Haushalt existiert nicht mehr');
 			} else {
-				// Role changes are applied one after another, so some of them may have been saved
-				toast.error(`Änderungen konnten nicht vollständig gespeichert werden (HTTP ${response.status})`);
-				void load(params.accountingUnitKey);
+				// Nothing was changed, e.g. the current roles could not be loaded or the user may no longer edit them
+				toast.error(`Änderungen konnten nicht gespeichert werden (HTTP ${response.status})`);
 			}
 		} catch {
 			toast.error('Änderungen konnten nicht gespeichert werden');

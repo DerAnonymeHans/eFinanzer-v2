@@ -239,19 +239,31 @@ test('reloads the own user access after changing the own roles', async () => {
 });
 
 test('keeps the dialog open if the user does not exist anymore', async () => {
-	api.PUT.mockResolvedValue(failed(400));
+	api.PUT.mockResolvedValue(failed(400, { type: 'UnknownUserError', userName: 'rpruef' }));
 	renderPage();
 
 	await userEvent.click(editButton('Rita Prüfer'));
 	await userEvent.click(page.getByRole('dialog').getByRole('checkbox', { name: 'Haupt-Finanzer' }));
 	await userEvent.click(page.getByRole('dialog').getByRole('button', { name: 'Speichern' }));
 
-	await expect.element(page.getByText(/eventuell gibt es den Benutzer nicht mehr/)).toBeInTheDocument();
+	await expect.element(page.getByText('Den Benutzer Rita Prüfer gibt es nicht mehr')).toBeInTheDocument();
+	await expect.element(page.getByRole('dialog')).toBeInTheDocument();
+});
+
+test('keeps the dialog open if the logged-in user removes their own managing role', async () => {
+	api.PUT.mockResolvedValue(failed(400, { type: 'InvalidInputError', field: 'AdministrationRoles', message: 'Not allowed' }));
+	renderPage(administratorAccess, 'eadmin');
+
+	await userEvent.click(editButton('Erika Admin'));
+	await userEvent.click(page.getByRole('dialog').getByRole('checkbox', { name: 'Finanzverwaltung' }));
+	await userEvent.click(page.getByRole('dialog').getByRole('button', { name: 'Speichern' }));
+
+	await expect.element(page.getByText('Du kannst dir die Rolle Finanzverwaltung nicht selbst entziehen')).toBeInTheDocument();
 	await expect.element(page.getByRole('dialog')).toBeInTheDocument();
 });
 
 test('closes the dialog and reloads if the roles were saved only partly', async () => {
-	api.PUT.mockResolvedValue(failed(500));
+	api.PUT.mockResolvedValue(failed(500, { type: 'ChangeUserRoleError', userName: 'rpruef', role: 'HeadFinanceOfficer', added: true }));
 	renderPage();
 	await expect.element(administrationUserRow('Rita Prüfer')).toBeInTheDocument();
 	const loadsBefore = administrationUsersLoads();
@@ -260,9 +272,23 @@ test('closes the dialog and reloads if the roles were saved only partly', async 
 	await userEvent.click(page.getByRole('dialog').getByRole('checkbox', { name: 'Haupt-Finanzer' }));
 	await userEvent.click(page.getByRole('dialog').getByRole('button', { name: 'Speichern' }));
 
-	await expect.element(page.getByText('Rollen konnten nicht vollständig gespeichert werden (HTTP 500)')).toBeInTheDocument();
+	await expect
+		.element(page.getByText('Rollen konnten nicht vollständig gespeichert werden: Die Rolle Haupt-Finanzer konnte nicht hinzugefügt werden'))
+		.toBeInTheDocument();
 	await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
 	await expect.poll(administrationUsersLoads).toBeGreaterThan(loadsBefore);
+});
+
+test('keeps the dialog open if nothing was saved', async () => {
+	api.PUT.mockResolvedValue(failed(403));
+	renderPage();
+
+	await userEvent.click(editButton('Rita Prüfer'));
+	await userEvent.click(page.getByRole('dialog').getByRole('checkbox', { name: 'Haupt-Finanzer' }));
+	await userEvent.click(page.getByRole('dialog').getByRole('button', { name: 'Speichern' }));
+
+	await expect.element(page.getByText('Rollen konnten nicht gespeichert werden (HTTP 403)')).toBeInTheDocument();
+	await expect.element(page.getByRole('dialog')).toBeInTheDocument();
 });
 
 test('shows the pending requests of the first page', async () => {
@@ -390,7 +416,7 @@ test('dismisses a request without a comment', async () => {
 });
 
 test('keeps the dialog open if the request cannot be applied', async () => {
-	api.PUT.mockResolvedValue(failed(409, { id: 7, reason: 'user does not exist anymore' }));
+	api.PUT.mockResolvedValue(failed(409, { type: 'RoleChangeRequestNotApplicableError', id: 7, reason: 'user does not exist anymore' }));
 	renderPage();
 
 	await userEvent.click(requestRow().getByRole('button', { name: 'Annehmen' }));
@@ -496,7 +522,7 @@ test('reloads the own user access after removing oneself', async () => {
 });
 
 test('reloads the members if removing failed partly', async () => {
-	api.PUT.mockResolvedValue(failed(500));
+	api.PUT.mockResolvedValue(failed(500, { type: 'ChangeUserRoleError', userName: 'rpruef', role: 'FinanceReviewer', added: false }));
 	renderPage();
 	await expect.element(administrationUserRow('Rita Prüfer')).toBeInTheDocument();
 	const loadsBefore = administrationUsersLoads();
@@ -504,6 +530,8 @@ test('reloads the members if removing failed partly', async () => {
 	await userEvent.click(page.getByRole('button', { name: 'Rita Prüfer entfernen' }));
 	await userEvent.click(page.getByRole('alertdialog').getByRole('button', { name: 'Entfernen' }));
 
-	await expect.element(page.getByText('Rollen konnten nicht vollständig entfernt werden (HTTP 500)')).toBeInTheDocument();
+	await expect
+		.element(page.getByText('Rollen konnten nicht vollständig entfernt werden: Die Rolle Finanzprüfung konnte nicht entfernt werden'))
+		.toBeInTheDocument();
 	await expect.poll(administrationUsersLoads).toBeGreaterThan(loadsBefore);
 });

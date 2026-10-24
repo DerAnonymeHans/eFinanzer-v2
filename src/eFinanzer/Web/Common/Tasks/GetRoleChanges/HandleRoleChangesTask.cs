@@ -104,7 +104,7 @@ public class HandleRoleChangesTask(
                 logger.LogError(
                     "Changing role {Role} (ChangeType: {ChangeType}) of user {UserName} failed: {Error}",
                     change.Role, change.Type, change.Username, changeResult.Error);
-                return new ChangeUserRoleError(change.Username, change.Role, change.Type is RoleChangeType.Added, changeResult.Error);
+                return new ChangeUserRoleError(change.Username, change.Role.ToString(), change.Type is RoleChangeType.Added, changeResult.Error);
             }
 
             logger.LogInformation(

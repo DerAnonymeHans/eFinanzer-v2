@@ -339,11 +339,15 @@ export interface components {
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "AccountingUnitHasFiscalYearsError";
         };
         AccountingUnitKeyAlreadyExistsError: {
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "AccountingUnitKeyAlreadyExistsError";
         };
         /** @enum {unknown} */
         AccountingUnitRole: "FinanceOfficer" | "Treasurer" | "FinanceAuthorizedUser";
@@ -362,21 +366,17 @@ export interface components {
             isAdded: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
-        };
-        ChangeAdministrationRoleError: {
-            userName: string;
-            role: components["schemas"]["AdministrationRole"];
-            added: boolean;
-            message?: string;
-            parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "ApplyRoleChangeError";
         };
         ChangeUserRoleError: {
-            key: string;
             userName: string;
-            role: components["schemas"]["AccountingUnitRole"];
+            role: string;
             added: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "ChangeUserRoleError";
         };
         CreateAccountingUnitCommand: {
             key: string;
@@ -387,6 +387,8 @@ export interface components {
             key: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "CreateAccountingUnitGroupsError";
         };
         CreateFiscalYearCommand: {
             key: string;
@@ -405,10 +407,13 @@ export interface components {
             key: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "DeleteAccountingUnitGroupError";
         };
         Error: {
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            type: string;
         };
         FiscalYearDto: {
             key: string;
@@ -419,6 +424,8 @@ export interface components {
             accountingUnitKey: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearHasBookingsError";
         };
         FiscalYearOverlapsExistingError: {
             key: string;
@@ -434,6 +441,8 @@ export interface components {
             overlappingEndDate: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearOverlapsExistingError";
         };
         FiscalYearWithBookingsShortenedError: {
             key: string;
@@ -444,6 +453,8 @@ export interface components {
             endDate: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearWithBookingsShortenedError";
         };
         GetAccountingUnitManagementDto: {
             key: string;
@@ -495,6 +506,8 @@ export interface components {
             field: string;
             message: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "InvalidInputError";
         };
         InvalidOffsetPaginationError: {
             pagination: components["schemas"]["OffsetPagination"];
@@ -502,23 +515,31 @@ export interface components {
             maxPageSize: number | string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "InvalidOffsetPaginationError";
         };
         LoadAccountingUnitRoleMembersError: {
             key: string;
             groupPath: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "LoadAccountingUnitRoleMembersError";
         };
         LoadAdministrationRoleMembersError: {
             groupPath: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "LoadAdministrationRoleMembersError";
         };
         NotFoundError: {
             entity: string;
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "NotFoundError";
         };
         OffsetPagination: {
             /** Format: int32 */
@@ -537,6 +558,8 @@ export interface components {
         PendingRoleChangeRequestAlreadyExistsError: {
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "PendingRoleChangeRequestAlreadyExistsError";
         };
         /** @enum {unknown} */
         ResolutionStatus: "Dismissed" | "Approved" | null;
@@ -563,6 +586,8 @@ export interface components {
             id: number | string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "RoleChangeRequestAlreadyResolvedError";
         };
         RoleChangeRequestNotApplicableError: {
             /** Format: int32 */
@@ -570,11 +595,15 @@ export interface components {
             reason: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "RoleChangeRequestNotApplicableError";
         };
         UnknownUserError: {
             userName: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "UnknownUserError";
         };
         UpdateAccountingUnitRequest: {
             name: null | string;
@@ -1071,7 +1100,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChangeAdministrationRoleError"];
+                    "application/json": components["schemas"]["ChangeUserRoleError"];
                 };
             };
         };

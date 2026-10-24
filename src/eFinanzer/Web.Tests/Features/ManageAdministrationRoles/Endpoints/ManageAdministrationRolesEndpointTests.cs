@@ -178,5 +178,7 @@ public class ManageAdministrationRolesEndpointTests(DatabaseFixture database) : 
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("\"type\":\"UnknownUserError\"", json);
     }
 }

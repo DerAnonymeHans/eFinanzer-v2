@@ -4,6 +4,7 @@ using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
+using eFinanzer.Common.Results;
 using eFinanzer.Common.Tasks.GetRoleChanges;
 using eFinanzer.Features.GetUserAccess;
 using eFinanzer.Features.GetUsers;
@@ -39,7 +40,9 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.ConfigureHttpJsonOptions(options =>
     // Enums are only accepted by name, so a number cannot smuggle in an undefined value
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>());
+builder.Services.AddOpenApi(options => options
+    .AddDocumentTransformer<KeycloakSecuritySchemeTransformer>()
+    .AddSchemaTransformer<ErrorTypeSchemaTransformer>());
 
 var app = builder.Build();
 

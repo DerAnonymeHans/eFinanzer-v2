@@ -206,7 +206,7 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         var result = await MyTask.Update(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal(new ChangeUserRoleError("alice", AccountingUnitRole.Treasurer, Added: true, keycloakError), result.Error);
+        Assert.Equal(new ChangeUserRoleError("alice", nameof(AccountingUnitRole.Treasurer), Added: true, keycloakError), result.Error);
     }
 
     public static TheoryData<List<UpdateAccountingUnitCommand.UserRoles>> InvalidUsersWithRoles()

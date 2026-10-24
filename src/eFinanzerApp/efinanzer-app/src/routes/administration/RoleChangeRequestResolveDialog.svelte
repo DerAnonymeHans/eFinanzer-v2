@@ -1,21 +1,15 @@
 <script lang="ts" module>
-	import type { components } from '#lib/api/schema.js';
 	import type { RoleChangeRequestResolutionStatus } from '#lib/api/types.js';
 
 	export type Resolution = NonNullable<RoleChangeRequestResolutionStatus>;
-	type NotApplicableError = components['schemas']['RoleChangeRequestNotApplicableError'];
 
 	/** Same limit as the API */
 	const COMMENT_MAX_LENGTH = 500;
-
-	// Both conflicts share the status code, only the one of a request that cannot be applied has a reason
-	function isNotApplicableError(error: unknown): error is NotApplicableError {
-		return typeof error === 'object' && error !== null && 'reason' in error;
-	}
 </script>
 
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
+	import { isApiError } from '#lib/api/errors.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { Label } from '#lib/components/ui/label/index.js';
@@ -57,7 +51,7 @@
 				toast.success(isApproval ? 'Antrag wurde angenommen' : 'Antrag wurde abgelehnt');
 				onChanged();
 				open = false;
-			} else if (response.status === 409 && isNotApplicableError(error)) {
+			} else if (response.status === 409 && isApiError(error, 'RoleChangeRequestNotApplicableError')) {
 				toast.error(
 					'Der Antrag kann nicht angewendet werden, eventuell gibt es den Benutzer oder einen Haushalt nicht mehr'
 				);

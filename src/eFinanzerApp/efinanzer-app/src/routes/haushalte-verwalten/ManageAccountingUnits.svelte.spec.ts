@@ -278,6 +278,54 @@ test('saves the changed users only after confirming', async () => {
 	expect(api.GET).toHaveBeenCalledWith('/api/get-user-access/my-user-access');
 });
 
+async function saveWithoutMaxMuster() {
+	await userEvent.click(page.getByRole('button', { name: 'Max Muster entfernen' }));
+	await userEvent.click(page.getByRole('button', { name: /Speichern/ }));
+	await userEvent.click(page.getByRole('alertdialog').getByRole('button', { name: 'Speichern' }));
+}
+
+function accountingUnitLoads() {
+	return api.GET.mock.calls.filter(([path]) => path === '/api/manage-accounting-units/get-accounting-unit').length;
+}
+
+test('names the role that could not be changed and reloads if the changes were saved only partly', async () => {
+	api.PUT.mockResolvedValue(failed(500, { type: 'ChangeUserRoleError', userName: 'mmuster', role: 'Treasurer', added: false }));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+	const loadsBefore = accountingUnitLoads();
+
+	await saveWithoutMaxMuster();
+
+	await expect
+		.element(
+			page.getByText(
+				'Änderungen konnten nicht vollständig gespeichert werden: Die Rolle Kassenwart von Max Muster konnte nicht entfernt werden'
+			)
+		)
+		.toBeInTheDocument();
+	await expect.poll(accountingUnitLoads).toBeGreaterThan(loadsBefore);
+});
+
+test('names a user that does not exist anymore', async () => {
+	api.PUT.mockResolvedValue(failed(400, { type: 'UnknownUserError', userName: 'eexample' }));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+
+	await saveWithoutMaxMuster();
+
+	await expect.element(page.getByText('Den Benutzer Erika Example gibt es nicht mehr')).toBeInTheDocument();
+});
+
+test('reports a failure without partial changes', async () => {
+	api.PUT.mockResolvedValue(failed(500));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+
+	await saveWithoutMaxMuster();
+
+	await expect.element(page.getByText('Änderungen konnten nicht gespeichert werden (HTTP 500)')).toBeInTheDocument();
+});
+
 test('removes a user whose roles were all taken away', async () => {
 	renderDetails();
 
