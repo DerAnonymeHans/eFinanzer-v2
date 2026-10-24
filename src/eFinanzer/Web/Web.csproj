@@ -39,11 +39,8 @@
 
     <ItemGroup>
       <Folder Include="Features\GetUsers\" />
+      <Folder Include="Features\ManageAdministrationRoles\Tasks\GetAdministrationUsers\Errors\" />
       <Folder Include="Features\ManageFiscalYears\Endpoints\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="OpenApi\efinanzer.json" />
     </ItemGroup>
 
 </Project>

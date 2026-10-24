@@ -32,4 +32,12 @@ public static class GroupRules
         KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer),
     ];
     public static IReadOnlyList<string> GetResolveRoleChangeRequestsGroups() => ResolveRoleChangeRequestsGroups;
+
+
+    private static readonly string[] ManageAdministrationRolesGroups =
+    [
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator),
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer),
+    ];
+    public static IReadOnlyList<string> GetManageAdministrationRolesGroups() => ManageAdministrationRolesGroups;
 }

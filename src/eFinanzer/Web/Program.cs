@@ -7,6 +7,7 @@ using eFinanzer.Common.Integrations.Keycloak;
 using eFinanzer.Features.GetUserAccess;
 using eFinanzer.Features.GetUsers;
 using eFinanzer.Features.ManageAccountingUnits;
+using eFinanzer.Features.ManageAdministrationRoles;
 using eFinanzer.Features.ManageFiscalYears;
 using eFinanzer.Features.ManageRoleChangeRequests;
 
@@ -27,6 +28,7 @@ builder.Services.AddFrontendCors(builder.Configuration);
 builder.Services.AddKeycloakAdmin(builder.Configuration);
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
+builder.Services.AddManageAdministrationRoles();
 builder.Services.AddManageFiscalYears();
 builder.Services.AddManageRoleChangeRequests();
 builder.Services.AddGetUsers();

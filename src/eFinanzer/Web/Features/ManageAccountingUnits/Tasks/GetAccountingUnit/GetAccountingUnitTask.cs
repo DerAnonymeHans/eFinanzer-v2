@@ -13,7 +13,7 @@ namespace eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit;
 
 public interface IGetAccountingUnitTask
 {
-    Task<Result<GetAccountingUnitManagementDto>> Get(string key, CancellationToken ct);
+    Task<Result<GetAccountingUnitManagementDto>> Get(string accountingUnitKey, CancellationToken ct);
     Task<Result<List<GetAccountingUnitManagementListDto>>> GetAll(CancellationToken ct);
 }
 
@@ -30,17 +30,17 @@ public class GetAccountingUnitTask(
         .GetValues<AccountingUnitRole>()
         .ToDictionary(KeycloakGroups.GetGroupName);
 
-    public async Task<Result<GetAccountingUnitManagementDto>> Get(string key, CancellationToken ct)
+    public async Task<Result<GetAccountingUnitManagementDto>> Get(string accountingUnitKey, CancellationToken ct)
     {
         var accountingUnit = await context.AccountingUnits
-            .Where(x => x.Key == key)
+            .Where(x => x.Key == accountingUnitKey)
             .Select(x => new { x.Key, x.Name, x.Description })
             .FirstOrDefaultAsync(ct);
 
         if (accountingUnit is null)
-            return new NotFoundError(nameof(AccountingUnit), key);
+            return new NotFoundError(nameof(AccountingUnit), accountingUnitKey);
 
-        var getRolesWithKeycloakGroupsResult = await GetRolesWithKeycloakGroups(key, ct);
+        var getRolesWithKeycloakGroupsResult = await GetRolesWithKeycloakGroups(accountingUnitKey, ct);
         if (getRolesWithKeycloakGroupsResult.IsError)
             return getRolesWithKeycloakGroupsResult.Error;
 
@@ -54,8 +54,8 @@ public class GetAccountingUnitTask(
             if (getUsersResult.IsError)
             {
                 logger.LogError("Loading the members of group {GroupPath} of accounting unit {AccountingUnitKey} failed: {Error}",
-                    group.Path, key, getUsersResult.Error);
-                return new LoadAccountingUnitRoleMembersError(key, group.Path, getUsersResult.Error);
+                    group.Path, accountingUnitKey, getUsersResult.Error);
+                return new LoadAccountingUnitRoleMembersError(accountingUnitKey, group.Path, getUsersResult.Error);
             }
 
             foreach (var user in getUsersResult.Value)
@@ -83,14 +83,14 @@ public class GetAccountingUnitTask(
         };
     }
 
-    private async Task<Result<List<RoleWithKeycloakGroup>>> GetRolesWithKeycloakGroups(string key, CancellationToken ct)
+    private async Task<Result<List<RoleWithKeycloakGroup>>> GetRolesWithKeycloakGroups(string accountingUnitKey, CancellationToken ct)
     {
-        var getSubgroupsResult = await GetRoleGroups(key, ct);
+        var getSubgroupsResult = await GetRoleGroups(accountingUnitKey, ct);
         if (getSubgroupsResult.IsError)
         {
             logger.LogError("Loading the role groups of accounting unit {AccountingUnitKey} failed: {Error}",
-                key, getSubgroupsResult.Error);
-            return new LoadAccountingUnitRoleGroupsError(key, getSubgroupsResult.Error);
+                accountingUnitKey, getSubgroupsResult.Error);
+            return new LoadAccountingUnitRoleGroupsError(accountingUnitKey, getSubgroupsResult.Error);
         }
 
         // Every subgroup of the accounting unit stands for one role
@@ -100,7 +100,7 @@ public class GetAccountingUnitTask(
             if (!RolesByGroupName.TryGetValue(subgroup.Name, out var role))
             {
                 logger.LogWarning("Ignoring group {GroupPath} of accounting unit {AccountingUnitKey}, it is no known role",
-                    subgroup.Path, key);
+                    subgroup.Path, accountingUnitKey);
                 continue;
             }
             roleGroups.Add(new(role, subgroup));
@@ -109,9 +109,9 @@ public class GetAccountingUnitTask(
         return roleGroups;
     }
 
-    private async Task<Result<List<KeycloakGroup>>> GetRoleGroups(string key, CancellationToken ct)
+    private async Task<Result<List<KeycloakGroup>>> GetRoleGroups(string accountingUnitKey, CancellationToken ct)
     {
-        var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(KeycloakGroups.GetAccountingUnitGroup(key), ct);
+        var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(KeycloakGroups.GetAccountingUnitGroup(accountingUnitKey), ct);
         if (groupIdResult.IsError)
             return groupIdResult.Error;
 
