@@ -1,9 +1,11 @@
-using eFinanzer.Common.Database;
+﻿using eFinanzer.Common.Database;
 using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Models;
 using eFinanzer.Features.ManageRoleChangeRequests.Errors;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.ResolveRoleChangeRequest.Errors;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.ResolveRoleChangeRequest.Models;
@@ -22,12 +24,11 @@ public interface IResolveRoleChangeRequestTask
 public class ResolveRoleChangeRequestTask(
     EFinanzerDbContext context,
     IKeycloakUserClient keycloakUserClient,
+    IHandleRoleChangesTask handleRoleChangesTask,
     TimeProvider timeProvider,
     ILogger<ResolveRoleChangeRequestTask> logger
     ) : IResolveRoleChangeRequestTask
 {
-    private record GroupChange(string AccountingUnitKey, AccountingUnitRole Role, string GroupId, bool IsAdded);
-
     public async Task<Result> Resolve(ResolveRoleChangeRequestCommand command, CancellationToken ct)
     {
         Result[] validations =
@@ -47,19 +48,17 @@ public class ResolveRoleChangeRequestTask(
             return new RoleChangeRequestAlreadyResolvedError(command.Id);
 
         // Everything that can fail is resolved before anything is changed
-        var userId = "";
-        List<GroupChange> groupChanges = [];
+        RoleChange<AccountingUnitRole>[] roleChanges = [];
         if (command.Resolution == RoleChangeRequest.ResolutionStatus.Approved)
         {
             var userResult = await keycloakUserClient.GetUserByUsername(request.RequestedBy, ct);
             if (userResult.IsError)
                 return new RoleChangeRequestNotApplicableError(command.Id, $"user '{request.RequestedBy}' does not exist anymore", userResult.Error);
-            userId = userResult.Value.Id;
 
-            var groupChangesResult = await GetGroupChanges(command.Id, request.RoleChanges, ct);
-            if (groupChangesResult.IsError)
-                return groupChangesResult.Error;
-            groupChanges = groupChangesResult.Value;
+            var roleChangesResult = await GetRoleChanges(command.Id, request, userResult.Value.Id, ct);
+            if (roleChangesResult.IsError)
+                return roleChangesResult.Error;
+            roleChanges = roleChangesResult.Value;
         }
 
         await context.RoleChangeRequests
@@ -70,28 +69,16 @@ public class ResolveRoleChangeRequestTask(
                 .SetProperty(x => x.ResolvedAt, timeProvider.GetUtcNow())
                 .SetProperty(x => x.ResolutionComment, command.Comment), ct);
 
-        foreach (var change in groupChanges)
+        var executeResult = await handleRoleChangesTask.ExecuteRoleChanges(roleChanges, ct);
+        if (executeResult.IsError)
         {
-            var changeResult = change.IsAdded
-                ? await keycloakUserClient.AddUserToGroup(userId, change.GroupId, ct)
-                : await keycloakUserClient.RemoveUserFromGroup(userId, change.GroupId, ct);
+            logger.LogError("Applying role change request {RoleChangeRequestId} of user {UserName} failed, reverting its resolution",
+                command.Id, request.RequestedBy);
 
-            if (changeResult.IsError)
-            {
-                logger.LogError(
-                    "Changing role {Role} (added: {Added}) of user {UserName} in accounting unit {AccountingUnitKey} for role change request {RoleChangeRequestId} failed: {Error}",
-                    change.Role, change.IsAdded, request.RequestedBy, change.AccountingUnitKey, command.Id, changeResult.Error);
+            // Not cancellable, so the request does not stay approved without all its changes being applied
+            await RevertResolution(command.Id);
 
-                // Not cancellable, so the request does not stay approved without all its changes being applied
-                await RevertResolution(command.Id);
-
-                return new ApplyRoleChangeError(command.Id, change.AccountingUnitKey, request.RequestedBy, change.Role,
-                    change.IsAdded, changeResult.Error);
-            }
-
-            logger.LogInformation(
-                "Changed role {Role} (added: {Added}) of user {UserName} in accounting unit {AccountingUnitKey} for role change request {RoleChangeRequestId}",
-                change.Role, change.IsAdded, request.RequestedBy, change.AccountingUnitKey, command.Id);
+            return new ApplyRoleChangeError(command.Id, executeResult.Error);
         }
 
         logger.LogInformation("Resolved role change request {RoleChangeRequestId} of user {UserName} as {Resolution}",
@@ -102,11 +89,11 @@ public class ResolveRoleChangeRequestTask(
     /// <summary>
     /// Resolves the Keycloak group ids of the requested roles
     /// </summary>
-    private async Task<Result<List<GroupChange>>> GetGroupChanges(int id, List<RoleChangeRequest.RoleChange> roleChanges,
-        CancellationToken ct)
+    private async Task<Result<RoleChange<AccountingUnitRole>[]>> GetRoleChanges(int id, RoleChangeRequest request,
+        string userId, CancellationToken ct)
     {
-        var groupChanges = new List<GroupChange>();
-        foreach (var change in roleChanges)
+        var roleChanges = new List<RoleChange<AccountingUnitRole>>();
+        foreach (var change in request.RoleChanges)
         {
             var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(
                 KeycloakGroups.GetAccountingUnitRoleGroup(change.AccountingUnitKey, change.AccountingUnitRole), ct);
@@ -120,11 +107,18 @@ public class ResolveRoleChangeRequestTask(
                     groupIdResult.Error);
             }
 
-            groupChanges.Add(new GroupChange(change.AccountingUnitKey, change.AccountingUnitRole, groupIdResult.Value,
-                change.IsAdded));
+            roleChanges.Add(new RoleChange<AccountingUnitRole>
+            {
+                Username = request.RequestedBy,
+                UserId = userId,
+                Role = change.AccountingUnitRole,
+                KeycloakGroupId = groupIdResult.Value,
+                Type = change.IsAdded ? RoleChangeType.Added : RoleChangeType.Removed,
+            });
         }
 
-        return groupChanges.OrderBy(x => x.IsAdded).ToList();
+        // Removals first, so a failure leaves the user with fewer instead of more rights
+        return roleChanges.OrderBy(x => x.Type is RoleChangeType.Added).ToArray();
     }
 
     private async Task RevertResolution(int roleChangeRequestId)

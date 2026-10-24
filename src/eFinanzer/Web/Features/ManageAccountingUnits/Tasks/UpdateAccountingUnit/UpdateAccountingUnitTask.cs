@@ -1,6 +1,5 @@
 ﻿using eFinanzer.Common.Database;
 using eFinanzer.Common.Database.Models;
-using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
@@ -21,7 +20,6 @@ public interface IUpdateAccountingUnitTask
 public class UpdateAccountingUnitTask(
     EFinanzerDbContext context,
     IGetAccountingUnitTask getAccountingUnitTask,
-    IKeycloakUserClient keycloakUserClient,
     IHandleRoleChangesTask handleRoleChangesTask,
     ILogger<UpdateAccountingUnitTask> logger
     ) : IUpdateAccountingUnitTask

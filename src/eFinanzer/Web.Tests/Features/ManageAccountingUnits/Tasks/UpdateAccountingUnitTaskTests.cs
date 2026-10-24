@@ -1,4 +1,4 @@
-using eFinanzer.Common.Database.Models;
+﻿using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
@@ -23,7 +23,6 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
     private UpdateAccountingUnitTask MyTask => new(
         Database.CreateContext(),
         new GetAccountingUnitTask(Database.CreateContext(), _keycloakUserClient, NullLogger<GetAccountingUnitTask>.Instance),
-        _keycloakUserClient,
         new HandleRoleChangesTask(_keycloakUserClient, NullLogger<HandleRoleChangesTask>.Instance),
         NullLogger<UpdateAccountingUnitTask>.Instance);
 

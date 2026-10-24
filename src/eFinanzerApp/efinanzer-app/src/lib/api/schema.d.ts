@@ -360,10 +360,6 @@ export interface components {
         ApplyRoleChangeError: {
             /** Format: int32 */
             id: number | string;
-            accountingUnitKey: string;
-            userName: string;
-            role: components["schemas"]["AccountingUnitRole"];
-            isAdded: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
             /** @enum {string} */
