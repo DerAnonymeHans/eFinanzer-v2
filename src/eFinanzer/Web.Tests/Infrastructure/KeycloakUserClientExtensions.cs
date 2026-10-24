@@ -73,6 +73,28 @@ public static class KeycloakUserClientExtensions
         }
     }
 
+    public static KeycloakGroup AdministrationRoleGroup(AdministrationRole role) => Group(KeycloakGroups.GetAdministrationRoleGroup(role));
+
+    /// <summary>
+    /// Creates the administration group and all its role groups, the given roles with the given members
+    /// </summary>
+    public static void SetupAdministrationRoleMembers(this IKeycloakUserClient client,
+        params (AdministrationRole Role, string[] UserNames)[] roles)
+    {
+        client.SetupGroups(KeycloakGroups.AdministrationGroup);
+        client.GetSubgroups(GroupId(KeycloakGroups.AdministrationGroup), Arg.Any<CancellationToken>())
+            .Returns(Result<List<KeycloakGroup>>.Ok(roles.Select(x => AdministrationRoleGroup(x.Role)).ToList()));
+        client.SetupGroups(Enum.GetValues<AdministrationRole>()
+            .Select(KeycloakGroups.GetAdministrationRoleGroup)
+            .ToArray());
+
+        foreach (var (role, userNames) in roles)
+        {
+            client.GetUsersInGroup(AdministrationRoleGroup(role).Id, Arg.Any<CancellationToken>())
+                .Returns(Result<List<KeycloakUser>>.Ok(userNames.Select(User).ToList()));
+        }
+    }
+
     /// <summary>
     /// Makes the users known to Keycloak and lets all group membership changes succeed
     /// </summary>

@@ -44,6 +44,8 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.Empty(result.Value.AccountingUnits);
         Assert.Empty(result.Value.AdministrationRoles);
         Assert.False(result.Value.ManageAccountingUnits);
+        Assert.False(result.Value.ResolveRoleChangeRequests);
+        Assert.False(result.Value.ManageAdministrationRoles);
     }
 
     [Fact]
@@ -61,6 +63,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         // Assert
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.ManageAccountingUnits);
+        Assert.False(result.Value.ManageAdministrationRoles);
         Assert.Empty(result.Value.AdministrationRoles);
         Assert.Collection(result.Value.AccountingUnits,
             fsr =>
@@ -160,6 +163,25 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.False(result.Value.ManageAccountingUnits);
         Assert.Equal([AdministrationRole.FinanceReviewer], result.Value.AdministrationRoles);
         Assert.Empty(result.Value.AccountingUnits);
+    }
+
+    [Theory]
+    [InlineData(AdministrationRole.FinanceAdministrator, true, true)]
+    [InlineData(AdministrationRole.HeadFinanceOfficer, true, false)]
+    [InlineData(AdministrationRole.FinanceReviewer, false, false)]
+    public async Task Get_AdministrationRole_ReturnsAdministrationPermissions(
+        AdministrationRole role, bool resolveRoleChangeRequests, bool manageAdministrationRoles)
+    {
+        // Arrange
+        var user = CreateUser(KeycloakGroups.GetAdministrationRoleGroup(role));
+
+        // Act
+        var result = await MyTask.Get(user, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(resolveRoleChangeRequests, result.Value.ResolveRoleChangeRequests);
+        Assert.Equal(manageAdministrationRoles, result.Value.ManageAdministrationRoles);
     }
 
     [Fact]

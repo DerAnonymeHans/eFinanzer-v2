@@ -73,6 +73,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.Empty(access.AccountingUnits);
         Assert.Empty(access.AdministrationRoles);
         Assert.False(access.ManageAccountingUnits);
+        Assert.False(access.ManageAdministrationRoles);
     }
 
     [Fact]
@@ -89,6 +90,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         // Assert
         Assert.NotNull(access);
         Assert.False(access.ManageAccountingUnits);
+        Assert.False(access.ManageAdministrationRoles);
         Assert.Equal([AdministrationRole.FinanceReviewer], access.AdministrationRoles);
         var fsr = Assert.Single(access.AccountingUnits);
         Assert.Equal("fsr", fsr.Key);
@@ -96,5 +98,23 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.True(fsr.ManageFiscalYears);
         Assert.Equal([AccountingUnitRole.FinanceOfficer], fsr.AccountingUnitRoles);
         Assert.Equal(new UserAccess.FiscalYearDto { Key = "2026" }, Assert.Single(fsr.FiscalYears));
+    }
+
+    [Fact]
+    public async Task Get_FinanceAdministrator_ReturnsAdministrationPermissions()
+    {
+        // Arrange
+        var client = _factory.CreateAuthorizedClient(
+            KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+
+        // Act
+        var access = await client.GetFromJsonAsync<UserAccess>(Url, JsonOptions, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(access);
+        Assert.True(access.ManageAccountingUnits);
+        Assert.True(access.ResolveRoleChangeRequests);
+        Assert.True(access.ManageAdministrationRoles);
+        Assert.Equal([AdministrationRole.FinanceAdministrator], access.AdministrationRoles);
     }
 }

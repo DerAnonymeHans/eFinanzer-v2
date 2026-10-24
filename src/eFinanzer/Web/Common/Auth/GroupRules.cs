@@ -36,8 +36,7 @@ public static class GroupRules
 
     private static readonly string[] ManageAdministrationRolesGroups =
     [
-        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator),
-        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer),
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator)
     ];
     public static IReadOnlyList<string> GetManageAdministrationRolesGroups() => ManageAdministrationRolesGroups;
 }

@@ -44,6 +44,7 @@ public class GetUserAccessTask(
         var accountingUnitRolesByKey = GetAccountingUnitRoles(groups);
         var manageAccountingUnits = GroupRules.GetManageAccountingUnitGroups().Any(groups.Contains);
         var resolveRoleChangeRequests = GroupRules.GetResolveRoleChangeRequestsGroups().Any(groups.Contains);
+        var manageAdministrationRoles = GroupRules.GetManageAdministrationRolesGroups().Any(groups.Contains);
 
         var query = context.AccountingUnits.AsQueryable();
         if (!manageAccountingUnits)
@@ -69,6 +70,7 @@ public class GetUserAccessTask(
         {
             ManageAccountingUnits = manageAccountingUnits,
             ResolveRoleChangeRequests = resolveRoleChangeRequests,
+            ManageAdministrationRoles = manageAdministrationRoles,
             AdministrationRoles = administrationRoles,
             AccountingUnits = accountingUnits
                 .Select(x => new UserAccess.AccountingUnitDto
