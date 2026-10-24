@@ -39,13 +39,9 @@ public class GetUserAccessTask(
             .ToHashSet();
         if (groups.Count == 0)
             return UserAccess.NoAccess();
-
-        var administrationRoles = GetAdministrationRoles(groups);
+        
         var accountingUnitRolesByKey = GetAccountingUnitRoles(groups);
         var manageAccountingUnits = GroupRules.GetManageAccountingUnitGroups().Any(groups.Contains);
-        var resolveRoleChangeRequests = GroupRules.GetResolveRoleChangeRequestsGroups().Any(groups.Contains);
-        var manageAdministrationRoles = GroupRules.GetManageAdministrationRolesGroups().Any(groups.Contains);
-
         var query = context.AccountingUnits.AsQueryable();
         if (!manageAccountingUnits)
         {
@@ -69,9 +65,10 @@ public class GetUserAccessTask(
         return new UserAccess
         {
             ManageAccountingUnits = manageAccountingUnits,
-            ResolveRoleChangeRequests = resolveRoleChangeRequests,
-            ManageAdministrationRoles = manageAdministrationRoles,
-            AdministrationRoles = administrationRoles,
+            ResolveRoleChangeRequests = GroupRules.GetResolveRoleChangeRequestsGroups().Any(groups.Contains),
+            ManageAdministrationRoles = GroupRules.GetManageAdministrationRolesGroups().Any(groups.Contains),
+            IsAdministration = GroupRules.GetAdministrationRoleGroups().Any(groups.Contains),
+            AdministrationRoles = GetAdministrationRoles(groups),
             AccountingUnits = accountingUnits
                 .Select(x => new UserAccess.AccountingUnitDto
                 {

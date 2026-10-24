@@ -17,3 +17,4 @@ export type RoleChangeRequest = Schemas['GetRoleChangeRequestDto'];
 export type RoleChangeRequestResolutionStatus = Schemas['ResolutionStatus'];
 export type RoleChangeRequestAccountingUnit = Schemas['RoleChangeRequestAccountingUnitDto'];
 export type RoleChange = Schemas['RoleChangeDto'];
+export type AdministrationUser = Schemas['AdministrationUserDto'];

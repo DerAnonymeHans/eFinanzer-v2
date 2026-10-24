@@ -64,25 +64,12 @@ public class ManageAdministrationRolesEndpointTests(DatabaseFixture database) : 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    /// <summary>
-    /// Only finance administrators manage administration roles, even head finance officers may not
-    /// </summary>
-    public static TheoryData<string, string, AdministrationRole> AllEndpointsWithNonManagingRoles => new()
-    {
-        { "GET", $"{BaseUrl}/get-administration-users", AdministrationRole.HeadFinanceOfficer },
-        { "GET", $"{BaseUrl}/get-administration-users", AdministrationRole.FinanceReviewer },
-        { "PUT", $"{BaseUrl}/update-administration-roles", AdministrationRole.HeadFinanceOfficer },
-        { "PUT", $"{BaseUrl}/update-administration-roles", AdministrationRole.FinanceReviewer },
-    };
-
     [Theory]
-    [MemberData(nameof(AllEndpointsWithNonManagingRoles))]
-    public async Task Endpoint_UserWithoutManagingRole_ReturnsForbiddenWithoutCallingKeycloak(
-        string method, string url, AdministrationRole role)
+    [MemberData(nameof(AllEndpoints))]
+    public async Task Endpoint_UserWithoutAdministrationRole_ReturnsForbiddenWithoutCallingKeycloak(string method, string url)
     {
         // Arrange
         var client = _factory.CreateAuthorizedClient(
-            KeycloakGroups.GetAdministrationRoleGroup(role),
             KeycloakGroups.GetAccountingUnitRoleGroup("fsr", AccountingUnitRole.FinanceOfficer));
 
         // Act
@@ -93,12 +80,38 @@ public class ManageAdministrationRolesEndpointTests(DatabaseFixture database) : 
         Assert.Empty(_factory.KeycloakUserClient.ReceivedCalls());
     }
 
-    [Fact]
-    public async Task Get_UserWithManagingRole_ReturnsUsersWithRolesAsStrings()
+    /// <summary>
+    /// Only finance administrators change administration roles, even head finance officers may not
+    /// </summary>
+    [Theory]
+    [InlineData(AdministrationRole.HeadFinanceOfficer)]
+    [InlineData(AdministrationRole.FinanceReviewer)]
+    public async Task Update_UserWithoutManagingRole_ReturnsForbiddenWithoutCallingKeycloak(AdministrationRole role)
+    {
+        // Arrange
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
+
+        // Act
+        var response = await client.SendAsync(CreateRequest("PUT", $"{BaseUrl}/update-administration-roles"),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Empty(_factory.KeycloakUserClient.ReceivedCalls());
+    }
+
+    /// <summary>
+    /// Every member of the administration may see who else is in it
+    /// </summary>
+    [Theory]
+    [InlineData(AdministrationRole.HeadFinanceOfficer)]
+    [InlineData(AdministrationRole.FinanceAdministrator)]
+    [InlineData(AdministrationRole.FinanceReviewer)]
+    public async Task Get_UserWithAdministrationRole_ReturnsUsersWithRolesAsStrings(AdministrationRole role)
     {
         // Arrange
         _factory.KeycloakUserClient.SetupAdministrationRoleMembers((AdministrationRole.FinanceReviewer, ["alice"]));
-        var client = CreateManagingClient();
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
         var response = await client.GetAsync($"{BaseUrl}/get-administration-users", TestContext.Current.CancellationToken);

@@ -46,6 +46,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.False(result.Value.ManageAccountingUnits);
         Assert.False(result.Value.ResolveRoleChangeRequests);
         Assert.False(result.Value.ManageAdministrationRoles);
+        Assert.False(result.Value.IsAdministration);
     }
 
     [Fact]
@@ -64,6 +65,7 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.True(result.IsSuccess);
         Assert.False(result.Value.ManageAccountingUnits);
         Assert.False(result.Value.ManageAdministrationRoles);
+        Assert.False(result.Value.IsAdministration);
         Assert.Empty(result.Value.AdministrationRoles);
         Assert.Collection(result.Value.AccountingUnits,
             fsr =>
@@ -182,6 +184,22 @@ public class GetUserAccessTaskTests(DatabaseFixture database) : DatabaseTest(dat
         Assert.True(result.IsSuccess);
         Assert.Equal(resolveRoleChangeRequests, result.Value.ResolveRoleChangeRequests);
         Assert.Equal(manageAdministrationRoles, result.Value.ManageAdministrationRoles);
+        Assert.True(result.Value.IsAdministration);
+    }
+
+    [Theory]
+    [InlineData("/administration")]
+    [InlineData("/administration/unknown-role")]
+    [InlineData("/administration/finance-reviewer/subgroup")]
+    public async Task Get_GroupIsNoAdministrationRole_IsNoAdministration(string groupPath)
+    {
+        // Act
+        var result = await MyTask.Get(CreateUser(groupPath), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value.IsAdministration);
+        Assert.Empty(result.Value.AdministrationRoles);
     }
 
     [Fact]

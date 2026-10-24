@@ -25,7 +25,7 @@ public class GetAdministrationUsersEndpoint : IEndpoint
         CancellationToken ct)
     {
         user.CreateClaimBuilder()
-            .MustBeOneOf(GroupRules.GetManageAdministrationRolesGroups())
+            .MustBeOneOf(GroupRules.GetAdministrationRoleGroups())
             .Validate();
 
         var result = await task.GetUsers(ct);

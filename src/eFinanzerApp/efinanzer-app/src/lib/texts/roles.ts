@@ -3,7 +3,7 @@ import type { AccountingUnitRole, AdministrationRole, UserAccess } from '../api/
 // Display names of all roles. Typed as Record, so a role added in the API fails the type check until it has a name here.
 // The key order is the display order, most important first.
 export const administrationRoleNames: Record<AdministrationRole, string> = {
-	HeadFinanceOfficer: 'StuRa-Finanzer',
+	HeadFinanceOfficer: 'Haupt-Finanzer',
 	FinanceAdministrator: 'Finanzverwaltung',
 	FinanceReviewer: 'Finanzprüfung',
 };

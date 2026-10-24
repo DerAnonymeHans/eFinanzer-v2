@@ -2,6 +2,7 @@
 	import type { AccountingUnitRole } from '#lib/api/types.js';
 	import { accountingUnitRoleNames } from '#lib/texts/roles.js';
 
+	/** In display order, most important first */
 	const roles = Object.keys(accountingUnitRoleNames) as AccountingUnitRole[];
 </script>
 
@@ -9,25 +10,21 @@
 	import { toast } from 'svelte-sonner';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 	import SaveIcon from '@lucide/svelte/icons/save';
-	import Trash2Icon from '@lucide/svelte/icons/trash-2';
-	import UserPlusIcon from '@lucide/svelte/icons/user-plus';
 	import { resolve } from '$app/paths';
 	import type { PageProps } from './$types';
 	import { Button } from '#lib/components/ui/button/index.js';
-	import * as ButtonGroup from '#lib/components/ui/button-group/index.js';
 	import * as Card from '#lib/components/ui/card/index.js';
 	import * as Field from '#lib/components/ui/field/index.js';
 	import { Input } from '#lib/components/ui/input/index.js';
-	import * as Select from '#lib/components/ui/select/index.js';
 	import CountedTextarea from '#lib/components/CountedTextarea.svelte';
-	import EmptyState from '#lib/components/EmptyState.svelte';
 	import ErrorAlert from '#lib/components/ErrorAlert.svelte';
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
 	import UserName from '#lib/components/UserName.svelte';
-	import UserSearchSelect from '#lib/components/UserSearchSelect.svelte';
+	import UsersWithRolesList from '#lib/components/users-with-roles-list/UsersWithRolesList.svelte';
+	import type { UserWithRoles } from '#lib/components/users-with-roles-list/user-with-roles.js';
 	import apiClient from '#lib/api/client.js';
 	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
-	import type { AccountingUnitDetails, User, UserRoles } from '#lib/api/types.js';
+	import type { AccountingUnitDetails } from '#lib/api/types.js';
 	import { confirm } from '#lib/components/confirm-dialog/confirmDialog.svelte.js';
 	import { useUserAccess } from '#lib/stores/user-access.svelte.js';
 	import { userCache } from '#lib/stores/user-cache.svelte.js';
@@ -53,9 +50,16 @@
 
 	let name = $state('');
 	let description = $state('');
-	let users = $state<UserRoles[]>([]);
-	let newUser = $state<User>();
+	/** The edited users, only saved together with the general info */
+	let users = $state<UserWithRoles[]>([]);
 	let submitted = $state(false);
+
+	const savedUsers = $derived(
+		(accountingUnit?.usersWithRoles ?? []).map((user) => ({ username: user.userName, roles: user.roles }))
+	);
+	const removedUsers = $derived(
+		savedUsers.filter((saved) => !users.some((user) => user.username === saved.username))
+	);
 
 	// Loads the Haushalt and fills the form with its values, unless a newer load was started meanwhile
 	async function load(key: string) {
@@ -63,8 +67,7 @@
 		const result = accountingUnitLoader.value;
 		name = result?.name ?? '';
 		description = result?.description ?? '';
-		// A copy, so the edits do not change the loaded Haushalt
-		users = structuredClone(result?.usersWithRoles ?? []);
+		users = (result?.usersWithRoles ?? []).map((user) => ({ username: user.userName, roles: [...user.roles] }));
 	}
 
 	// Loads again when another Haushalt is opened
@@ -78,17 +81,17 @@
 	});
 	const shownErrors = $derived<Partial<typeof errors>>(submitted ? errors : {});
 
-	const usersWithoutRoles = $derived(users.filter((user) => user.roles.length === 0));
-
-	function removeUser(userName: string) {
-		users = users.filter((user) => user.userName !== userName);
+	// Users without roles are removed, the dialog says so
+	async function handleEdit(_before: UserWithRoles, after: UserWithRoles) {
+		const index = users.findIndex((user) => user.username === after.username);
+		if (after.roles.length === 0) users = users.filter((user) => user.username !== after.username);
+		else if (index === -1) users.push(after);
+		else users[index] = after;
+		return true;
 	}
 
-	// The search leaves out users that are already listed, so the selected one can be added as it is
-	function addUser() {
-		if (!newUser) return;
-		users.push({ userName: newUser.username, roles: [] });
-		newUser = undefined;
+	async function handleRemove(username: string) {
+		users = users.filter((user) => user.username !== username);
 	}
 
 	async function save() {
@@ -98,7 +101,10 @@
 				body: {
 					name: emptyToNull(name),
 					description: emptyToNull(description),
-					usersWithRoles: $state.snapshot(users)
+					usersWithRoles: users.map((user) => ({
+						userName: user.username,
+						roles: [...user.roles] as AccountingUnitRole[]
+					}))
 				}
 			});
 
@@ -136,12 +142,12 @@
 
 {#snippet saveDescription()}
 	<p>Die allgemeinen Angaben und die Rollen der Benutzer werden übernommen.</p>
-	{#if usersWithoutRoles.length > 0}
+	{#if removedUsers.length > 0}
 		<p class="mt-2">
-			Ohne Rolle und damit aus dem Haushalt entfernt werden:
-			{#each usersWithoutRoles as user, index (user.userName)}
+			Aus dem Haushalt entfernt werden:
+			{#each removedUsers as user, index (user.username)}
 				{#if index > 0},
-				{/if}<UserName username={user.userName} />
+				{/if}<UserName username={user.username} />
 			{/each}
 		</p>
 	{/if}
@@ -205,68 +211,23 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="text-base">Benutzer und Rollen</Card.Title>
-			</Card.Header>
-			<Card.Content class="flex flex-col gap-3">
-				{#if users.length === 0}
-					<EmptyState description="Noch keine Benutzer in diesem Haushalt" />
-				{/if}
-
-				{#each users as user (user.userName)}
-					{@const labelId = `roles-${user.userName}`}
-					<!-- Shows the full name, the cryptic user name is only used as key and id -->
-					<div
-						class="grid grid-cols-[1fr_auto] items-center gap-3 md:grid-cols-[minmax(120px,200px)_1fr_auto]"
-					>
-						<span class="truncate font-semibold" id={labelId}><UserName username={user.userName} /></span>
-						<div class="col-span-full row-start-2 md:col-span-1 md:row-start-auto">
-							<Select.Root type="multiple" bind:value={user.roles}>
-								<Select.Trigger class="w-full" aria-labelledby={labelId}>
-									{#if user.roles.length === 0}
-										<span class="text-muted-foreground">Keine Rolle</span>
-									{:else}
-										{roles
-											.filter((role) => user.roles.includes(role))
-											.map((role) => accountingUnitRoleNames[role])
-											.join(', ')}
-									{/if}
-								</Select.Trigger>
-								<Select.Content>
-									{#each roles as role (role)}
-										<Select.Item value={role} label={accountingUnitRoleNames[role]} />
-									{/each}
-								</Select.Content>
-							</Select.Root>
-						</div>
-						<Button
-							variant="ghost"
-							size="icon"
-							class="col-start-2 row-start-1 text-destructive hover:bg-destructive/10 hover:text-destructive md:col-start-auto"
-							aria-label={`${userCache.getDisplayName(user.userName)} entfernen`}
-							title="Entfernen"
-							onclick={() => removeUser(user.userName)}
-						>
-							<Trash2Icon />
-						</Button>
-					</div>
-				{/each}
-
-				<ButtonGroup.Root class="mt-2 w-full max-w-[480px]">
-					<UserSearchSelect
-						class="min-w-0 flex-1"
-						aria-label="Benutzer suchen"
-						value={newUser}
-						onChange={(user) => (newUser = user)}
-						excludeUsernames={users.map((user) => user.userName)}
-					/>
-					<Button variant="outline" disabled={!newUser} onclick={addUser}>
-						<UserPlusIcon />
-						Hinzufügen
-					</Button>
-				</ButtonGroup.Root>
-			</Card.Content>
-		</Card.Root>
+		<UsersWithRolesList
+			title="Benutzer und Rollen"
+			emptyText="Noch keine Benutzer in diesem Haushalt"
+			showAddUser={true}
+			showEditUser={true}
+			showDeleteUser={true}
+			{users}
+			roleKeyToName={(key) => accountingUnitRoleNames[key as AccountingUnitRole]}
+			existingRoles={roles}
+			editDialogDescription={(user) =>
+				user
+					? `Rollen von ${userCache.getDisplayName(user.username)} in diesem Haushalt. Die Änderungen werden mit „Speichern“ übernommen.`
+					: 'Person suchen und ihre Rollen in diesem Haushalt auswählen. Die Änderungen werden mit „Speichern“ übernommen.'}
+			hasRemoveDialog={false}
+			removeDialogTitle={(user) => `${userCache.getDisplayName(user.username)} aus dem Haushalt entfernen?`}
+			onEdit={handleEdit}
+			onRemove={handleRemove}
+		/>
 	{/if}
 </div>

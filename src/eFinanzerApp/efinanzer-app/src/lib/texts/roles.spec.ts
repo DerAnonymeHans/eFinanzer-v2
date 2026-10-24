@@ -12,7 +12,7 @@ test('lists administration roles first, then the roles per accounting unit', () 
 	};
 
 	expect(getRoleNames(userAccess)).toEqual([
-		'StuRa-Finanzer',
+		'Haupt-Finanzer',
 		'Finanzprüfung',
 		'FSR DIT · Finanzer',
 		'FSR DIT · Kassenwart',

@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/manage-administration-roles/get-administration-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAdministrationUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-administration-roles/update-administration-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UpdateAdministrationRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/manage-accounting-units/create-accounting-unit": {
         parameters: {
             query?: never;
@@ -317,6 +349,10 @@ export interface components {
         AccountingUnitRole: "FinanceOfficer" | "Treasurer" | "FinanceAuthorizedUser";
         /** @enum {unknown} */
         AdministrationRole: "HeadFinanceOfficer" | "FinanceAdministrator" | "FinanceReviewer";
+        AdministrationUserDto: {
+            username: string;
+            roles: components["schemas"]["AdministrationRole"][];
+        };
         ApplyRoleChangeError: {
             /** Format: int32 */
             id: number | string;
@@ -324,6 +360,13 @@ export interface components {
             userName: string;
             role: components["schemas"]["AccountingUnitRole"];
             isAdded: boolean;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+        };
+        ChangeAdministrationRoleError: {
+            userName: string;
+            role: components["schemas"]["AdministrationRole"];
+            added: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
         };
@@ -413,6 +456,9 @@ export interface components {
             name?: null | string;
             description?: null | string;
         };
+        GetAdministrationUsersDto: {
+            administrationUsers: components["schemas"]["AdministrationUserDto"][];
+        };
         GetFiscalYearManagementListDto: {
             key: string;
             accountingUnitKey: string;
@@ -459,6 +505,11 @@ export interface components {
         };
         LoadAccountingUnitRoleMembersError: {
             key: string;
+            groupPath: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+        };
+        LoadAdministrationRoleMembersError: {
             groupPath: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
@@ -530,6 +581,10 @@ export interface components {
             description: null | string;
             usersWithRoles: components["schemas"]["UserRoles"][];
         };
+        UpdateAdministrationRolesCommand: {
+            username: string;
+            administrationRoles: components["schemas"]["AdministrationRole"][];
+        };
         UpdateFiscalYearRequest: {
             name: null | string;
             /** Format: date */
@@ -539,8 +594,10 @@ export interface components {
         };
         UserAccess: {
             accountingUnits: components["schemas"]["AccountingUnitDto"][];
+            isAdministration?: boolean;
             manageAccountingUnits?: boolean;
             resolveRoleChangeRequests?: boolean;
+            manageAdministrationRoles?: boolean;
             administrationRoles: components["schemas"]["AdministrationRole"][];
         };
         UserDto: {
@@ -946,6 +1003,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FiscalYearWithBookingsShortenedError"];
+                };
+            };
+        };
+    };
+    GetAdministrationUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetAdministrationUsersDto"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadAdministrationRoleMembersError"];
+                };
+            };
+        };
+    };
+    UpdateAdministrationRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAdministrationRolesCommand"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnknownUserError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeAdministrationRoleError"];
                 };
             };
         };

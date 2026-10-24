@@ -74,6 +74,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.Empty(access.AdministrationRoles);
         Assert.False(access.ManageAccountingUnits);
         Assert.False(access.ManageAdministrationRoles);
+        Assert.False(access.IsAdministration);
     }
 
     [Fact]
@@ -91,6 +92,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.NotNull(access);
         Assert.False(access.ManageAccountingUnits);
         Assert.False(access.ManageAdministrationRoles);
+        Assert.True(access.IsAdministration);
         Assert.Equal([AdministrationRole.FinanceReviewer], access.AdministrationRoles);
         var fsr = Assert.Single(access.AccountingUnits);
         Assert.Equal("fsr", fsr.Key);
@@ -115,6 +117,7 @@ public class GetUserAccessEndpointTests(DatabaseFixture database) : DatabaseTest
         Assert.True(access.ManageAccountingUnits);
         Assert.True(access.ResolveRoleChangeRequests);
         Assert.True(access.ManageAdministrationRoles);
+        Assert.True(access.IsAdministration);
         Assert.Equal([AdministrationRole.FinanceAdministrator], access.AdministrationRoles);
     }
 }
