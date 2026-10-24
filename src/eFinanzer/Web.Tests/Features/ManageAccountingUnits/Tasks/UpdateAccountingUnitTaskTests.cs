@@ -1,12 +1,13 @@
-using eFinanzer.Common.Database.Models;
+﻿using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit;
-using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Models;
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,7 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
     private UpdateAccountingUnitTask MyTask => new(
         Database.CreateContext(),
         new GetAccountingUnitTask(Database.CreateContext(), _keycloakUserClient, NullLogger<GetAccountingUnitTask>.Instance),
-        _keycloakUserClient,
+        new HandleRoleChangesTask(_keycloakUserClient, NullLogger<HandleRoleChangesTask>.Instance),
         NullLogger<UpdateAccountingUnitTask>.Instance);
 
     private async Task<AccountingUnit> LoadAccountingUnit(string key)
@@ -204,7 +205,7 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         var result = await MyTask.Update(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal(new ChangeUserRoleError("fsr", "alice", AccountingUnitRole.Treasurer, Added: true, keycloakError), result.Error);
+        Assert.Equal(new ChangeUserRoleError("alice", nameof(AccountingUnitRole.Treasurer), Added: true, keycloakError), result.Error);
     }
 
     public static TheoryData<List<UpdateAccountingUnitCommand.UserRoles>> InvalidUsersWithRoles()

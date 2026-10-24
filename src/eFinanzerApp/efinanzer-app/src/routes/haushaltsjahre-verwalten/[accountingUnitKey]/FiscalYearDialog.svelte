@@ -1,9 +1,6 @@
 <script lang="ts" module>
 	import { parseDate } from '@internationalized/date';
-	import type { components } from '#lib/api/schema.js';
 
-	type InvalidInputError = components['schemas']['InvalidInputError'];
-	type OverlapsExistingError = components['schemas']['FiscalYearOverlapsExistingError'];
 	type FieldName = 'key' | 'name' | 'period';
 
 	const formFieldsByApiField: Record<string, FieldName> = {
@@ -12,19 +9,12 @@
 		StartDate: 'period',
 		EndDate: 'period'
 	};
-
-	function isOverlapError(error: unknown): error is OverlapsExistingError {
-		return typeof error === 'object' && error !== null && 'overlappingKey' in error;
-	}
-
-	function isInvalidInputError(error: unknown): error is InvalidInputError {
-		return typeof error === 'object' && error !== null && 'field' in error;
-	}
 </script>
 
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
+	import { isApiError } from '#lib/api/errors.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import * as Field from '#lib/components/ui/field/index.js';
@@ -111,14 +101,14 @@
 				toast.success(isEdit ? 'Haushaltsjahr wurde gespeichert' : 'Haushaltsjahr wurde angelegt');
 				onSaved();
 				open = false;
-			} else if (response.status === 409 && isOverlapError(error)) {
+			} else if (response.status === 409 && isApiError(error, 'FiscalYearOverlapsExistingError')) {
 				const other = `„${error.overlappingKey}“ (${formatDate(error.overlappingStartDate)} – ${formatDate(error.overlappingEndDate)})`;
 				serverErrors = { period: `Überschneidet sich mit dem Haushaltsjahr ${other}` };
 			} else if (response.status === 409 && isEdit) {
 				serverErrors = { period: 'Es gibt Belege außerhalb dieses Zeitraums' };
 			} else if (response.status === 409) {
 				serverErrors = { key: 'Dieser Schlüssel ist bereits vergeben' };
-			} else if (response.status === 400 && isInvalidInputError(error) && formFieldsByApiField[error.field]) {
+			} else if (response.status === 400 && isApiError(error, 'InvalidInputError') && formFieldsByApiField[error.field]) {
 				serverErrors = { [formFieldsByApiField[error.field]]: 'Ungültige Eingabe' };
 			} else if (response.status === 400) {
 				toast.error('Die Eingaben sind ungültig');

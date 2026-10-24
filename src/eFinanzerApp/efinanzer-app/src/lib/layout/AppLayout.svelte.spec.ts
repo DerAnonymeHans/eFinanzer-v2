@@ -157,12 +157,12 @@ test('leaves the fiscal year page for a Haushalt whose fiscal years the user may
 });
 
 test.each([
-	{ resolveRoleChangeRequests: true, shown: true },
-	{ resolveRoleChangeRequests: false, shown: false }
+	{ isAdministration: true, shown: true },
+	{ isAdministration: false, shown: false }
 ])(
-	'shows the administration only to users who may resolve role change requests ($shown)',
-	async ({ resolveRoleChangeRequests, shown }) => {
-		get.mockResolvedValue(ok({ resolveRoleChangeRequests, administrationRoles: [], accountingUnits: [] }));
+	'shows the administration only to members of the administration ($shown)',
+	async ({ isAdministration, shown }) => {
+		get.mockResolvedValue(ok({ isAdministration, administrationRoles: [], accountingUnits: [] }));
 
 		renderLayout();
 		const nav = await openNavigation();

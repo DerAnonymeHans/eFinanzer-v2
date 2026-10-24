@@ -6,44 +6,38 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <RootNamespace>eFinanzer</RootNamespace>
-      <UserSecretsId>495fa570-86c1-42e4-99bd-b72c33a10502</UserSecretsId>
-  </PropertyGroup>
-
-    <!-- Writes the OpenAPI document to OpenApi/efinanzer.json on Debug builds, the frontend generates its API client from it -->
-    <PropertyGroup>
-        <OpenApiGenerateDocuments Condition="'$(Configuration)' != 'Debug'">false</OpenApiGenerateDocuments>
-        <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/OpenApi</OpenApiDocumentsDirectory>
-        <OpenApiGenerateDocumentsOptions>--file-name efinanzer</OpenApiGenerateDocumentsOptions>
+        <UserSecretsId>495fa570-86c1-42e4-99bd-b72c33a10502</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-          <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.12">
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-          <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
-        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.17.4" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3"/>
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0"/>
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0"/>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.17.4"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="eFinanzer.Common.Results" />
+        <Using Include="eFinanzer.Common.Results"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Features\GetUsers\" />
-      <Folder Include="Features\ManageFiscalYears\Endpoints\" />
+        <Folder Include="Features\GetUsers\"/>
+        <Folder Include="Features\ManageAdministrationRoles\Tasks\GetAdministrationUsers\Errors\"/>
+        <Folder Include="Features\ManageFiscalYears\Endpoints\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <_ContentIncludedByDefault Remove="OpenApi\efinanzer.json" />
+        <_ContentIncludedByDefault Remove="OpenApi\efinanzer.json"/>
     </ItemGroup>
 
 </Project>

@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/manage-administration-roles/get-administration-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAdministrationUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manage-administration-roles/update-administration-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UpdateAdministrationRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/manage-accounting-units/create-accounting-unit": {
         parameters: {
             query?: never;
@@ -307,33 +339,40 @@ export interface components {
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "AccountingUnitHasFiscalYearsError";
         };
         AccountingUnitKeyAlreadyExistsError: {
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "AccountingUnitKeyAlreadyExistsError";
         };
         /** @enum {unknown} */
         AccountingUnitRole: "FinanceOfficer" | "Treasurer" | "FinanceAuthorizedUser";
         /** @enum {unknown} */
         AdministrationRole: "HeadFinanceOfficer" | "FinanceAdministrator" | "FinanceReviewer";
+        AdministrationUserDto: {
+            username: string;
+            roles: components["schemas"]["AdministrationRole"][];
+        };
         ApplyRoleChangeError: {
             /** Format: int32 */
             id: number | string;
-            accountingUnitKey: string;
-            userName: string;
-            role: components["schemas"]["AccountingUnitRole"];
-            isAdded: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "ApplyRoleChangeError";
         };
         ChangeUserRoleError: {
-            key: string;
             userName: string;
-            role: components["schemas"]["AccountingUnitRole"];
+            role: string;
             added: boolean;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "ChangeUserRoleError";
         };
         CreateAccountingUnitCommand: {
             key: string;
@@ -344,6 +383,8 @@ export interface components {
             key: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "CreateAccountingUnitGroupsError";
         };
         CreateFiscalYearCommand: {
             key: string;
@@ -362,10 +403,13 @@ export interface components {
             key: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "DeleteAccountingUnitGroupError";
         };
         Error: {
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            type: string;
         };
         FiscalYearDto: {
             key: string;
@@ -376,6 +420,8 @@ export interface components {
             accountingUnitKey: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearHasBookingsError";
         };
         FiscalYearOverlapsExistingError: {
             key: string;
@@ -391,6 +437,8 @@ export interface components {
             overlappingEndDate: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearOverlapsExistingError";
         };
         FiscalYearWithBookingsShortenedError: {
             key: string;
@@ -401,6 +449,8 @@ export interface components {
             endDate: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "FiscalYearWithBookingsShortenedError";
         };
         GetAccountingUnitManagementDto: {
             key: string;
@@ -412,6 +462,9 @@ export interface components {
             key: string;
             name?: null | string;
             description?: null | string;
+        };
+        GetAdministrationUsersDto: {
+            administrationUsers: components["schemas"]["AdministrationUserDto"][];
         };
         GetFiscalYearManagementListDto: {
             key: string;
@@ -449,6 +502,8 @@ export interface components {
             field: string;
             message: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "InvalidInputError";
         };
         InvalidOffsetPaginationError: {
             pagination: components["schemas"]["OffsetPagination"];
@@ -456,18 +511,31 @@ export interface components {
             maxPageSize: number | string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "InvalidOffsetPaginationError";
         };
         LoadAccountingUnitRoleMembersError: {
             key: string;
             groupPath: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "LoadAccountingUnitRoleMembersError";
+        };
+        LoadAdministrationRoleMembersError: {
+            groupPath: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "LoadAdministrationRoleMembersError";
         };
         NotFoundError: {
             entity: string;
             key: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "NotFoundError";
         };
         OffsetPagination: {
             /** Format: int32 */
@@ -486,6 +554,8 @@ export interface components {
         PendingRoleChangeRequestAlreadyExistsError: {
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "PendingRoleChangeRequestAlreadyExistsError";
         };
         /** @enum {unknown} */
         ResolutionStatus: "Dismissed" | "Approved" | null;
@@ -512,6 +582,8 @@ export interface components {
             id: number | string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "RoleChangeRequestAlreadyResolvedError";
         };
         RoleChangeRequestNotApplicableError: {
             /** Format: int32 */
@@ -519,16 +591,24 @@ export interface components {
             reason: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "RoleChangeRequestNotApplicableError";
         };
         UnknownUserError: {
             userName: string;
             message?: string;
             parentError?: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "UnknownUserError";
         };
         UpdateAccountingUnitRequest: {
             name: null | string;
             description: null | string;
             usersWithRoles: components["schemas"]["UserRoles"][];
+        };
+        UpdateAdministrationRolesCommand: {
+            username: string;
+            administrationRoles: components["schemas"]["AdministrationRole"][];
         };
         UpdateFiscalYearRequest: {
             name: null | string;
@@ -539,8 +619,10 @@ export interface components {
         };
         UserAccess: {
             accountingUnits: components["schemas"]["AccountingUnitDto"][];
+            isAdministration?: boolean;
             manageAccountingUnits?: boolean;
             resolveRoleChangeRequests?: boolean;
+            manageAdministrationRoles?: boolean;
             administrationRoles: components["schemas"]["AdministrationRole"][];
         };
         UserDto: {
@@ -946,6 +1028,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FiscalYearWithBookingsShortenedError"];
+                };
+            };
+        };
+    };
+    GetAdministrationUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetAdministrationUsersDto"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadAdministrationRoleMembersError"];
+                };
+            };
+        };
+    };
+    UpdateAdministrationRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAdministrationRolesCommand"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnknownUserError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeUserRoleError"];
                 };
             };
         };

@@ -13,8 +13,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest",
 		"lint": "eslint .",
-		"generate:api": "npx -y openapi-typescript@7 ../../eFinanzer/Web/OpenApi/efinanzer.json --output src/lib/api/schema.d.ts",
-		"generate:api:url": "npx -y openapi-typescript@7 --output src/lib/api/schema.d.ts"
+		"generate:api": "npx -y openapi-typescript@7 --output src/lib/api/schema.d.ts"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

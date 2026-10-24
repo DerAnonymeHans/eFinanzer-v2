@@ -5,8 +5,10 @@ namespace eFinanzer.Features.GetUserAccess.Tasks.GetUserAccess.Models;
 public record UserAccess
 {
     public required List<AccountingUnitDto> AccountingUnits { get; init; }
+    public bool IsAdministration { get; init; }
     public bool ManageAccountingUnits { get; init; }
     public bool ResolveRoleChangeRequests { get; init; }
+    public bool ManageAdministrationRoles { get; init; }
     public required AdministrationRole[] AdministrationRoles { get; init; }
 
     public static UserAccess NoAccess() => new()

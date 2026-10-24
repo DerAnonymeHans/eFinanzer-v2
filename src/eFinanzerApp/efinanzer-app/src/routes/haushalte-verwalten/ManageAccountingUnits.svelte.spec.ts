@@ -76,10 +76,14 @@ function renderDetails() {
 	return render(DetailPage, props as never);
 }
 
-/** Opens the user search, types into it and waits for the search request */
+function userRow(fullName: string) {
+	return page.getByRole('row').filter({ hasText: fullName });
+}
+
+/** Opens the user search of the dialog, types into it and waits for the search request */
 async function searchUser(text: string) {
 	// The trigger, the search input inside the opened popover has the same name
-	await userEvent.click(page.getByRole('combobox', { name: 'Benutzer suchen' }).first());
+	await userEvent.click(page.getByRole('dialog').getByRole('combobox', { name: 'Benutzer suchen' }).first());
 	await userEvent.fill(page.getByPlaceholder('Name, Benutzername oder E-Mail'), text);
 	await expect
 		.poll(() => api.GET.mock.calls)
@@ -202,57 +206,60 @@ test('shows the general info and the users with their roles', async () => {
 	await expect.element(page.getByLabelText('Beschreibung', { exact: true })).toHaveValue('Fachschaftsrat DIT');
 
 	// Full names instead of the cryptic user names
-	await expect.element(page.getByText('Max Muster')).toBeInTheDocument();
-	await expect.element(page.getByText('Erika Example')).toBeInTheDocument();
+	await expect.element(userRow('Max Muster')).toHaveTextContent('Kassenwart');
+	await expect.element(userRow('Erika Example')).toHaveTextContent(/Finanzer\s*Finanzbevollmächtigter/);
 	await expect.element(page.getByText('mmuster')).not.toBeInTheDocument();
-	// The role selects are named after their user
-	await expect.element(page.getByRole('combobox', { name: 'Max Muster' })).toHaveTextContent('Kassenwart');
-	await expect
-		.element(page.getByRole('combobox', { name: 'Erika Example' }))
-		.toHaveTextContent('Finanzer, Finanzbevollmächtigter');
 });
 
-test('changes the roles of a user', async () => {
+test('changes the roles of a user only when saving', async () => {
 	api.PUT.mockResolvedValue(ok(undefined, 204));
 	renderDetails();
 
-	await userEvent.click(page.getByRole('combobox', { name: 'Max Muster' }));
-	await userEvent.click(page.getByRole('option', { name: 'Finanzer', exact: true }));
-	await userEvent.keyboard('{Escape}');
-	await expect.element(page.getByRole('combobox', { name: 'Max Muster' })).toHaveTextContent('Finanzer, Kassenwart');
+	await userEvent.click(page.getByRole('button', { name: 'Rollen von Max Muster bearbeiten' }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.click(dialog.getByRole('checkbox', { name: 'Finanzer', exact: true }));
+	await userEvent.click(dialog.getByRole('button', { name: 'Speichern' }));
+
+	await expect.element(page.getByRole('dialog')).not.toBeInTheDocument();
+	await expect.element(userRow('Max Muster')).toHaveTextContent(/Finanzer\s*Kassenwart/);
+	expect(api.PUT).not.toHaveBeenCalled();
 
 	await userEvent.click(page.getByRole('button', { name: /Speichern/ }));
 	await userEvent.click(page.getByRole('alertdialog').getByRole('button', { name: 'Speichern' }));
 
-	await expect.poll(() => api.PUT.mock.calls.length).toBe(1);
-	const [, { body }] = api.PUT.mock.calls[0];
-	expect(body.usersWithRoles[0].userName).toBe('mmuster');
-	expect([...body.usersWithRoles[0].roles].sort()).toEqual(['FinanceOfficer', 'Treasurer']);
+	await expect
+		.poll(() => api.PUT.mock.calls.at(-1)?.[1].body.usersWithRoles)
+		.toEqual([
+			{ userName: 'mmuster', roles: ['FinanceOfficer', 'Treasurer'] },
+			{ userName: 'eexample', roles: ['FinanceOfficer', 'FinanceAuthorizedUser'] }
+		]);
 });
 
 test('saves the changed users only after confirming', async () => {
 	api.PUT.mockResolvedValue(ok(undefined, 204));
 	renderDetails();
 
+	// Removing needs no confirmation, it is only saved with the global button
 	await userEvent.click(page.getByRole('button', { name: 'Max Muster entfernen' }));
+	await expect.element(page.getByRole('alertdialog')).not.toBeInTheDocument();
+	await expect.element(userRow('Max Muster')).not.toBeInTheDocument();
+
+	await userEvent.click(page.getByRole('button', { name: 'Mitglied hinzufügen' }));
+	const dialog = page.getByRole('dialog');
 	await searchUser('Nina');
 	await userEvent.click(page.getByRole('option', { name: 'Nina Neu' }));
-	await userEvent.click(page.getByRole('button', { name: /Hinzufügen/ }));
-
-	await expect
-		.poll(() => page.getByRole('button', { name: /entfernen$/ }).elements().map((row) => row.getAttribute('aria-label')))
-		.toEqual(['Erika Example entfernen', 'Nina Neu entfernen']);
-	await expect.element(page.getByText('Max Muster')).not.toBeInTheDocument();
+	await userEvent.click(dialog.getByRole('checkbox', { name: 'Kassenwart' }));
+	await userEvent.click(dialog.getByRole('button', { name: 'Hinzufügen' }));
+	await expect.element(userRow('Nina Neu')).toHaveTextContent('Kassenwart');
 	// The search delivered the name, it is not loaded again
 	expect(api.GET).not.toHaveBeenCalledWith('/api/get-users/get-user', { params: { query: { username: 'nneu' } } });
 
 	await userEvent.click(page.getByRole('button', { name: /Speichern/ }));
-	const dialog = page.getByRole('alertdialog');
-	// The added user has no role yet
-	await expect.element(dialog.getByText(/aus dem Haushalt entfernt werden/)).toHaveTextContent('Nina Neu');
+	const confirmDialog = page.getByRole('alertdialog');
+	await expect.element(confirmDialog.getByText(/Aus dem Haushalt entfernt werden/)).toHaveTextContent('Max Muster');
 	expect(api.PUT).not.toHaveBeenCalled();
 
-	await userEvent.click(dialog.getByRole('button', { name: 'Speichern' }));
+	await userEvent.click(confirmDialog.getByRole('button', { name: 'Speichern' }));
 
 	await expect
 		.poll(() => api.PUT)
@@ -263,7 +270,7 @@ test('saves the changed users only after confirming', async () => {
 				description: 'Fachschaftsrat DIT',
 				usersWithRoles: [
 					{ userName: 'eexample', roles: ['FinanceOfficer', 'FinanceAuthorizedUser'] },
-					{ userName: 'nneu', roles: [] }
+					{ userName: 'nneu', roles: ['Treasurer'] }
 				]
 			}
 		});
@@ -271,11 +278,74 @@ test('saves the changed users only after confirming', async () => {
 	expect(api.GET).toHaveBeenCalledWith('/api/get-user-access/my-user-access');
 });
 
+async function saveWithoutMaxMuster() {
+	await userEvent.click(page.getByRole('button', { name: 'Max Muster entfernen' }));
+	await userEvent.click(page.getByRole('button', { name: /Speichern/ }));
+	await userEvent.click(page.getByRole('alertdialog').getByRole('button', { name: 'Speichern' }));
+}
+
+function accountingUnitLoads() {
+	return api.GET.mock.calls.filter(([path]) => path === '/api/manage-accounting-units/get-accounting-unit').length;
+}
+
+test('names the role that could not be changed and reloads if the changes were saved only partly', async () => {
+	api.PUT.mockResolvedValue(failed(500, { type: 'ChangeUserRoleError', userName: 'mmuster', role: 'Treasurer', added: false }));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+	const loadsBefore = accountingUnitLoads();
+
+	await saveWithoutMaxMuster();
+
+	await expect
+		.element(
+			page.getByText(
+				'Änderungen konnten nicht vollständig gespeichert werden: Die Rolle Kassenwart von Max Muster konnte nicht entfernt werden'
+			)
+		)
+		.toBeInTheDocument();
+	await expect.poll(accountingUnitLoads).toBeGreaterThan(loadsBefore);
+});
+
+test('names a user that does not exist anymore', async () => {
+	api.PUT.mockResolvedValue(failed(400, { type: 'UnknownUserError', userName: 'eexample' }));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+
+	await saveWithoutMaxMuster();
+
+	await expect.element(page.getByText('Den Benutzer Erika Example gibt es nicht mehr')).toBeInTheDocument();
+});
+
+test('reports a failure without partial changes', async () => {
+	api.PUT.mockResolvedValue(failed(500));
+	renderDetails();
+	await expect.element(userRow('Max Muster')).toBeInTheDocument();
+
+	await saveWithoutMaxMuster();
+
+	await expect.element(page.getByText('Änderungen konnten nicht gespeichert werden (HTTP 500)')).toBeInTheDocument();
+});
+
+test('removes a user whose roles were all taken away', async () => {
+	renderDetails();
+
+	await userEvent.click(page.getByRole('button', { name: 'Rollen von Max Muster bearbeiten' }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.click(dialog.getByRole('checkbox', { name: 'Kassenwart' }));
+	await expect.element(dialog.getByText('Ohne Rolle wird der Benutzer entfernt.')).toBeInTheDocument();
+	await userEvent.click(dialog.getByRole('button', { name: 'Speichern' }));
+
+	await expect.element(userRow('Max Muster')).not.toBeInTheDocument();
+	expect(api.PUT).not.toHaveBeenCalled();
+});
+
 test('allows adding only after a search result was selected', async () => {
 	renderDetails();
 
-	await expect.element(page.getByRole('button', { name: 'Max Muster entfernen' })).toBeInTheDocument();
-	const addButton = page.getByRole('button', { name: /Hinzufügen/ });
+	await userEvent.click(page.getByRole('button', { name: 'Mitglied hinzufügen' }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.click(dialog.getByRole('checkbox', { name: 'Kassenwart' }));
+	const addButton = dialog.getByRole('button', { name: 'Hinzufügen' });
 	await expect.element(addButton).toBeDisabled();
 
 	await searchUser('Nina');
@@ -287,7 +357,7 @@ test('allows adding only after a search result was selected', async () => {
 test('leaves users that are already listed out of the search results', async () => {
 	renderDetails();
 
-	await expect.element(page.getByRole('button', { name: 'Max Muster entfernen' })).toBeInTheDocument();
+	await userEvent.click(page.getByRole('button', { name: 'Mitglied hinzufügen' }));
 	await searchUser('Max');
 
 	await expect.element(page.getByText('Keine Benutzer gefunden')).toBeInTheDocument();

@@ -5,6 +5,9 @@ namespace eFinanzer.Common.Auth;
 
 public static class GroupRules
 {
+    private static readonly string[] AdministrationGroups = Enum.GetValues<AdministrationRole>().Select(KeycloakGroups.GetAdministrationRoleGroup).ToArray();
+    public static  IReadOnlyList<string> GetAdministrationRoleGroups() => AdministrationGroups;
+    
     private static readonly string[] ManageAccountingUnitsGroups =
     [
         KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator),
@@ -32,4 +35,11 @@ public static class GroupRules
         KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.HeadFinanceOfficer),
     ];
     public static IReadOnlyList<string> GetResolveRoleChangeRequestsGroups() => ResolveRoleChangeRequestsGroups;
+
+
+    private static readonly string[] ManageAdministrationRolesGroups =
+    [
+        KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator)
+    ];
+    public static IReadOnlyList<string> GetManageAdministrationRolesGroups() => ManageAdministrationRolesGroups;
 }

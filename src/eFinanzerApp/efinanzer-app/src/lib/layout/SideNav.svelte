@@ -54,7 +54,7 @@
 	const userAccess = useUserAccess();
 	const canEditAccountingUnits = $derived(userAccess.value?.manageAccountingUnits ?? false);
 	const canEditFiscalYears = $derived(accountingUnit?.manageFiscalYears ?? false);
-	const canAdministrate = $derived(userAccess.value?.resolveRoleChangeRequests ?? false);
+	const canAdministrate = $derived(userAccess.value?.isAdministration ?? false);
 	const roleNames = $derived(
 		userAccess.value ? getRoleNames(userAccess.value).slice(0, MAX_SHOWN_ROLES) : []
 	);

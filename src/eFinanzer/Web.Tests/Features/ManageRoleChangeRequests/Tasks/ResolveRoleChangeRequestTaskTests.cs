@@ -1,9 +1,11 @@
-using eFinanzer.Common.Database.Models;
+﻿using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
 using eFinanzer.Features.ManageRoleChangeRequests;
 using eFinanzer.Features.ManageRoleChangeRequests.Errors;
 using eFinanzer.Features.ManageRoleChangeRequests.Tasks.ResolveRoleChangeRequest;
@@ -26,6 +28,7 @@ public class ResolveRoleChangeRequestTaskTests(DatabaseFixture database) : Datab
     private ResolveRoleChangeRequestTask MyTask => new(
         Database.CreateContext(),
         _keycloakUserClient,
+        new HandleRoleChangesTask(_keycloakUserClient, NullLogger<HandleRoleChangesTask>.Instance),
         new FixedTimeProvider(ResolvedAt),
         NullLogger<ResolveRoleChangeRequestTask>.Instance);
 
@@ -167,14 +170,18 @@ public class ResolveRoleChangeRequestTaskTests(DatabaseFixture database) : Datab
         var id = await Add(Pending("alice", FixedTimeProvider.DefaultNow, Change("fsr", AccountingUnitRole.Treasurer)));
         _keycloakUserClient.SetupUsers("alice");
         SetupRoleGroups(("fsr", AccountingUnitRole.Treasurer));
+        var keycloakError = new NotFoundError("User or group", "x");
         _keycloakUserClient.AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Fail(new NotFoundError("User or group", "x")));
+            .Returns(Result.Fail(keycloakError));
 
         // Act
         var result = await MyTask.Resolve(Command(id, RoleChangeRequest.ResolutionStatus.Approved), CancellationToken.None);
 
         // Assert
-        Assert.IsType<ApplyRoleChangeError>(result.Error);
+        Assert.Equal(
+            new ApplyRoleChangeError(id,
+                new ChangeUserRoleError("alice", nameof(AccountingUnitRole.Treasurer), Added: true, keycloakError)),
+            result.Error);
         var stored = await Load(id);
         Assert.Null(stored.Resolution);
         Assert.Null(stored.ResolvedBy);

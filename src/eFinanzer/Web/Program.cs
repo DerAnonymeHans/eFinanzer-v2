@@ -4,9 +4,12 @@ using eFinanzer.Common.Auth;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Endpoints;
 using eFinanzer.Common.Integrations.Keycloak;
+using eFinanzer.Common.Results;
+using eFinanzer.Common.Tasks.GetRoleChanges;
 using eFinanzer.Features.GetUserAccess;
 using eFinanzer.Features.GetUsers;
 using eFinanzer.Features.ManageAccountingUnits;
+using eFinanzer.Features.ManageAdministrationRoles;
 using eFinanzer.Features.ManageFiscalYears;
 using eFinanzer.Features.ManageRoleChangeRequests;
 
@@ -25,8 +28,10 @@ builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
 builder.Services.AddAuth(builder.Configuration, builder.Environment);
 builder.Services.AddFrontendCors(builder.Configuration);
 builder.Services.AddKeycloakAdmin(builder.Configuration);
+builder.Services.AddScoped<IHandleRoleChangesTask, HandleRoleChangesTask>();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddManageAccountingUnits();
+builder.Services.AddManageAdministrationRoles();
 builder.Services.AddManageFiscalYears();
 builder.Services.AddManageRoleChangeRequests();
 builder.Services.AddGetUsers();
@@ -35,7 +40,9 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.ConfigureHttpJsonOptions(options =>
     // Enums are only accepted by name, so a number cannot smuggle in an undefined value
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer<KeycloakSecuritySchemeTransformer>());
+builder.Services.AddOpenApi(options => options
+    .AddDocumentTransformer<KeycloakSecuritySchemeTransformer>()
+    .AddSchemaTransformer<ErrorTypeSchemaTransformer>());
 
 var app = builder.Build();
 

@@ -13,7 +13,7 @@
 <!-- Keeps the page while the user access is reloaded after a change, so its state survives -->
 {#if userAccess.loading && !userAccess.value}
 	<PageSpinner />
-{:else if !userAccess.value?.resolveRoleChangeRequests}
+{:else if !userAccess.value?.isAdministration}
 	<NoAccess description="Für die Administration fehlt die Berechtigung." />
 {:else}
 	{@render children()}
