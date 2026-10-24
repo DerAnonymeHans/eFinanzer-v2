@@ -60,7 +60,7 @@
 			} else if (response.status === 500 && isApiError(error, 'ChangeUserRoleError')) {
 				// Role changes are applied one after another, so the ones before the failed one were saved
 				const change = error.added ? 'hinzugefügt' : 'entfernt';
-				toast.error(`${texts.partialFailure}: Die Rolle ${error.role} konnte nicht ${change} werden`);
+				toast.error(`${texts.partialFailure}: Die Rolle ${administrationRoleNames[error.role as AdministrationRole]} konnte nicht ${change} werden`);
 			} else if (response.status === 400 && isApiError(error, 'UnknownUserError')) {
 				toast.error(`Den Benutzer ${userCache.getDisplayName(error.userName)} gibt es nicht mehr`);
 				return false;

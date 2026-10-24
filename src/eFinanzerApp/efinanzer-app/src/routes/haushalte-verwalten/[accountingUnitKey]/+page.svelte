@@ -118,7 +118,7 @@
 				// Role changes are applied one after another, so the ones before the failed one were saved
 				const change = error.added ? 'hinzugefügt' : 'entfernt';
 				toast.error(
-					`Änderungen konnten nicht vollständig gespeichert werden: Die Rolle ${error.role} von ` +
+					`Änderungen konnten nicht vollständig gespeichert werden: Die Rolle ${accountingUnitRoleNames[error.role as AccountingUnitRole]} von ` +
 						`${userCache.getDisplayName(error.userName)} konnte nicht ${change} werden`
 				);
 				void load(params.accountingUnitKey);
