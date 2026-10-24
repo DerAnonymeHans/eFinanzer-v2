@@ -4,8 +4,10 @@ using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Models;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit;
-using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,12 +22,10 @@ public class UpdateAccountingUnitTask(
     EFinanzerDbContext context,
     IGetAccountingUnitTask getAccountingUnitTask,
     IKeycloakUserClient keycloakUserClient,
+    IHandleRoleChangesTask handleRoleChangesTask,
     ILogger<UpdateAccountingUnitTask> logger
     ) : IUpdateAccountingUnitTask
 {
-    private record UserRole(string UserName, AccountingUnitRole Role);
-
-    private record RoleChange(string UserName, string UserId, AccountingUnitRole Role, string GroupId, bool Added);
 
     public async Task<Result> Update(UpdateAccountingUnitCommand command, CancellationToken ct)
     {
@@ -55,33 +55,14 @@ public class UpdateAccountingUnitTask(
 
         logger.LogInformation("Updated accounting unit {AccountingUnitKey}", command.Key);
 
-        foreach (var change in roleChangesResult.Value)
-        {
-            var changeResult = change.Added
-                ? await keycloakUserClient.AddUserToGroup(change.UserId, change.GroupId, ct)
-                : await keycloakUserClient.RemoveUserFromGroup(change.UserId, change.GroupId, ct);
-
-            if (changeResult.IsError)
-            {
-                logger.LogError(
-                    "Changing role {Role} (added: {Added}) of user {UserName} in accounting unit {AccountingUnitKey} failed: {Error}",
-                    change.Role, change.Added, change.UserName, command.Key, changeResult.Error);
-                return new ChangeUserRoleError(command.Key, change.UserName, change.Role, change.Added, changeResult.Error);
-            }
-
-            logger.LogInformation(
-                "Changed role {Role} (added: {Added}) of user {UserName} in accounting unit {AccountingUnitKey}",
-                change.Role, change.Added, change.UserName, command.Key);
-        }
-
-        return Result.Ok();
+        return await handleRoleChangesTask.ExecuteRoleChanges(roleChangesResult.Value, ct);
     }
 
     /// <summary>
     /// Diffs the requested roles with the current ones in Keycloak and resolves the user and group ids needed to apply
     /// them
     /// </summary>
-    private async Task<Result<List<RoleChange>>> GetRoleChanges(string key,
+    private async Task<Result<RoleChange<AccountingUnitRole>[]>> GetRoleChanges(string key,
         List<UpdateAccountingUnitCommand.UserRoles> usersWithRoles, CancellationToken ct)
     {
         var currentResult = await getAccountingUnitTask.Get(key, ct);
@@ -92,49 +73,15 @@ public class UpdateAccountingUnitTask(
 
             logger.LogError("Loading the current user roles of accounting unit {AccountingUnitKey} failed: {Error}",
                 key, currentResult.Error);
-            return new LoadCurrentUserRolesError(key, currentResult.Error);
+            return new LoadCurrentUserRolesError(currentResult.Error);
         }
 
-        // Keycloak stores usernames in lower case
-        var current = currentResult.Value.UsersWithRoles
-            .SelectMany(user => user.Roles.Select(role => new UserRole(user.UserName.ToLowerInvariant(), role)))
-            .ToHashSet();
-        var requested = usersWithRoles
-            .SelectMany(user => user.Roles.Select(role => new UserRole(user.UserName.ToLowerInvariant(), role)))
-            .ToHashSet();
-
-        var added = requested.Except(current).ToList();
-        var removed = current.Except(requested).ToList();
-
-        var userIds = new Dictionary<string, string>();
-        foreach (var userName in added.Concat(removed).Select(x => x.UserName).Distinct())
-        {
-            var userResult = await keycloakUserClient.GetUserByUsername(userName, ct);
-            if (userResult.IsError)
-                return new UnknownUserError(userName);
-
-            userIds[userName] = userResult.Value.Id;
-        }
-
-        var groupIds = new Dictionary<AccountingUnitRole, string>();
-        foreach (var role in added.Concat(removed).Select(x => x.Role).Distinct())
-        {
-            var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(
-                KeycloakGroups.GetAccountingUnitRoleGroup(key, role), ct);
-            if (groupIdResult.IsError)
-            {
-                logger.LogError("Loading the group of role {Role} of accounting unit {AccountingUnitKey} failed: {Error}",
-                    role, key, groupIdResult.Error);
-                return new LoadCurrentUserRolesError(key, groupIdResult.Error);
-            }
-
-            groupIds[role] = groupIdResult.Value;
-        }
-
-        // Removals first, so a failure leaves users with fewer instead of more rights
-        return removed.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, groupIds[x.Role], Added: false))
-            .Concat(added.Select(x => new RoleChange(x.UserName, userIds[x.UserName], x.Role, groupIds[x.Role], Added: true)))
-            .ToList();
+        return await handleRoleChangesTask.GetRoleChanges(
+            currentResult.Value.UsersWithRoles.Select(x => new UserWithRoles<AccountingUnitRole>(x.UserName, x.Roles)),
+            usersWithRoles.Select(x => new UserWithRoles<AccountingUnitRole>(x.UserName, x.Roles)),
+            role => KeycloakGroups.GetAccountingUnitRoleGroup(key, role),
+            ct
+        );
     }
 
     /// <summary>

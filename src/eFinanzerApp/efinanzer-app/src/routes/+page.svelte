@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Card from '#lib/components/ui/card/index.js';
-  import {useUserAccess} from "#lib/stores/user-access.svelte.ts";
+  import {useUserAccess} from "#lib/stores/user-access.svelte.js";
   import {Button} from "#lib/components/ui/button/index.js";
   import {resolve} from "$app/paths";
 

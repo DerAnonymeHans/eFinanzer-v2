@@ -144,6 +144,25 @@ public class ManageAdministrationRolesEndpointTests(DatabaseFixture database) : 
             KeycloakUserClientExtensions.AdministrationRoleGroup(AdministrationRole.FinanceReviewer).Id, Arg.Any<CancellationToken>());
     }
 
+    /// <summary>
+    /// Otherwise the last finance administrator could lock everyone out of managing administration roles
+    /// </summary>
+    [Fact]
+    public async Task Update_RemoveOwnManagingRole_ReturnsBadRequestWithoutCallingKeycloak()
+    {
+        // Arrange
+        var client = CreateManagingClient();
+
+        // Act
+        var response = await client.PutAsJsonAsync($"{BaseUrl}/update-administration-roles",
+            new { username = TestAuthHandler.Username, administrationRoles = new[] { "FinanceReviewer" } },
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(_factory.KeycloakUserClient.ReceivedCalls());
+    }
+
     [Fact]
     public async Task Update_UnknownUser_ReturnsBadRequest()
     {

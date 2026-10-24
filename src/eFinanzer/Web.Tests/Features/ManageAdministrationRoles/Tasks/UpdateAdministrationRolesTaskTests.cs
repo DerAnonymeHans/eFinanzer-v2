@@ -3,6 +3,8 @@ using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.GetAdministrationUsers;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.UpdateAdministrationRoles;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.UpdateAdministrationRoles.Errors;
@@ -18,8 +20,8 @@ public class UpdateAdministrationRolesTaskTests
     private readonly IKeycloakUserClient _keycloakUserClient = Substitute.For<IKeycloakUserClient>();
 
     private UpdateAdministrationRolesTask MyTask => new(
-        _keycloakUserClient,
         new GetAdministrationUsersTask(_keycloakUserClient, NullLogger<GetAdministrationUsersTask>.Instance),
+        new HandleRoleChangesTask(_keycloakUserClient, NullLogger<HandleRoleChangesTask>.Instance),
         NullLogger<UpdateAdministrationRolesTask>.Instance);
 
     private static string RoleGroupId(AdministrationRole role) => KeycloakUserClientExtensions.AdministrationRoleGroup(role).Id;
@@ -150,7 +152,7 @@ public class UpdateAdministrationRolesTaskTests
         var result = await MyTask.Update(Command("alice", AdministrationRole.HeadFinanceOfficer), CancellationToken.None);
 
         // Assert
-        Assert.IsType<LoadCurrentAdministrationRolesError>(result.Error);
+        Assert.IsType<LoadCurrentUserRolesError>(result.Error);
         await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _keycloakUserClient.DidNotReceive().RemoveUserFromGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
@@ -170,7 +172,7 @@ public class UpdateAdministrationRolesTaskTests
 
         // Assert
         Assert.Equal(
-            new ChangeAdministrationRoleError("alice", AdministrationRole.FinanceReviewer, Added: false, keycloakError),
+            new ChangeUserRoleError("alice", AdministrationRole.FinanceReviewer, Added: false, keycloakError),
             result.Error);
         await _keycloakUserClient.DidNotReceive().AddUserToGroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }

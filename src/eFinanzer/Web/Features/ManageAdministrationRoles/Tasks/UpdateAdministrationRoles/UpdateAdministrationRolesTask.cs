@@ -2,6 +2,8 @@
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.GetRoleChanges;
+using eFinanzer.Common.Tasks.GetRoleChanges.Models;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.GetAdministrationUsers;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.UpdateAdministrationRoles.Errors;
 using eFinanzer.Features.ManageAdministrationRoles.Tasks.UpdateAdministrationRoles.Models;
@@ -14,13 +16,11 @@ public interface IUpdateAdministrationRolesTask
 }
 
 public class UpdateAdministrationRolesTask(
-    IKeycloakUserClient keycloakUserClient,
     IGetAdministrationUsersTask getAdministrationUsersTask,
+    IHandleRoleChangesTask handleRoleChangesTask,
     ILogger<UpdateAdministrationRolesTask> logger
     ) : IUpdateAdministrationRolesTask
 {
-    private record RoleChange(string UserName, string UserId, AdministrationRole Role, string GroupId, bool Added);
-
     public async Task<Result> Update(UpdateAdministrationRolesCommand command, CancellationToken ct)
     {
         var validation = Validate(command);
@@ -32,33 +32,14 @@ public class UpdateAdministrationRolesTask(
         if (roleChangesResult.IsError)
             return roleChangesResult.Error;
 
-        foreach (var change in roleChangesResult.Value)
-        {
-            var changeResult = change.Added
-                ? await keycloakUserClient.AddUserToGroup(change.UserId, change.GroupId, ct)
-                : await keycloakUserClient.RemoveUserFromGroup(change.UserId, change.GroupId, ct);
-
-            if (changeResult.IsError)
-            {
-                logger.LogError(
-                    "Changing administration role {Role} (added: {Added}) of user {UserName} failed: {Error}",
-                    change.Role, change.Added, change.UserName, changeResult.Error);
-                return new ChangeAdministrationRoleError(change.UserName, change.Role, change.Added, changeResult.Error);
-            }
-
-            logger.LogInformation(
-                "Changed administration role {Role} (added: {Added}) of user {UserName}",
-                change.Role, change.Added, change.UserName);
-        }
-
-        return Result.Ok();
+        return await handleRoleChangesTask.ExecuteRoleChanges(roleChangesResult.Value, ct);
     }
 
     /// <summary>
     /// Diffs the requested roles with the current ones in Keycloak and resolves the user and group ids needed to apply
     /// them
     /// </summary>
-    private async Task<Result<List<RoleChange>>> GetRoleChanges(UpdateAdministrationRolesCommand command,
+    private async Task<Result<RoleChange<AdministrationRole>[]>> GetRoleChanges(UpdateAdministrationRolesCommand command,
         CancellationToken ct)
     {
         var currentResult = await getAdministrationUsersTask.GetUsers(ct);
@@ -68,45 +49,15 @@ public class UpdateAdministrationRolesTask(
             return new LoadCurrentAdministrationRolesError(currentResult.Error);
         }
 
-        // Keycloak stores usernames in lower case
-        var userName = command.Username.ToLowerInvariant();
-        var current = currentResult.Value.AdministrationUsers
-            .Where(x => x.Username.Equals(userName, StringComparison.InvariantCultureIgnoreCase))
-            .SelectMany(x => x.Roles)
-            .ToHashSet();
-        var requested = command.AdministrationRoles.ToHashSet();
-
-        var added = requested.Except(current).ToList();
-        var removed = current.Except(requested).ToList();
-
-        if (added.Count == 0 && removed.Count == 0)
-            return new List<RoleChange>();
-
-        var userResult = await keycloakUserClient.GetUserByUsername(userName, ct);
-        if (userResult.IsError)
-            return new UnknownUserError(userName);
-
-        var userId = userResult.Value.Id;
-
-        var groupIds = new Dictionary<AdministrationRole, string>();
-        foreach (var role in added.Concat(removed))
-        {
-            var groupIdResult = await keycloakUserClient.GetGroupIdFromPath(
-                KeycloakGroups.GetAdministrationRoleGroup(role), ct);
-            if (groupIdResult.IsError)
-            {
-                logger.LogError("Loading the group of administration role {Role} failed: {Error}",
-                    role, groupIdResult.Error);
-                return new LoadCurrentAdministrationRolesError(groupIdResult.Error);
-            }
-
-            groupIds[role] = groupIdResult.Value;
-        }
-
-        // Removals first, so a failure leaves the user with fewer instead of more rights
-        return removed.Select(role => new RoleChange(userName, userId, role, groupIds[role], Added: false))
-            .Concat(added.Select(role => new RoleChange(userName, userId, role, groupIds[role], Added: true)))
-            .ToList();
+        // Only this user is requested, so the other users must not be in the diff or they would lose all their roles
+        return await handleRoleChangesTask.GetRoleChanges(
+            currentResult.Value.AdministrationUsers
+                .Where(x => x.Username.Equals(command.Username, StringComparison.OrdinalIgnoreCase))
+                .Select(x => new UserWithRoles<AdministrationRole>(x.Username, x.Roles)),
+            [new UserWithRoles<AdministrationRole>(command.Username, command.AdministrationRoles)],
+            KeycloakGroups.GetAdministrationRoleGroup,
+            ct
+        );
     }
 
     /// <summary>

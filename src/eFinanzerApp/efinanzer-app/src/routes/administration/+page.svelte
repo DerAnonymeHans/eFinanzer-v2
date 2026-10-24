@@ -1,6 +1,6 @@
 <script lang="ts">
 	import RoleChangeRequestsList from './RoleChangeRequestsList.svelte';
-	import {useUserAccess} from "#lib/stores/user-access.svelte.ts";
+	import {useUserAccess} from "#lib/stores/user-access.svelte.js";
 	import AdministrationUsers from "./AdministrationUsers.svelte";
 
 	const userAccess = useUserAccess();
