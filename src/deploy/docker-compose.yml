@@ -79,7 +79,7 @@ services:
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
     volumes:
-      - ./keycloak/themes/efinanzer:/opt/keyloak/themes/efinanzer:ro
+      - ./keycloak/themes/efinanzer:/opt/keycloak/themes/efinanzer:ro
     depends_on:
       keycloak_postgres:
         condition: service_healthy
