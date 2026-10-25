@@ -1841,6 +1841,7 @@
     "strictTransportSecurity": "max-age=31536000; includeSubDomains"
   },
   "smtpServer": {},
+  "loginTheme": "efinanzer",
   "eventsEnabled": false,
   "eventsListeners": [
     "jboss-logging"
@@ -1848,7 +1849,54 @@
   "enabledEventTypes": [],
   "adminEventsEnabled": false,
   "adminEventsDetailsEnabled": false,
-  "identityProviders": [],
+  "identityProviders": [
+    {
+      "alias": "htwk-idp",
+      "displayName": "Shibboleth",
+      "internalId": "e37ee670-2226-4f95-b4a9-e5301bf73852",
+      "providerId": "saml",
+      "enabled": true,
+      "updateProfileFirstLoginMode": "on",
+      "trustEmail": false,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "authenticateByDefault": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "postBindingLogout": "true",
+        "singleLogoutServiceUrl": "https://shib1.rz.htwk-leipzig.de/idp/profile/SAML2/POST/SLO",
+        "postBindingResponse": "true",
+        "backchannelSupported": "false",
+        "idpEntityId": "https://shib1.rz.htwk-leipzig.de/idp/shibboleth",
+        "loginHint": "false",
+        "allowCreate": "true",
+        "enabledFromMetadata": "true",
+        "syncMode": "LEGACY",
+        "singleSignOnServiceUrl": "https://shib1.rz.htwk-leipzig.de/idp/profile/SAML2/POST/SSO",
+        "wantAuthnRequestsSigned": "false",
+        "artifactResolutionServiceUrl": "https://shib1.rz.htwk-leipzig.de:8443/idp/profile/SAML2/SOAP/ArtifactResolution",
+        "allowedClockSkew": "0",
+        "encryptionPublicKey": "MIIFDTCCA3WgAwIBAgIUTrmu//wvKeDw0Mi+miaP5OUutN0wDQYJKoZIhvcNAQEL\nBQAwgZUxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdTYWNoc2VuMRAwDgYDVQQHDAdM\nZWlwemlnMT8wPQYDVQQKDDZIb2Noc2NodWxlIGZ1ZXIgVGVjaG5paywgV2lydHNj\naGFmdCB1bmQgS3VsdHVyIExlaXB6aWcxITAfBgNVBAMMGHNoaWIxLnJ6Lmh0d2st\nbGVpcHppZy5kZTAeFw0yNDAzMTMwNzUzNDdaFw0yNzA1MDcwNzUzNDdaMIGVMQsw\nCQYDVQQGEwJERTEQMA4GA1UECAwHU2FjaHNlbjEQMA4GA1UEBwwHTGVpcHppZzE/\nMD0GA1UECgw2SG9jaHNjaHVsZSBmdWVyIFRlY2huaWssIFdpcnRzY2hhZnQgdW5k\nIEt1bHR1ciBMZWlwemlnMSEwHwYDVQQDDBhzaGliMS5yei5odHdrLWxlaXB6aWcu\nZGUwggGiMA0GCSqGSIb3DQEBAQUAA4IBjwAwggGKAoIBgQDTZ2ccjc+iUsyLqpFs\nvJuECSJrRM/8o5Hb3AUl6muwgJE3jucTEcWXNP8fljMibMqWhbLDYfL30VN6tP2z\nukys8U9U6brd2QpfBE1YaBVetVDfWB06iUmisLR14F4kdwOAql3uOl6prhXByXOt\nwmljsR3fHf+qvEPLZmMBXvieQE0+xjPnA8KO7Q5Bg0G4NkG37FPQAb3tzks3bnjX\nzXjzYHtMa6yV7P8OOFsw/A7ByCS0ieEdfxNzr0EGopF68ZWBeYjby88AFb+zbXSC\nF4PL8Vpb/tweQNWud5ESu4TTO2GQFU5GWKWypfLxEzU5LFATCJhwdhUvm39N4z5+\nlJBydtTEK79feOtbkG2Y1abscxyT7P1pSuukZO15C8aqjAXJhEsqj1EJCYqOP3CA\nXxGdj4tSxJGUggwGsUafeRRLoXsjhU4nnHurHj/GZcb8/xaW3pZWzbm1aR7nhRQs\nLsvJcxVNQ2pvVUrFCB2MaAiTlthwgJ+l5qqUBtteEIr1RrcCAwEAAaNTMFEwHQYD\nVR0OBBYEFMXLoJfZ7amEH3n4ld5IwQ74mA36MB8GA1UdIwQYMBaAFMXLoJfZ7amE\nH3n4ld5IwQ74mA36MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggGB\nAHMX3nGrikLaMLRMjOEWampXIfPKPG0TkoUzXrdztR63+VIVkcMkY5CvxXwY0/jP\nv/Ukpzd3haboEU+V1VjUQpMcUCKrn3CqtR/4YdB6cJ0JXyB85EsM0JcSyCKVTSeb\n/JKzyL/ujYMeBS6jWOVqnjNAGLaaxV+bhrFRbNv4bNmR8hSC0axT6xXDcnihTcVm\n7RPmZEuXQdCnfYj0VQLJ6Xhip62BNu10B3iy507TkeqiGav73ED8U8bSVHuEFONN\nDnTA3VEg7vJn0YZea02SuNQyaRgUF5ijYr2J2v/9nLpwYdqD+FKULcKgdxUFU+em\nWYE6I85/0U231dHQdjXc0e2jtzE0CbhEXYYyws8EupmrTNre6T1n0K8bHHjpeWG/\npUzdBw0nRUob/cKwD1j5ZJSUNTXZyxYt0LJfeDTqQyrxCrRhusbf4FURw3rtt5Az\n2VovA/5EUbqC/uoxEHfOukMPKSEtzZR7/tHtRKiqgDYJCCVIsNy3NWy+/7XZ9AxD\njg==",
+        "artifactBindingResponse": "false",
+        "validateSignature": "false",
+        "signingCertificate": "MIIFDTCCA3WgAwIBAgIUTrmu//wvKeDw0Mi+miaP5OUutN0wDQYJKoZIhvcNAQEL\nBQAwgZUxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdTYWNoc2VuMRAwDgYDVQQHDAdM\nZWlwemlnMT8wPQYDVQQKDDZIb2Noc2NodWxlIGZ1ZXIgVGVjaG5paywgV2lydHNj\naGFmdCB1bmQgS3VsdHVyIExlaXB6aWcxITAfBgNVBAMMGHNoaWIxLnJ6Lmh0d2st\nbGVpcHppZy5kZTAeFw0yNDAzMTMwNzUzNDdaFw0yNzA1MDcwNzUzNDdaMIGVMQsw\nCQYDVQQGEwJERTEQMA4GA1UECAwHU2FjaHNlbjEQMA4GA1UEBwwHTGVpcHppZzE/\nMD0GA1UECgw2SG9jaHNjaHVsZSBmdWVyIFRlY2huaWssIFdpcnRzY2hhZnQgdW5k\nIEt1bHR1ciBMZWlwemlnMSEwHwYDVQQDDBhzaGliMS5yei5odHdrLWxlaXB6aWcu\nZGUwggGiMA0GCSqGSIb3DQEBAQUAA4IBjwAwggGKAoIBgQDTZ2ccjc+iUsyLqpFs\nvJuECSJrRM/8o5Hb3AUl6muwgJE3jucTEcWXNP8fljMibMqWhbLDYfL30VN6tP2z\nukys8U9U6brd2QpfBE1YaBVetVDfWB06iUmisLR14F4kdwOAql3uOl6prhXByXOt\nwmljsR3fHf+qvEPLZmMBXvieQE0+xjPnA8KO7Q5Bg0G4NkG37FPQAb3tzks3bnjX\nzXjzYHtMa6yV7P8OOFsw/A7ByCS0ieEdfxNzr0EGopF68ZWBeYjby88AFb+zbXSC\nF4PL8Vpb/tweQNWud5ESu4TTO2GQFU5GWKWypfLxEzU5LFATCJhwdhUvm39N4z5+\nlJBydtTEK79feOtbkG2Y1abscxyT7P1pSuukZO15C8aqjAXJhEsqj1EJCYqOP3CA\nXxGdj4tSxJGUggwGsUafeRRLoXsjhU4nnHurHj/GZcb8/xaW3pZWzbm1aR7nhRQs\nLsvJcxVNQ2pvVUrFCB2MaAiTlthwgJ+l5qqUBtteEIr1RrcCAwEAAaNTMFEwHQYD\nVR0OBBYEFMXLoJfZ7amEH3n4ld5IwQ74mA36MB8GA1UdIwQYMBaAFMXLoJfZ7amE\nH3n4ld5IwQ74mA36MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggGB\nAHMX3nGrikLaMLRMjOEWampXIfPKPG0TkoUzXrdztR63+VIVkcMkY5CvxXwY0/jP\nv/Ukpzd3haboEU+V1VjUQpMcUCKrn3CqtR/4YdB6cJ0JXyB85EsM0JcSyCKVTSeb\n/JKzyL/ujYMeBS6jWOVqnjNAGLaaxV+bhrFRbNv4bNmR8hSC0axT6xXDcnihTcVm\n7RPmZEuXQdCnfYj0VQLJ6Xhip62BNu10B3iy507TkeqiGav73ED8U8bSVHuEFONN\nDnTA3VEg7vJn0YZea02SuNQyaRgUF5ijYr2J2v/9nLpwYdqD+FKULcKgdxUFU+em\nWYE6I85/0U231dHQdjXc0e2jtzE0CbhEXYYyws8EupmrTNre6T1n0K8bHHjpeWG/\npUzdBw0nRUob/cKwD1j5ZJSUNTXZyxYt0LJfeDTqQyrxCrRhusbf4FURw3rtt5Az\n2VovA/5EUbqC/uoxEHfOukMPKSEtzZR7/tHtRKiqgDYJCCVIsNy3NWy+/7XZ9AxD\njg==",
+        "nameIDPolicyFormat": "urn:mace:shibboleth:1.0:nameIdentifier",
+        "entityId": "http://localhost:5532/auth/realms/efinanzer",
+        "signSpMetadata": "false",
+        "wantAssertionsEncrypted": "false",
+        "sendClientIdOnLogout": "false",
+        "wantAssertionsSigned": "false",
+        "metadataDescriptorUrl": "https://shib1.rz.htwk-leipzig.de/idp/shibboleth",
+        "sendIdTokenOnLogout": "true",
+        "postBindingAuthnRequest": "true",
+        "forceAuthn": "false",
+        "attributeConsumingServiceIndex": "0",
+        "addExtensionsElementWithKeyInfo": "false",
+        "principalType": "SUBJECT"
+      }
+    }
+  ],
   "identityProviderMappers": [],
   "components": {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
@@ -2023,8 +2071,12 @@
       }
     ]
   },
-  "internationalizationEnabled": false,
-  "supportedLocales": [],
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "de",
+    "en"
+  ],
+  "defaultLocale": "de",
   "authenticationFlows": [
     {
       "id": "9733de40-4308-4edd-9322-554bfec7f288",

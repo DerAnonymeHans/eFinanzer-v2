@@ -1,0 +1,355 @@
+﻿/* The app's font, copied from @fontsource-variable/schibsted-grotesk */
+@font-face {
+    font-family: 'Schibsted Grotesk Variable';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400 900;
+    src: url(../fonts/schibsted-grotesk-latin-ext-wght-normal.woff2) format('woff2-variations');
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+
+@font-face {
+    font-family: 'Schibsted Grotesk Variable';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 400 900;
+    src: url(../fonts/schibsted-grotesk-latin-wght-normal.woff2) format('woff2-variations');
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+
+/* Colors from the app's theme (eFinanzerApp/efinanzer-app/src/routes/layout.css) */
+:root {
+    --efinanzer-font: 'Schibsted Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --efinanzer-background: #f4f3ee;
+    --efinanzer-foreground: #17191c;
+    --efinanzer-card: #ffffff;
+    --efinanzer-primary: #0e5b52;
+    --efinanzer-primary-foreground: #ffffff;
+    --efinanzer-muted: #ebe9e2;
+    --efinanzer-muted-foreground: #5a5f66;
+    --efinanzer-border: #dedcd4;
+    --efinanzer-destructive: #b42a22;
+    --efinanzer-input: #c9c6bc;
+    --efinanzer-ring: #0e5b52;
+    --efinanzer-radius-md: 0.4rem;
+
+    /* PatternFly variables, so links, checkboxes and other parent theme elements pick up the app's look */
+    --pf-global--FontFamily--sans-serif: var(--efinanzer-font);
+    --pf-global--FontFamily--heading--sans-serif: var(--efinanzer-font);
+    --pf-global--primary-color--100: var(--efinanzer-primary);
+    --pf-global--primary-color--200: var(--efinanzer-primary);
+    --pf-global--link--Color: var(--efinanzer-primary);
+    --pf-global--link--Color--hover: var(--efinanzer-primary);
+}
+
+/* App background instead of the parent theme's background image, with a dark wave like the app's sidebar
+   across the lower part. Fixed, so it stays at the bottom of the screen when the page scrolls */
+.login-pf body {
+    background:
+        url(../img/wave.svg) center bottom / 100% 70vh no-repeat fixed,
+        var(--efinanzer-background);
+    color: var(--efinanzer-foreground);
+    font-family: var(--efinanzer-font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* PatternFly 3 sets its own font on form elements and headings */
+.login-pf body :is(h1, h2, h3, input, button, select, textarea) {
+    font-family: var(--efinanzer-font);
+}
+
+.login-pf a {
+    color: var(--efinanzer-primary);
+}
+
+/* Like the app's Label component */
+.login-pf-page .pf-c-form__label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--efinanzer-foreground);
+}
+
+/* Like the app's Input component */
+.login-pf-page .pf-c-form-control {
+    height: 36px;
+    padding: 4px 10px;
+    font-size: 14px;
+    color: var(--efinanzer-foreground);
+    background-color: var(--efinanzer-card);
+    border: 1px solid var(--efinanzer-input);
+    border-radius: var(--efinanzer-radius-md);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: color 0.15s, box-shadow 0.15s;
+}
+
+.login-pf-page .pf-c-form-control::placeholder {
+    color: var(--efinanzer-muted-foreground);
+}
+
+/* PatternFly thickens the bottom border on hover and focus, the app shows a ring instead */
+.login-pf-page .pf-c-form-control:hover,
+.login-pf-page .pf-c-form-control:focus {
+    padding: 4px 10px;
+    border-width: 1px;
+    border-color: var(--efinanzer-input);
+}
+
+.login-pf-page .pf-c-form-control:focus-visible {
+    outline: none;
+    border-color: var(--efinanzer-ring);
+    box-shadow: 0 0 0 3px rgb(14 91 82 / 0.5);
+}
+
+.login-pf-page .pf-c-form-control[aria-invalid="true"] {
+    border-color: var(--efinanzer-destructive);
+    box-shadow: 0 0 0 3px rgb(180 42 34 / 0.2);
+}
+
+.login-pf-page .pf-m-error,
+.login-pf-page .kc-feedback-text {
+    color: var(--efinanzer-destructive);
+}
+
+/* Password field and its show/hide button, joined into one input */
+.login-pf-page .pf-c-input-group .pf-c-form-control {
+    border-radius: var(--efinanzer-radius-md) 0 0 var(--efinanzer-radius-md);
+}
+
+.login-pf-page .pf-c-input-group .pf-c-button.pf-m-control {
+    height: 36px;
+    color: var(--efinanzer-muted-foreground);
+    background-color: var(--efinanzer-card);
+    border: 1px solid var(--efinanzer-input);
+    border-left: 0;
+    border-radius: 0 var(--efinanzer-radius-md) var(--efinanzer-radius-md) 0;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.login-pf-page .pf-c-input-group .pf-c-button.pf-m-control::after {
+    display: none;
+}
+
+.login-pf-page .pf-c-input-group .pf-c-button.pf-m-control:hover {
+    color: var(--efinanzer-foreground);
+}
+
+/* Like the app's default Button in the large size */
+.login-pf-page .pf-c-button.pf-m-primary {
+    height: 40px;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--efinanzer-primary-foreground);
+    background-color: var(--efinanzer-primary);
+    border: 1px solid transparent;
+    border-radius: var(--efinanzer-radius-md);
+    transition: all 0.15s;
+}
+
+/* PatternFly draws the button border and focus outline with this pseudo element */
+.login-pf-page .pf-c-button.pf-m-primary::after {
+    display: none;
+}
+
+.login-pf-page .pf-c-button.pf-m-primary:hover {
+    background-color: rgb(14 91 82 / 0.8);
+}
+
+.login-pf-page .pf-c-button.pf-m-primary:focus-visible {
+    outline: none;
+    border-color: var(--efinanzer-ring);
+    box-shadow: 0 0 0 3px rgb(14 91 82 / 0.5);
+}
+
+.login-pf-page .pf-c-button.pf-m-primary:active {
+    transform: translateY(1px);
+}
+
+.login-pf-page .pf-c-button.pf-m-primary:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.login-pf-page input[type="checkbox"] {
+    accent-color: var(--efinanzer-primary);
+}
+
+/* Identity providers above the login form, since most people sign in through one */
+#kc-content-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+#kc-social-providers {
+    order: -1;
+    display: flex;
+    flex-direction: column;
+}
+
+#kc-social-providers .kc-social-links {
+    margin: 0;
+}
+
+/* The heading becomes an "or" divider below the buttons (text in messages/), replacing the parent theme's line */
+#kc-social-providers hr {
+    display: none;
+}
+
+#kc-social-providers h2 {
+    order: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 8px;
+    font-size: 14px;
+    color: var(--efinanzer-muted-foreground);
+}
+
+#kc-social-providers h2::before,
+#kc-social-providers h2::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--efinanzer-border);
+}
+
+/* Like the app's default Button in the large size, as the main way to sign in */
+.login-pf-page .kc-social-item.pf-c-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--efinanzer-primary-foreground);
+    background-color: var(--efinanzer-primary);
+    border: 1px solid transparent;
+    border-radius: var(--efinanzer-radius-md);
+    transition: all 0.15s;
+}
+
+.login-pf-page .kc-social-item.pf-c-button::after {
+    display: none;
+}
+
+.login-pf-page .kc-social-item.pf-c-button:hover {
+    color: var(--efinanzer-primary-foreground);
+    background-color: rgb(14 91 82 / 0.8);
+}
+
+.login-pf-page .kc-social-item.pf-c-button:focus-visible {
+    outline: none;
+    border-color: var(--efinanzer-ring);
+    box-shadow: 0 0 0 3px rgb(14 91 82 / 0.5);
+}
+
+.login-pf-page .kc-social-item.pf-c-button:active {
+    transform: translateY(1px);
+}
+
+/* With identity providers above it, the form's submit button becomes secondary, like the app's outline Button.
+   Pages without identity providers keep the teal button */
+#kc-content-wrapper:has(#kc-social-providers) .pf-c-button.pf-m-primary {
+    color: var(--efinanzer-foreground);
+    background-color: var(--efinanzer-background);
+    border-color: var(--efinanzer-border);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+#kc-content-wrapper:has(#kc-social-providers) .pf-c-button.pf-m-primary:hover {
+    background-color: var(--efinanzer-muted);
+}
+
+#kc-content-wrapper:has(#kc-social-providers) .pf-c-button.pf-m-primary:focus-visible {
+    border-color: var(--efinanzer-ring);
+    box-shadow: 0 0 0 3px rgb(14 91 82 / 0.5);
+}
+
+/* Styled like the app's Card component, replacing the parent theme's shadow and colored top border */
+.login-pf-page .card-pf {
+    background: var(--efinanzer-card);
+    color: var(--efinanzer-foreground);
+    border: 0;
+    border-radius: 0.7rem;
+    box-shadow:
+        0 0 0 1px rgb(23 25 28 / 0.1),
+        0 1px 2px 0 rgb(0 0 0 / 0.05);
+    padding: 24px;
+}
+
+/* Logo and app name above the login card, styled like the wordmark in the app's sidebar */
+#kc-header-wrapper {
+    color: var(--efinanzer-foreground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-weight: bold;
+    text-transform: none;
+    letter-spacing: -0.01em;
+}
+
+#kc-header-wrapper::before {
+    content: "";
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    background: url(../img/logo.svg) no-repeat center / contain;
+}
+
+/* Same breakpoint as the parent theme, which left-aligns the header on small screens */
+@media (max-width: 767px) {
+    /* The full width wave gets too steep on narrow screens, use a flatter one with a smaller dark area */
+    .login-pf body {
+        background:
+            url(../img/wave-mobile.svg) center bottom / 100% 60vh no-repeat fixed,
+            var(--efinanzer-background);
+    }
+
+    /* Card centered vertically, with the header centered in the space above it. The empty pseudo element
+       takes the row below the card, so the space above and below the card stays equal */
+    .login-pf-page {
+        display: grid;
+        grid-template-rows: 1fr auto 1fr;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 24px 0;
+    }
+
+    .login-pf-page::after {
+        content: "";
+    }
+
+    .login-pf-page #kc-header {
+        align-self: center;
+    }
+
+    /* The parent theme turns the card into a flat full-width block here, keep it a card like in the app */
+    .login-pf-page .card-pf {
+        margin-left: 16px;
+        margin-right: 16px;
+        box-shadow:
+            0 0 0 1px rgb(23 25 28 / 0.1),
+            0 1px 2px 0 rgb(0 0 0 / 0.05);
+        padding: 16px;
+    }
+
+    /* The parent theme left-aligns the header and leaves room on the right for the language picker */
+    #kc-header {
+        text-align: center;
+    }
+
+    #kc-header-wrapper {
+        color: var(--efinanzer-foreground);
+        padding: 0 0 20px;
+        font-size: 24px;
+        gap: 10px;
+    }
+
+    #kc-header-wrapper::before {
+        width: 36px;
+        height: 36px;
+    }
+}
