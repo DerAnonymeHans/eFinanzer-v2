@@ -17,7 +17,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     container_name: keycloak
-    command: start-dev --import-realm
+    command: start-dev --import-realm --spi-theme--static-max-age=-1
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak_postgres:5432/keycloak
@@ -32,6 +32,7 @@ services:
       - keycloak_postgres
     volumes:
       - ./config/keycloak:/opt/keycloak/data/import
+      - ../deploy/keycloak/themes/efinanzer:/opt/keycloak/themes/efinanzer
     networks:
       - web-net
       - keycloak-net

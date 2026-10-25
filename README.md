@@ -10,6 +10,7 @@ Dieses Projekt soll die Finanzverwaltung der SSV der HTWK und insbesondere die A
 - <b>eFinanzer DB</b> - Postgres DB für die relationalen Applikationsdaten
 - <b>Keycloak</b> - Nutzer und Rollen Management. Schnittstelle für den Shibboleth SSO
 - <b>Keycloak DB</b> - Keycloak eigene postgres DB
+- <b>Nginx</b> - Reverseproxy. Alle eingehenden Anfragen aus dem Web gehen über den Proxy und werden auf die korrekten Services (nach Pfad) aufgeteilt
 - <b>Victorialogs</b> - Log DB und Frontend
 - <b>Vector</b> - sammelt die Containerlogs von den DBs und Keycloak und loggt sie zu Victorialogs
 
@@ -61,6 +62,13 @@ Rollen werden mittels Gruppen abgebildet. Jeder nutzer kann in mehreren Gruppen 
 ## Deployment & CI/CD
 
 Backend und Frontend werden unabhängig voneinander zu einem Docker Image gebaut, welches im Dockerhub hochgeladen wird. Beides passiert automatisch in der Pipeline beim push auf die main branch. Zusätzlich werden die für das Deployment notwendigen Dateien (docker-compose.yml, nginx.conf, vector.yaml) per SCP auf den Server kopiert. Docker compose wird anschließend neu gestartet.
+
+### Keycloak
+Keycloak wird zur Zeit nicht vollautomatisch konfiguriert. Bei Änderungen sind manuelle Container Neustarts möglich. Die Realm Konfiguration wird auch nicht automatisch übernommen, da dies bei Keycloak in Production gar nicht so einfach ist. Stattdessen muss der Realm manuell über die UI importiert werden, falls die Daten auf dem Server verloren gehen sollten.
+
+
+### Nginx
+Bei einer Änderung der nginx.conf muss der Nginx Container manuell neugestartet werden, damit die Änderungen übernommen werden.
 
 ## Local Development
 

@@ -1,0 +1,2 @@
+<!-- Dark background of the login page's lower part, fill is the app's sidebar color. Stretched to the full width by styles.css -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none"><path fill="#17191c" d="M0,96 C240,48 480,48 720,96 C960,144 1200,144 1440,96 L1440,320 L0,320 Z"/></svg>

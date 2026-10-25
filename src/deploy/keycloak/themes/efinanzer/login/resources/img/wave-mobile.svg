@@ -1,0 +1,2 @@
+<!-- Flatter version of wave.svg for narrow screens, where the stretched wave would get too steep -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none"><path fill="#17191c" d="M0,96 C240,64 480,64 720,96 C960,128 1200,128 1440,96 L1440,320 L0,320 Z"/></svg>
