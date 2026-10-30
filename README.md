@@ -72,4 +72,4 @@ Bei einer Änderung der nginx.conf muss der Nginx Container manuell neugestartet
 
 ## Local Development
 
-Für lokale Entwicklung kann das docker compose im src/local_dev Ordner verwendet werden. Damit werden alle notwendigen externen Abhängigkeiten (Keycloak, DBs, VictoriaLogs) abgedeckt. Backend und Frontend werden lokal im Development Modus gestartet und mit den lokal gestarteten Containern verknüpft. Dazu mehr in den Readmes von FE und BE.
+Siehe LOCAL_DEV.md
