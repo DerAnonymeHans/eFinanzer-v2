@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using eFinanzer.Common.Database;
 using eFinanzer.Common.Database.Models;
-using eFinanzer.Common.Models;
 
 #nullable disable
 
@@ -25,7 +24,6 @@ namespace eFinanzer.Migrations
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "payment_type", new[] { "bank", "cash" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "receipt_position_state", new[] { "disbursed", "planned", "spent" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "receipt_type", new[] { "booking", "budget_installment", "carry_over" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "role_change_request_resolution", new[] { "approved", "dismissed" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
@@ -43,85 +41,7 @@ namespace eFinanzer.Migrations
 
                     b.HasKey("Key");
 
-                    b.ToTable("AccountingUnits", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.BudgetAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BudgetId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BudgetId");
-
-                    b.ToTable("BudgetAttachments", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ReceiptId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiptId");
-
-                    b.ToTable("ReceiptAttachments", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptPositionAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ReceiptPositionId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiptPositionId");
-
-                    b.ToTable("ReceiptPositionAttachments", (string)null);
+                    b.ToTable("AccountingUnits");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Budget", b =>
@@ -137,18 +57,6 @@ namespace eFinanzer.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<DateTimeOffset?>("ApprovedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ApprovedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
                     b.Property<string>("FiscalYearKey")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -158,59 +66,7 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("AccountingUnitKey", "FiscalYearKey");
 
-                    b.ToTable("Budgets", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BudgetId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BudgetId");
-
-                    b.ToTable("BudgetGroups", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetPosition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BudgetGroupId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("DeficitBudgetPositionId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("PlannedExpenses")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("PlannedIncome")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BudgetGroupId");
-
-                    b.HasIndex("DeficitBudgetPositionId");
-
-                    b.ToTable("BudgetPositions", (string)null);
+                    b.ToTable("Budgets");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.FiscalYear", b =>
@@ -234,7 +90,7 @@ namespace eFinanzer.Migrations
 
                     b.HasKey("AccountingUnitKey", "Key");
 
-                    b.ToTable("FiscalYears", (string)null);
+                    b.ToTable("FiscalYears");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Receipt", b =>
@@ -250,104 +106,19 @@ namespace eFinanzer.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<int?>("BudgetPositionId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
                     b.Property<string>("FiscalYearKey")
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<PaymentType>("PaymentType")
-                        .HasColumnType("payment_type");
-
                     b.Property<DateOnly>("ReceiptAt")
                         .HasColumnType("date");
 
-                    b.Property<Receipt.Type>("ReceiptType")
-                        .HasColumnType("receipt_type");
-
-                    b.Property<string>("Signature1")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Signature2")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("text");
-
-                    b.ComplexProperty(typeof(Dictionary<string, object>), "Receiver", "eFinanzer.Common.Database.Models.Receipt.Receiver#ReceiverData", b1 =>
-                        {
-                            b1.Property<string>("City")
-                                .IsRequired();
-
-                            b1.Property<string>("Iban")
-                                .IsRequired();
-
-                            b1.Property<string>("Name")
-                                .IsRequired();
-
-                            b1.Property<string>("Street")
-                                .IsRequired();
-
-                            b1
-                                .ToJson("Receiver")
-                                .HasColumnType("jsonb");
-                        });
-
                     b.HasKey("Id");
 
-                    b.HasIndex("BudgetPositionId");
+                    b.HasIndex("AccountingUnitKey", "FiscalYearKey");
 
-                    b.HasIndex("AccountingUnitKey", "FiscalYearKey", "Key")
-                        .IsUnique();
-
-                    b.ToTable("Receipts", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.ReceiptPosition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<decimal>("DepositAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<string>("PaidBy")
-                        .HasColumnType("text");
-
-                    b.Property<int>("ReceiptId")
-                        .HasColumnType("integer");
-
-                    b.Property<ReceiptPositionState>("State")
-                        .HasColumnType("receipt_position_state");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReceiptId");
-
-                    b.ToTable("ReceiptPositions", (string)null);
+                    b.ToTable("Receipts");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.RoleChangeRequest", b =>
@@ -400,80 +171,26 @@ namespace eFinanzer.Migrations
 
                     b.HasIndex("RequestedBy");
 
-                    b.ToTable("RoleChangeRequests", (string)null);
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.BudgetAttachment", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.Budget", "Budget")
-                        .WithMany("Attachments")
-                        .HasForeignKey("BudgetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Budget");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptAttachment", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.Receipt", "Receipt")
-                        .WithMany("Attachments")
-                        .HasForeignKey("ReceiptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Receipt");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Attachments.ReceiptPositionAttachment", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.ReceiptPosition", "ReceiptPosition")
-                        .WithMany("Attachments")
-                        .HasForeignKey("ReceiptPositionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReceiptPosition");
+                    b.ToTable("RoleChangeRequests");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.Budget", b =>
                 {
+                    b.HasOne("eFinanzer.Common.Database.Models.AccountingUnit", "AccountingUnit")
+                        .WithMany("Budgets")
+                        .HasForeignKey("AccountingUnitKey")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("eFinanzer.Common.Database.Models.FiscalYear", "FiscalYear")
                         .WithMany("Budgets")
                         .HasForeignKey("AccountingUnitKey", "FiscalYearKey")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("AccountingUnit");
+
                     b.Navigation("FiscalYear");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetGroup", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.Budget", "Budget")
-                        .WithMany("Groups")
-                        .HasForeignKey("BudgetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Budget");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetPosition", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.BudgetGroup", "BudgetGroup")
-                        .WithMany("Positions")
-                        .HasForeignKey("BudgetGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("eFinanzer.Common.Database.Models.BudgetPosition", "DeficitBudgetPosition")
-                        .WithMany()
-                        .HasForeignKey("DeficitBudgetPositionId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("BudgetGroup");
-
-                    b.Navigation("DeficitBudgetPosition");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.FiscalYear", b =>
@@ -495,11 +212,6 @@ namespace eFinanzer.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("eFinanzer.Common.Database.Models.BudgetPosition", "BudgetPosition")
-                        .WithMany("Receipts")
-                        .HasForeignKey("BudgetPositionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("eFinanzer.Common.Database.Models.FiscalYear", "FiscalYear")
                         .WithMany("Receipts")
                         .HasForeignKey("AccountingUnitKey", "FiscalYearKey")
@@ -508,43 +220,15 @@ namespace eFinanzer.Migrations
 
                     b.Navigation("AccountingUnit");
 
-                    b.Navigation("BudgetPosition");
-
                     b.Navigation("FiscalYear");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.ReceiptPosition", b =>
-                {
-                    b.HasOne("eFinanzer.Common.Database.Models.Receipt", "Receipt")
-                        .WithMany("Positions")
-                        .HasForeignKey("ReceiptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Receipt");
                 });
 
             modelBuilder.Entity("eFinanzer.Common.Database.Models.AccountingUnit", b =>
                 {
+                    b.Navigation("Budgets");
+
                     b.Navigation("FiscalYears");
 
-                    b.Navigation("Receipts");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Budget", b =>
-                {
-                    b.Navigation("Attachments");
-
-                    b.Navigation("Groups");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetGroup", b =>
-                {
-                    b.Navigation("Positions");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.BudgetPosition", b =>
-                {
                     b.Navigation("Receipts");
                 });
 
@@ -553,18 +237,6 @@ namespace eFinanzer.Migrations
                     b.Navigation("Budgets");
 
                     b.Navigation("Receipts");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.Receipt", b =>
-                {
-                    b.Navigation("Attachments");
-
-                    b.Navigation("Positions");
-                });
-
-            modelBuilder.Entity("eFinanzer.Common.Database.Models.ReceiptPosition", b =>
-                {
-                    b.Navigation("Attachments");
                 });
 #pragma warning restore 612, 618
         }

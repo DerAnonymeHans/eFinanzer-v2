@@ -14,7 +14,6 @@ public record FiscalYear
     public DateOnly StartDate { get; init; }
     public DateOnly EndDate { get; init; }
     
-    
     public List<Budget>? Budgets { get; init; }
     public List<Receipt>? Receipts { get; init; }
 }
