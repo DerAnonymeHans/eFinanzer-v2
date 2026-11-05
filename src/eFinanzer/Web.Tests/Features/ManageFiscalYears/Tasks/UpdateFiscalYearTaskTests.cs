@@ -171,7 +171,6 @@ public class UpdateFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
     {
         Context.Receipts.Add(new Receipt
         {
-            Key = $"R-{receiptAt:yyyyMMdd}",
             AccountingUnitKey = accountingUnitKey,
             FiscalYearKey = "2026",
             ReceiptAt = receiptAt,

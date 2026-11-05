@@ -48,9 +48,9 @@ public class GetFiscalYearsTaskTests(DatabaseFixture database) : DatabaseTest(da
             new AccountingUnit { Key = "stura" },
             CreateFiscalYear("fsr", "2026", 2026),
             CreateFiscalYear("stura", "2026", 2026),
-            new Receipt { Key = "R-1", AccountingUnitKey = "fsr", FiscalYearKey = "2026" },
-            new Receipt { Key = "R-2", AccountingUnitKey = "fsr", FiscalYearKey = "2026" },
-            new Receipt { Key = "R-3", AccountingUnitKey = "stura", FiscalYearKey = "2026" });
+            new Receipt { AccountingUnitKey = "fsr", FiscalYearKey = "2026" },
+            new Receipt { AccountingUnitKey = "fsr", FiscalYearKey = "2026" },
+            new Receipt { AccountingUnitKey = "stura", FiscalYearKey = "2026" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
