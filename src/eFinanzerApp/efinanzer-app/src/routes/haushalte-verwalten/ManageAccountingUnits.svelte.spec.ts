@@ -64,6 +64,20 @@ beforeEach(async () => {
 	});
 });
 
+/** The form data the last call of the mocked client method would have sent */
+function sentForm(method: Mock): [string, FormDataEntryValue][] {
+	const { body, bodySerializer } = method.mock.calls.at(-1)?.at(-1) as {
+		body: unknown;
+		bodySerializer: (body: unknown) => FormData;
+	};
+	return [...bodySerializer(body).entries()];
+}
+
+/** A file as chosen in the file dialog */
+function logoFile(name = 'logo.png', size = 100) {
+	return new File([new Uint8Array(size)], name, { type: 'image/png' });
+}
+
 function renderList() {
 	renderAppOverlays();
 	return render(ListPage);
@@ -165,8 +179,14 @@ test('creates an accounting unit from the dialog', async () => {
 	await expect
 		.poll(() => api.POST)
 		.toHaveBeenCalledWith('/api/manage-accounting-units/create-accounting-unit', {
-			body: { key: 'fsr-new', name: 'FSR Neu', description: null }
+			body: { key: 'fsr-new', name: 'FSR Neu', description: null },
+			bodySerializer: expect.any(Function)
 		});
+	// Without a logo, the form data only has the filled fields
+	expect(sentForm(api.POST)).toEqual([
+		['key', 'fsr-new'],
+		['name', 'FSR Neu']
+	]);
 	await expect.element(page.getByText('Haushalt wurde angelegt')).toBeInTheDocument();
 	expect(api.GET).toHaveBeenCalledWith('/api/get-user-access/my-user-access');
 });
@@ -272,8 +292,18 @@ test('saves the changed users only after confirming', async () => {
 					{ userName: 'eexample', roles: ['FinanceOfficer', 'FinanceAuthorizedUser'] },
 					{ userName: 'nneu', roles: ['Treasurer'] }
 				]
-			}
+			},
+			bodySerializer: expect.any(Function)
 		});
+	expect(sentForm(api.PUT)).toEqual([
+		['name', 'FSR DIT'],
+		['description', 'Fachschaftsrat DIT'],
+		['usersWithRoles[0].userName', 'eexample'],
+		['usersWithRoles[0].roles[0]', 'FinanceOfficer'],
+		['usersWithRoles[0].roles[1]', 'FinanceAuthorizedUser'],
+		['usersWithRoles[1].userName', 'nneu'],
+		['usersWithRoles[1].roles[0]', 'Treasurer']
+	]);
 	await expect.element(page.getByText('Änderungen wurden gespeichert')).toBeInTheDocument();
 	expect(api.GET).toHaveBeenCalledWith('/api/get-user-access/my-user-access');
 });
@@ -361,4 +391,81 @@ test('leaves users that are already listed out of the search results', async () 
 	await searchUser('Max');
 
 	await expect.element(page.getByText('Keine Benutzer gefunden')).toBeInTheDocument();
+});
+
+test('shows the logo of every accounting unit in the list', async () => {
+	renderList();
+
+	await expect.element(page.getByText('FSR DIT')).toBeInTheDocument();
+	expect(page.getByTestId('accounting-unit-logo').all()).toHaveLength(2);
+});
+
+test('uploads the logo together with a new accounting unit', async () => {
+	api.POST.mockResolvedValue(ok(undefined, 201));
+	renderList();
+
+	await userEvent.click(page.getByRole('button', { name: /Haushalt anlegen/ }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.fill(dialog.getByLabelText('Schlüssel'), 'fsr-new');
+	await userEvent.upload(dialog.getByLabelText(/^Logo/), logoFile());
+	await expect.element(dialog.getByText('logo.png')).toBeInTheDocument();
+	await userEvent.click(dialog.getByRole('button', { name: 'Anlegen' }));
+
+	await expect.element(page.getByText('Haushalt wurde angelegt')).toBeInTheDocument();
+	const form = sentForm(api.POST);
+	expect(form.map(([name]) => name)).toEqual(['key', 'logo']);
+	const logo = form.find(([name]) => name === 'logo')?.[1];
+	expect(logo).toBeInstanceOf(File);
+	expect((logo as File).name).toBe('logo.png');
+});
+
+test('does not send a logo that is no PNG, JPG or SVG or is too large', async () => {
+	renderList();
+
+	await userEvent.click(page.getByRole('button', { name: /Haushalt anlegen/ }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.fill(dialog.getByLabelText('Schlüssel'), 'fsr-new');
+
+	await userEvent.upload(dialog.getByLabelText(/^Logo/), logoFile('logo.gif'));
+	await expect.element(dialog.getByText('Nur PNG-, JPG- oder SVG-Dateien')).toBeInTheDocument();
+
+	await userEvent.upload(dialog.getByLabelText(/^Logo/), logoFile('logo.svg', 5 * 1024 * 1024 + 1));
+	await expect.element(dialog.getByText('Höchstens 5 MB')).toBeInTheDocument();
+
+	await userEvent.click(dialog.getByRole('button', { name: 'Anlegen' }));
+	expect(api.POST).not.toHaveBeenCalled();
+});
+
+test('discards a selected logo', async () => {
+	renderList();
+
+	await userEvent.click(page.getByRole('button', { name: /Haushalt anlegen/ }));
+	const dialog = page.getByRole('dialog');
+	await userEvent.upload(dialog.getByLabelText(/^Logo/), logoFile('logo.gif'));
+	await userEvent.click(dialog.getByRole('button', { name: 'Auswahl verwerfen' }));
+
+	await expect.element(dialog.getByText('Nur PNG-, JPG- oder SVG-Dateien')).not.toBeInTheDocument();
+	await expect.element(dialog.getByText('PNG, JPG oder SVG, höchstens 5 MB')).toBeInTheDocument();
+});
+
+test('shows the logo of the accounting unit and replaces it when saving', async () => {
+	api.PUT.mockResolvedValue(ok(undefined, 204));
+	renderDetails();
+
+	await expect.element(page.getByRole('heading', { name: 'FSR DIT' })).toBeInTheDocument();
+	// Only in the general info, not next to the heading
+	expect(page.getByTestId('accounting-unit-logo').all()).toHaveLength(1);
+	await expect.element(page.getByRole('button', { name: 'Logo ändern' })).toBeInTheDocument();
+
+	await userEvent.upload(page.getByLabelText(/^Logo/), logoFile('neues-logo.svg'));
+	await userEvent.click(page.getByRole('button', { name: /Speichern/ }));
+	const confirmDialog = page.getByRole('alertdialog');
+	await expect.element(confirmDialog.getByText(/das neue Logo/)).toBeInTheDocument();
+	await userEvent.click(confirmDialog.getByRole('button', { name: 'Speichern' }));
+
+	await expect.element(page.getByText('Änderungen wurden gespeichert')).toBeInTheDocument();
+	const logo = sentForm(api.PUT).find(([name]) => name === 'logo')?.[1];
+	expect((logo as File).name).toBe('neues-logo.svg');
+	// The selection is reset by reloading the Haushalt
+	await expect.element(page.getByText('PNG, JPG oder SVG, höchstens 5 MB')).toBeInTheDocument();
 });

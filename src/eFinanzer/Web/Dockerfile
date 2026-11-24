@@ -1,4 +1,7 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+# Directory of the file storage (FileStorage:BasePath). Created here, so a fresh docker volume mounted on it is owned
+# by the app user, which is not allowed to create it at runtime.
+RUN mkdir -p /data/files && chown $APP_UID /data/files
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080

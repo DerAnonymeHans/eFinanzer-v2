@@ -7,9 +7,12 @@
 	import { Spinner } from '#lib/components/ui/spinner/index.js';
 	import CountedTextarea from '#lib/components/CountedTextarea.svelte';
 	import apiClient from '#lib/api/client.js';
+	import { logoChanged, validateLogo } from '#lib/components/accounting-unit-logo/accounting-unit-logo.svelte.js';
+	import { toFormData } from '#lib/api/form-data.js';
 	import { emptyToNull, toFieldErrors } from '#lib/utils.js';
 	import { validateKey, validateMaxLength } from '#lib/texts/validation.js';
 	import { DESCRIPTION_MAX_LENGTH, KEY_MAX_LENGTH, NAME_MAX_LENGTH } from './accounting-unit-validation.js';
+	import LogoInput from './LogoInput.svelte';
 
 	interface Props {
 		open: boolean;
@@ -23,6 +26,7 @@
 	let key = $state('');
 	let name = $state('');
 	let description = $state('');
+	let logo = $state<File | null>(null);
 	/** The errors are only shown once the user tried to submit, not while typing the first characters */
 	let submitted = $state(false);
 	let keyTaken = $state(false);
@@ -31,7 +35,8 @@
 	const errors = $derived({
 		key: keyTaken ? 'Dieser Schlüssel ist bereits vergeben' : validateKey(key, KEY_MAX_LENGTH),
 		name: validateMaxLength(name, NAME_MAX_LENGTH),
-		description: validateMaxLength(description, DESCRIPTION_MAX_LENGTH)
+		description: validateMaxLength(description, DESCRIPTION_MAX_LENGTH),
+		logo: validateLogo(logo)
 	});
 	const shownErrors = $derived<Partial<typeof errors>>(submitted || keyTaken ? errors : {});
 
@@ -42,11 +47,16 @@
 
 		saving = true;
 		try {
+			const body = { key, name: emptyToNull(name), description: emptyToNull(description) };
 			const { response } = await apiClient.POST('/api/manage-accounting-units/create-accounting-unit', {
-				body: { key, name: emptyToNull(name), description: emptyToNull(description) }
+				body,
+				// Sent as form data, so the logo can be uploaded together with the Haushalt
+				bodySerializer: () => toFormData({ ...body, logo })
 			});
 
 			if (response.ok) {
+				// A deleted Haushalt with the same key could have had a logo the browser still has
+				if (logo) logoChanged(key);
 				toast.success('Haushalt wurde angelegt');
 				onCreated();
 				open = false;
@@ -110,6 +120,7 @@
 					/>
 					<Field.Error errors={toFieldErrors(shownErrors.description)} />
 				</Field.Field>
+				<LogoInput id="create-accounting-unit-logo" bind:file={logo} error={errors.logo} />
 			</Field.Group>
 
 			<Dialog.Footer>

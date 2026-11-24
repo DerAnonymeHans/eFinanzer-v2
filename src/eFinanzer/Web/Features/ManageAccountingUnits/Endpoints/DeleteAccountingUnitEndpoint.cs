@@ -6,6 +6,7 @@ using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit.Errors;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo.Errors;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,7 +23,8 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
         NoContent,
         NotFound<NotFoundError>,
         Conflict<AccountingUnitHasFiscalYearsError>,
-        InternalServerError<DeleteAccountingUnitGroupError>>> Handle(
+        InternalServerError<DeleteAccountingUnitGroupError>,
+        InternalServerError<DeleteAccountingUnitLogoError>>> Handle(
         [FromQuery] string key,
         IDeleteAccountingUnitTask task,
         ClaimsPrincipal user,
@@ -41,6 +43,7 @@ public class DeleteAccountingUnitEndpoint : IEndpoint
             NotFoundError error => TypedResults.NotFound(error),
             AccountingUnitHasFiscalYearsError error => TypedResults.Conflict(error),
             DeleteAccountingUnitGroupError error => TypedResults.InternalServerError(error),
+            DeleteAccountingUnitLogoError error => TypedResults.InternalServerError(error),
             _ => throw new UnreachableException($"Unhandled error: {result.Error}")
         };
     }

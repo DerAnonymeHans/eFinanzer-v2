@@ -23,6 +23,8 @@
 	import UsersWithRolesList from '#lib/components/users-with-roles-list/UsersWithRolesList.svelte';
 	import type { UserWithRoles } from '#lib/components/users-with-roles-list/user-with-roles.js';
 	import apiClient from '#lib/api/client.js';
+	import { logoChanged, validateLogo } from '#lib/components/accounting-unit-logo/accounting-unit-logo.svelte.js';
+	import { toFormData } from '#lib/api/form-data.js';
 	import { useDataLoader, type LoadFunctionResult } from '#lib/api/data-loading.svelte.js';
 	import { isApiError } from '#lib/api/errors.js';
 	import type { AccountingUnitDetails } from '#lib/api/types.js';
@@ -32,6 +34,7 @@
 	import { emptyToNull, toFieldErrors } from '#lib/utils.js';
 	import { validateMaxLength } from '#lib/texts/validation.js';
 	import { DESCRIPTION_MAX_LENGTH, NAME_MAX_LENGTH } from '../accounting-unit-validation.js';
+	import LogoInput from '../LogoInput.svelte';
 
 	let { params }: PageProps = $props();
 
@@ -51,6 +54,8 @@
 
 	let name = $state('');
 	let description = $state('');
+	/** A new logo, replaces the current one when saving */
+	let logo = $state<File | null>(null);
 	/** The edited users, only saved together with the general info */
 	let users = $state<UserWithRoles[]>([]);
 	let submitted = $state(false);
@@ -68,6 +73,7 @@
 		const result = accountingUnitLoader.value;
 		name = result?.name ?? '';
 		description = result?.description ?? '';
+		logo = null;
 		users = (result?.usersWithRoles ?? []).map((user) => ({ username: user.userName, roles: [...user.roles] }));
 	}
 
@@ -78,7 +84,8 @@
 
 	const errors = $derived({
 		name: validateMaxLength(name, NAME_MAX_LENGTH),
-		description: validateMaxLength(description, DESCRIPTION_MAX_LENGTH)
+		description: validateMaxLength(description, DESCRIPTION_MAX_LENGTH),
+		logo: validateLogo(logo)
 	});
 	const shownErrors = $derived<Partial<typeof errors>>(submitted ? errors : {});
 
@@ -97,17 +104,29 @@
 
 	async function save() {
 		try {
-			const { response, error } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
+			const body = {
+				name: emptyToNull(name),
+				description: emptyToNull(description),
+				usersWithRoles: users.map((user) => ({
+					userName: user.username,
+					roles: [...user.roles] as AccountingUnitRole[]
+				}))
+			};
+			const savedLogo = logo;
+			const { response, error: responseError } = await apiClient.PUT('/api/manage-accounting-units/update-accounting-unit', {
 				params: { query: { key: params.accountingUnitKey } },
-				body: {
-					name: emptyToNull(name),
-					description: emptyToNull(description),
-					usersWithRoles: users.map((user) => ({
-						userName: user.username,
-						roles: [...user.roles] as AccountingUnitRole[]
-					}))
-				}
+				body,
+				// Sent as form data, so the logo can be uploaded together with the other changes
+				bodySerializer: () => toFormData({ ...body, logo: savedLogo })
 			});
+
+			// The schema knows only one error per status code, isApiError tells the others apart
+			const error: unknown = responseError;
+
+			// The logo is saved before the roles, so it changed even if a role change failed afterwards
+			if (savedLogo && (response.ok || isApiError(error, 'ChangeUserRoleError'))) {
+				logoChanged(params.accountingUnitKey);
+			}
 
 			if (response.ok) {
 				toast.success('Änderungen wurden gespeichert');
@@ -151,7 +170,9 @@
 </script>
 
 {#snippet saveDescription()}
-	<p>Die allgemeinen Angaben und die Rollen der Benutzer werden übernommen.</p>
+	<p>
+		Die allgemeinen Angaben{#if logo}, das neue Logo{/if} und die Rollen der Benutzer werden übernommen.
+	</p>
 	{#if removedUsers.length > 0}
 		<p class="mt-2">
 			Aus dem Haushalt entfernt werden:
@@ -189,8 +210,9 @@
 			<Card.Header>
 				<Card.Title class="text-base">Allgemein</Card.Title>
 			</Card.Header>
-			<Card.Content>
-				<Field.Group class="max-w-[560px]">
+			<!-- On wide screens the logo is next to the fields, otherwise below them -->
+			<Card.Content class="grid items-start gap-8 lg:grid-cols-[minmax(0,560px)_auto]">
+				<Field.Group>
 					<div class="grid gap-4 sm:grid-cols-2">
 						<Field.Field>
 							<Field.Label for="accounting-unit-key">Schlüssel</Field.Label>
@@ -218,6 +240,13 @@
 						<Field.Error errors={toFieldErrors(shownErrors.description)} />
 					</Field.Field>
 				</Field.Group>
+				<LogoInput
+					id="accounting-unit-logo"
+					bind:file={logo}
+					accountingUnitKey={accountingUnit.key}
+					error={errors.logo}
+					logoClass="size-48"
+				/>
 			</Card.Content>
 		</Card.Root>
 

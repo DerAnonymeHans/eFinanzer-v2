@@ -14,6 +14,11 @@ public record UpdateAccountingUnitCommand
     /// </summary>
     public required List<UserRoles> UsersWithRoles { get; init; }
 
+    /// <summary>
+    /// Replaces the current logo. Without one, the current logo is kept.
+    /// </summary>
+    public IFormFile? Logo { get; init; }
+
     public record UserRoles
     {
         public required string UserName { get; init; }

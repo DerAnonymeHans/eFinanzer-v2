@@ -7,6 +7,7 @@ using eFinanzer.Common.Tasks.GetRoleChanges;
 using eFinanzer.Common.Tasks.GetRoleChanges.Models;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit;
 using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +22,7 @@ public class UpdateAccountingUnitTask(
     EFinanzerDbContext context,
     IGetAccountingUnitTask getAccountingUnitTask,
     IHandleRoleChangesTask handleRoleChangesTask,
+    IManageAccountingUnitLogoTask manageAccountingUnitLogoTask,
     ILogger<UpdateAccountingUnitTask> logger
     ) : IUpdateAccountingUnitTask
 {
@@ -37,6 +39,13 @@ public class UpdateAccountingUnitTask(
         if (failedValidation is not null)
             return failedValidation;
 
+        if (command.Logo is not null)
+        {
+            var logoValidation = manageAccountingUnitLogoTask.Validate(command.Logo);
+            if (logoValidation.IsError)
+                return logoValidation;
+        }
+
         // Everything that can fail is resolved before anything is changed
         var roleChangesResult = await GetRoleChanges(command.Key, command.UsersWithRoles, ct);
         if (roleChangesResult.IsError)
@@ -52,6 +61,13 @@ public class UpdateAccountingUnitTask(
             return new NotFoundError(nameof(AccountingUnit), command.Key);
 
         logger.LogInformation("Updated accounting unit {AccountingUnitKey}", command.Key);
+
+        if (command.Logo is not null)
+        {
+            var saveLogoResult = await manageAccountingUnitLogoTask.Save(command.Key, command.Logo, ct);
+            if (saveLogoResult.IsError)
+                return saveLogoResult;
+        }
 
         return await handleRoleChangesTask.ExecuteRoleChanges(roleChangesResult.Value, ct);
     }

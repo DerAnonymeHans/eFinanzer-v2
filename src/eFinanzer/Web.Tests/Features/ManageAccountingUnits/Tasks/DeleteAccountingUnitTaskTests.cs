@@ -2,8 +2,12 @@ using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Results.Errors;
+using eFinanzer.Common.Tasks.HandleFileStorage;
+using eFinanzer.Common.Tasks.HandleFileStorage.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit.Errors;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo.Errors;
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,7 +21,24 @@ public class DeleteAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
 
     private readonly IKeycloakUserClient _keycloakUserClient = Substitute.For<IKeycloakUserClient>();
 
-    private DeleteAccountingUnitTask MyTask => new(Database.CreateContext(), _keycloakUserClient, NullLogger<DeleteAccountingUnitTask>.Instance);
+    private readonly TemporaryDirectory _storage = new();
+
+    private DeleteAccountingUnitTask MyTask => CreateTask(TestFiles.CreateFileStorageTask(_storage.Path));
+
+    private ManageAccountingUnitLogoTask LogoTask => CreateLogoTask(TestFiles.CreateFileStorageTask(_storage.Path));
+
+    private ManageAccountingUnitLogoTask CreateLogoTask(IHandleFileStorageTask fileStorageTask)
+        => new(Database.CreateContext(), fileStorageTask, NullLogger<ManageAccountingUnitLogoTask>.Instance);
+
+    private DeleteAccountingUnitTask CreateTask(IHandleFileStorageTask fileStorageTask)
+        => new(Database.CreateContext(), _keycloakUserClient, CreateLogoTask(fileStorageTask),
+            NullLogger<DeleteAccountingUnitTask>.Instance);
+
+    public override async ValueTask DisposeAsync()
+    {
+        _storage.Dispose();
+        await base.DisposeAsync();
+    }
 
     public override async ValueTask InitializeAsync()
     {
@@ -148,5 +169,58 @@ public class DeleteAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
 
         // Assert
         await _keycloakUserClient.DidNotReceive().DeleteGroup(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Delete_UnitWithLogo_DeletesLogo()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await LogoTask.Save("fsr", TestFiles.CreateFormFile(TestFiles.Svg, "logo.svg"), CancellationToken.None);
+
+        // Act
+        var result = await MyTask.Delete("fsr", CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Empty(Directory.GetFiles(_storage.Path, "*", SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public async Task Delete_UnitWithLogo_RecreatedUnitHasNoLogo()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        await LogoTask.Save("fsr", TestFiles.CreateFormFile(TestFiles.Png), CancellationToken.None);
+
+        // Act
+        await MyTask.Delete("fsr", CancellationToken.None);
+        await using var recreateContext = Database.CreateContext();
+        recreateContext.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await recreateContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        var logo = await LogoTask.Load("fsr", CancellationToken.None);
+        Assert.Equal(new NotFoundError(ManageAccountingUnitLogoTask.LogoEntity, "fsr"), logo.Error);
+    }
+
+    [Fact]
+    public async Task Delete_DeletingLogoFails_ReturnsDeleteLogoErrorAndKeepsUnit()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var storageError = new FileStorageError("accounting-units/fsr/logo.png", "Permission denied");
+        var fileStorageTask = Substitute.For<IHandleFileStorageTask>();
+        fileStorageTask.Delete(Arg.Any<string>()).Returns(Result.Fail(storageError));
+
+        // Act
+        var result = await CreateTask(fileStorageTask).Delete("fsr", CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new DeleteAccountingUnitLogoError("fsr", storageError), result.Error);
+        Assert.True(await Context.AccountingUnits.AnyAsync(x => x.Key == "fsr", TestContext.Current.CancellationToken));
     }
 }

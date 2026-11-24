@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
@@ -6,6 +7,7 @@ using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Models;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
 using eFinanzer.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,7 +19,19 @@ public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
 {
     private readonly IKeycloakUserClient _keycloakUserClient = Substitute.For<IKeycloakUserClient>();
 
-    private CreateAccountingUnitTask MyTask => new(Database.CreateContext(), _keycloakUserClient, NullLogger<CreateAccountingUnitTask>.Instance);
+    private CreateAccountingUnitTask MyTask => new(Database.CreateContext(), _keycloakUserClient, LogoTask,
+        NullLogger<CreateAccountingUnitTask>.Instance);
+
+    private readonly TemporaryDirectory _storage = new();
+
+    private ManageAccountingUnitLogoTask LogoTask => new(Database.CreateContext(),
+        TestFiles.CreateFileStorageTask(_storage.Path), NullLogger<ManageAccountingUnitLogoTask>.Instance);
+
+    public override async ValueTask DisposeAsync()
+    {
+        _storage.Dispose();
+        await base.DisposeAsync();
+    }
 
     public override async ValueTask InitializeAsync()
     {
@@ -199,5 +213,55 @@ public class CreateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
 
         // Assert
         await _keycloakUserClient.DidNotReceive().CreateSubgroup(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_WithLogo_StoresUnitAndLogo()
+    {
+        // Arrange
+        var command = new CreateAccountingUnitCommand { Key = "fsr", Logo = TestFiles.CreateFormFile(TestFiles.Png) };
+
+        // Act
+        var result = await MyTask.Create(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(await Context.AccountingUnits.AnyAsync(x => x.Key == "fsr", TestContext.Current.CancellationToken));
+        var logo = await LogoTask.Load("fsr", CancellationToken.None);
+        await using var content = logo.Value!.Content;
+        Assert.Equal(MediaTypeNames.Image.Png, logo.Value.ContentType);
+    }
+
+    [Fact]
+    public async Task Create_InvalidLogo_ReturnsInvalidInputAndCreatesNothing()
+    {
+        // Arrange
+        var command = new CreateAccountingUnitCommand { Key = "fsr", Logo = TestFiles.CreateFormFile(TestFiles.Gif, "logo.gif") };
+
+        // Act
+        var result = await MyTask.Create(command, CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<InvalidInputError>(result.Error);
+        Assert.Equal(ManageAccountingUnitLogoTask.LogoField, error.Field);
+        Assert.False(await Context.AccountingUnits.AnyAsync(TestContext.Current.CancellationToken));
+        Assert.Empty(_keycloakUserClient.ReceivedCalls());
+        Assert.Empty(Directory.GetFiles(_storage.Path, "*", SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public async Task Create_CreatingGroupsFails_DoesNotStoreLogo()
+    {
+        // Arrange
+        _keycloakUserClient.GetGroupIdFromPath(KeycloakGroups.AccountingUnitsGroup, Arg.Any<CancellationToken>())
+            .Returns(Result<string>.Fail(new NotFoundError("Group", KeycloakGroups.AccountingUnitsGroup)));
+        var command = new CreateAccountingUnitCommand { Key = "fsr", Logo = TestFiles.CreateFormFile(TestFiles.Png) };
+
+        // Act
+        var result = await MyTask.Create(command, CancellationToken.None);
+
+        // Assert
+        Assert.IsType<CreateAccountingUnitGroupsError>(result.Error);
+        Assert.Empty(Directory.GetFiles(_storage.Path, "*", SearchOption.AllDirectories));
     }
 }

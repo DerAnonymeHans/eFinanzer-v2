@@ -12,15 +12,18 @@ namespace eFinanzer.Tests.Infrastructure;
 
 /// <summary>
 /// Runs the app against the test database, with <see cref="TestAuthHandler"/> instead of Keycloak tokens and a
-/// substituted Keycloak admin client
+/// substituted Keycloak admin client. Files are stored in a temporary directory, which is deleted on dispose.
 /// </summary>
 public class EFinanzerApiFactory(DatabaseFixture database) : WebApplicationFactory<Program>
 {
     public IKeycloakUserClient KeycloakUserClient { get; } = Substitute.For<IKeycloakUserClient>();
 
+    public TemporaryDirectory FileStorage { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Database", database.ConnectionString);
+        builder.UseSetting("FileStorage:BasePath", FileStorage.Path);
 
         builder.ConfigureTestServices(services =>
         {
@@ -45,6 +48,12 @@ public class EFinanzerApiFactory(DatabaseFixture database) : WebApplicationFacto
         var client = CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.GroupsHeader, string.Join(',', groupPaths));
         return client;
+    }
+
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        FileStorage.Dispose();
     }
 
 }

@@ -1,5 +1,6 @@
 using System.Net;
-using System.Net.Http.Json;
+using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using eFinanzer.Common.Database.Models;
@@ -46,11 +47,31 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Valid body for the create and update endpoints, so the request reaches the authorization check
         Content = method switch
         {
-            "POST" => JsonContent.Create(new { key = "fsr" }),
-            "PUT" => JsonContent.Create(new { name = (string?)null, description = (string?)null, usersWithRoles = Array.Empty<object>() }),
+            "POST" => Form(fields: ("key", "fsr")),
+            "PUT" => Form(fields: ("name", "FSR")),
             _ => null,
         },
     };
+
+    /// <summary>
+    /// multipart/form-data body as sent by the frontend
+    /// </summary>
+    private static MultipartFormDataContent Form(byte[]? logo = null, string logoFileName = "logo.png",
+        params (string Name, string Value)[] fields)
+    {
+        var form = new MultipartFormDataContent();
+        foreach (var (name, value) in fields)
+            form.Add(new StringContent(value), name);
+
+        if (logo is not null)
+        {
+            var file = new ByteArrayContent(logo);
+            file.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            form.Add(file, "logo", logoFileName);
+        }
+
+        return form;
+    }
 
     [Theory]
     [MemberData(nameof(AllEndpoints))]
@@ -92,7 +113,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
-        var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr" },
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -107,7 +128,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
-        var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr inf" },
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr inf")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -123,7 +144,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
-        var response = await client.PostAsJsonAsync($"{BaseUrl}/create-accounting-unit", new { key = "fsr" },
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -167,9 +188,10 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     }
 
     [Theory]
-    [InlineData("""{ "name": null, "description": null }""")]
-    [InlineData("""{ "name": null, "description": null, "usersWithRoles": [{ "userName": "alice", "roles": [1] }] }""")]
-    public async Task Update_InvalidBody_ReturnsBadRequest(string body)
+    [InlineData("UsersWithRoles[0].UserName", "alice", "UsersWithRoles[0].Roles[0]", "99")]
+    [InlineData("UsersWithRoles[0].UserName", "alice", "UsersWithRoles[0].Roles[0]", "Unknown")]
+    [InlineData("UsersWithRoles[0].UserName", "", "UsersWithRoles[0].Roles[0]", "Treasurer")]
+    public async Task Update_InvalidBody_ReturnsBadRequest(string field1, string value1, string field2, string value2)
     {
         // Arrange
         Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
@@ -178,10 +200,182 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
 
         // Act
         var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
-            new StringContent(body, System.Text.Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
+            Form(fields: [(field1, value1), (field2, value2)]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Empty(_factory.KeycloakUserClient.ReceivedCalls());
+    }
+
+    [Fact]
+    // In camel case like the property names of the generated client, the field names are case insensitive
+    public async Task Update_UsersWithRolesAsFormFields_AppliesRoles()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _factory.KeycloakUserClient.SetupRoleMembers("fsr");
+        _factory.KeycloakUserClient.SetupUsers("alice");
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+
+        // Act
+        var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
+            Form(fields: [
+                ("name", "FSR"),
+                ("usersWithRoles[0].userName", "alice"),
+                ("usersWithRoles[0].roles[0]", "Treasurer"),
+                ("usersWithRoles[0].roles[1]", "FinanceOfficer"),
+            ]),
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.KeycloakUserClient.Received(2).AddUserToGroup("id-alice", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Equal("FSR", Context.AccountingUnits.Single().Name);
+    }
+
+    [Fact]
+    public async Task CreateAndLoadLogo_ValidLogo_ReturnsStoredLogo()
+    {
+        // Arrange
+        _factory.KeycloakUserClient.SetupGroupCreation();
+        var manager = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        // Every logged-in user may load logos
+        var user = _factory.CreateAuthorizedClient(KeycloakGroups.GetAccountingUnitRoleGroup("other", AccountingUnitRole.FinanceOfficer));
+
+        // Act
+        var createResponse = await manager.PostAsync($"{BaseUrl}/create-accounting-unit",
+            Form(TestFiles.Png, fields: ("key", "fsr")), TestContext.Current.CancellationToken);
+        var loadResponse = await user.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key=fsr", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, loadResponse.StatusCode);
+        Assert.Equal(MediaTypeNames.Image.Png, loadResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(TestFiles.Png, await loadResponse.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task UpdateAndLoadLogo_ValidLogo_ReturnsReplacedLogo()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _factory.KeycloakUserClient.SetupRoleMembers("fsr");
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr", Form(TestFiles.Png),
+            TestContext.Current.CancellationToken);
+
+        // Act
+        var updateResponse = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
+            Form(TestFiles.Jpeg, "logo.jpg"), TestContext.Current.CancellationToken);
+        var loadResponse = await client.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key=fsr", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+        Assert.Equal(MediaTypeNames.Image.Jpeg, loadResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(TestFiles.Jpeg, await loadResponse.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData("POST", $"{BaseUrl}/create-accounting-unit")]
+    [InlineData("PUT", $"{BaseUrl}/update-accounting-unit?key=fsr")]
+    public async Task CreateAndUpdate_InvalidLogo_ReturnsBadRequest(string method, string url)
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        var request = new HttpRequestMessage(new HttpMethod(method), url)
+        {
+            Content = Form(TestFiles.Gif, "logo.gif", ("key", "new")),
+        };
+
+        // Act
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("Logo", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task LoadLogo_Svg_IsServedWithPolicyBlockingScripts()
+    {
+        // Arrange
+        _factory.KeycloakUserClient.SetupGroupCreation();
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Svg, "logo.svg", ("key", "fsr")),
+            TestContext.Current.CancellationToken);
+
+        // Act
+        var response = await client.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key=fsr", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(MediaTypeNames.Image.Svg, response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(TestFiles.Svg, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("default-src 'none'", policy);
+        Assert.Contains("sandbox", policy);
+        Assert.Equal("nosniff", Assert.Single(response.Headers.GetValues("X-Content-Type-Options")));
+    }
+
+    [Fact]
+    public async Task LoadLogo_AnonymousUser_ReturnsLogo()
+    {
+        // Arrange
+        _factory.KeycloakUserClient.SetupGroupCreation();
+        var manager = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        await manager.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Png, fields: ("key", "fsr")),
+            TestContext.Current.CancellationToken);
+        var anonymous = _factory.CreateClient();
+
+        // Act
+        var response = await anonymous.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key=fsr", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(TestFiles.Png, await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Theory]
+    [InlineData("unknown")]
+    [InlineData("fsr")]
+    public async Task LoadLogo_UnknownUnitOrNoLogo_ReturnsNotFound(string key)
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var client = _factory.CreateAuthorizedClient();
+
+        // Act
+        var response = await client.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key={key}", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_EmptyFormAsSentByBrowsers_RemovesAllUsers()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "FSR" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _factory.KeycloakUserClient.SetupRoleMembers("fsr", (AccountingUnitRole.Treasurer, ["alice"]));
+        _factory.KeycloakUserClient.SetupUsers("alice");
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        // A FormData without entries only contains the closing boundary
+        var content = new StringContent("------boundary--\r\n");
+        content.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data; boundary=----boundary");
+
+        // Act
+        var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr", content,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.KeycloakUserClient.Received(1).RemoveUserFromGroup("id-alice", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Null(Context.AccountingUnits.Single().Name);
     }
 }

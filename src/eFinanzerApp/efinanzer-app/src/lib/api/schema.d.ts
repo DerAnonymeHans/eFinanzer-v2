@@ -260,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/manage-accounting-units/load-accounting-unit-logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LoadAccountingUnitLogo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/manage-accounting-units/update-accounting-unit": {
         parameters: {
             query?: never;
@@ -357,6 +373,26 @@ export interface components {
             username: string;
             roles: components["schemas"]["AdministrationRole"][];
         };
+        AlreadyExistsError: {
+            entity: string;
+            key: string;
+            message?: string;
+            parentError?: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "AlreadyExistsError";
+        };
         ApplyRoleChangeError: {
             /** Format: int32 */
             id: number | string;
@@ -374,17 +410,30 @@ export interface components {
             /** @enum {string} */
             type: "ChangeUserRoleError";
         };
-        CreateAccountingUnitCommand: {
-            key: string;
-            name?: null | string;
-            description?: null | string;
-        };
         CreateAccountingUnitGroupsError: {
             key: string;
             message?: string;
-            parentError: null | components["schemas"]["Error"];
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
             /** @enum {string} */
             type: "CreateAccountingUnitGroupsError";
+        };
+        CreateAccountingUnitRequest: {
+            key: string;
+            name?: null | string;
+            description?: null | string;
+            logo?: null | components["schemas"]["IFormFile"];
         };
         CreateFiscalYearCommand: {
             key: string;
@@ -402,14 +451,73 @@ export interface components {
         DeleteAccountingUnitGroupError: {
             key: string;
             message?: string;
-            parentError: null | components["schemas"]["Error"];
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
             /** @enum {string} */
             type: "DeleteAccountingUnitGroupError";
+        };
+        DeleteAccountingUnitLogoError: {
+            key: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "DeleteAccountingUnitLogoError";
         };
         Error: {
             message?: string;
             parentError?: null | components["schemas"]["Error"];
             type: string;
+        };
+        FileStorageError: {
+            path: string;
+            reason: string;
+            message?: string;
+            parentError?: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "FileStorageError";
+        };
+        FiscalYearAlreadyExistsError: {
+            key: string;
+            accountingUnitKey: string;
+            message?: string;
+            parentError?: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "FiscalYearAlreadyExistsError";
         };
         FiscalYearDto: {
             key: string;
@@ -498,6 +606,27 @@ export interface components {
             firstName?: null | string;
             lastName?: null | string;
         };
+        /** Format: binary */
+        IFormFile: null | string;
+        InvalidFilePathError: {
+            path: string;
+            message?: string;
+            parentError?: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "InvalidFilePathError";
+        };
         InvalidInputError: {
             field: string;
             message: string;
@@ -514,6 +643,32 @@ export interface components {
             /** @enum {string} */
             type: "InvalidOffsetPaginationError";
         };
+        LoadAccountingUnitLogoError: {
+            key: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "LoadAccountingUnitLogoError";
+        };
+        LoadAccountingUnitRoleGroupsError: {
+            key: string;
+            message?: string;
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "LoadAccountingUnitRoleGroupsError";
+        };
         LoadAccountingUnitRoleMembersError: {
             key: string;
             groupPath: string;
@@ -522,12 +677,66 @@ export interface components {
             /** @enum {string} */
             type: "LoadAccountingUnitRoleMembersError";
         };
+        LoadAdministrationRoleGroupsError: {
+            message?: string;
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "LoadAdministrationRoleGroupsError";
+        };
         LoadAdministrationRoleMembersError: {
             groupPath: string;
             message?: string;
             parentError: null | components["schemas"]["Error"];
             /** @enum {string} */
             type: "LoadAdministrationRoleMembersError";
+        };
+        LoadCurrentAdministrationRolesError: {
+            message?: string;
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "LoadCurrentAdministrationRolesError";
+        };
+        LoadCurrentUserRolesError: {
+            message?: string;
+            parentError: {
+                message?: string;
+                parentError?: {
+                    message?: string;
+                    parentError?: {
+                        message?: string;
+                        parentError?: unknown;
+                        type: string;
+                    };
+                    type: string;
+                };
+                type: string;
+            };
+            /** @enum {string} */
+            type: "LoadCurrentUserRolesError";
         };
         NotFoundError: {
             entity: string;
@@ -594,6 +803,15 @@ export interface components {
             /** @enum {string} */
             type: "RoleChangeRequestNotApplicableError";
         };
+        SaveAccountingUnitLogoError: {
+            key: string;
+            message?: string;
+            parentError: null | components["schemas"]["Error"];
+            /** @enum {string} */
+            type: "SaveAccountingUnitLogoError";
+        };
+        /** Format: binary */
+        Stream: string;
         UnknownUserError: {
             userName: string;
             message?: string;
@@ -602,9 +820,10 @@ export interface components {
             type: "UnknownUserError";
         };
         UpdateAccountingUnitRequest: {
-            name: null | string;
-            description: null | string;
-            usersWithRoles: components["schemas"]["UserRoles"][];
+            name?: null | string;
+            description?: null | string;
+            usersWithRoles?: null | components["schemas"]["UserRoles"][];
+            logo?: null | components["schemas"]["IFormFile"];
         };
         UpdateAdministrationRolesCommand: {
             username: string;
@@ -1110,7 +1329,8 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateAccountingUnitCommand"];
+                "multipart/form-data": components["schemas"]["CreateAccountingUnitRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateAccountingUnitRequest"];
             };
         };
         responses: {
@@ -1145,7 +1365,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CreateAccountingUnitGroupsError"];
+                    "application/json": components["schemas"]["SaveAccountingUnitLogoError"];
                 };
             };
         };
@@ -1192,7 +1412,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DeleteAccountingUnitGroupError"];
+                    "application/json": components["schemas"]["DeleteAccountingUnitLogoError"];
                 };
             };
         };
@@ -1257,6 +1477,48 @@ export interface operations {
             };
         };
     };
+    LoadAccountingUnitLogo: {
+        parameters: {
+            query: {
+                key: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": components["schemas"]["Stream"];
+                    "image/jpeg": components["schemas"]["Stream"];
+                    "image/svg+xml": components["schemas"]["Stream"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotFoundError"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoadAccountingUnitLogoError"];
+                };
+            };
+        };
+    };
     UpdateAccountingUnit: {
         parameters: {
             query: {
@@ -1268,7 +1530,8 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateAccountingUnitRequest"];
+                "multipart/form-data": components["schemas"]["UpdateAccountingUnitRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UpdateAccountingUnitRequest"];
             };
         };
         responses: {
@@ -1303,7 +1566,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChangeUserRoleError"];
+                    "application/json": components["schemas"]["SaveAccountingUnitLogoError"];
                 };
             };
         };
