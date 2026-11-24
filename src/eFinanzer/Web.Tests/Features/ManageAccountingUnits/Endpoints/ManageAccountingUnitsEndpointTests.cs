@@ -47,8 +47,8 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Valid body for the create and update endpoints, so the request reaches the authorization check
         Content = method switch
         {
-            "POST" => Form(fields: ("Key", "fsr")),
-            "PUT" => Form(fields: ("Name", "FSR")),
+            "POST" => Form(fields: ("key", "fsr")),
+            "PUT" => Form(fields: ("name", "FSR")),
             _ => null,
         },
     };
@@ -67,7 +67,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         {
             var file = new ByteArrayContent(logo);
             file.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-            form.Add(file, "Logo", logoFileName);
+            form.Add(file, "logo", logoFileName);
         }
 
         return form;
@@ -113,7 +113,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(role));
 
         // Act
-        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("Key", "fsr")),
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -128,7 +128,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
-        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("Key", "fsr inf")),
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr inf")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -144,7 +144,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
 
         // Act
-        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("Key", "fsr")),
+        var response = await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(fields: ("key", "fsr")),
             TestContext.Current.CancellationToken);
 
         // Assert
@@ -208,6 +208,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
     }
 
     [Fact]
+    // In camel case like the property names of the generated client, the field names are case insensitive
     public async Task Update_UsersWithRolesAsFormFields_AppliesRoles()
     {
         // Arrange
@@ -220,10 +221,10 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Act
         var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr",
             Form(fields: [
-                ("Name", "FSR"),
-                ("UsersWithRoles[0].UserName", "alice"),
-                ("UsersWithRoles[0].Roles[0]", "Treasurer"),
-                ("UsersWithRoles[0].Roles[1]", "FinanceOfficer"),
+                ("name", "FSR"),
+                ("usersWithRoles[0].userName", "alice"),
+                ("usersWithRoles[0].roles[0]", "Treasurer"),
+                ("usersWithRoles[0].roles[1]", "FinanceOfficer"),
             ]),
             TestContext.Current.CancellationToken);
 
@@ -244,7 +245,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
 
         // Act
         var createResponse = await manager.PostAsync($"{BaseUrl}/create-accounting-unit",
-            Form(TestFiles.Png, fields: ("Key", "fsr")), TestContext.Current.CancellationToken);
+            Form(TestFiles.Png, fields: ("key", "fsr")), TestContext.Current.CancellationToken);
         var loadResponse = await user.GetAsync($"{BaseUrl}/load-accounting-unit-logo?key=fsr", TestContext.Current.CancellationToken);
 
         // Assert
@@ -287,7 +288,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
         var request = new HttpRequestMessage(new HttpMethod(method), url)
         {
-            Content = Form(TestFiles.Gif, "logo.gif", ("Key", "new")),
+            Content = Form(TestFiles.Gif, "logo.gif", ("key", "new")),
         };
 
         // Act
@@ -304,7 +305,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Arrange
         _factory.KeycloakUserClient.SetupGroupCreation();
         var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
-        await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Svg, "logo.svg", ("Key", "fsr")),
+        await client.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Svg, "logo.svg", ("key", "fsr")),
             TestContext.Current.CancellationToken);
 
         // Act
@@ -326,7 +327,7 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
         // Arrange
         _factory.KeycloakUserClient.SetupGroupCreation();
         var manager = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
-        await manager.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Png, fields: ("Key", "fsr")),
+        await manager.PostAsync($"{BaseUrl}/create-accounting-unit", Form(TestFiles.Png, fields: ("key", "fsr")),
             TestContext.Current.CancellationToken);
         var anonymous = _factory.CreateClient();
 
@@ -353,5 +354,28 @@ public class ManageAccountingUnitsEndpointTests(DatabaseFixture database) : Data
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_EmptyFormAsSentByBrowsers_RemovesAllUsers()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "FSR" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _factory.KeycloakUserClient.SetupRoleMembers("fsr", (AccountingUnitRole.Treasurer, ["alice"]));
+        _factory.KeycloakUserClient.SetupUsers("alice");
+        var client = _factory.CreateAuthorizedClient(KeycloakGroups.GetAdministrationRoleGroup(AdministrationRole.FinanceAdministrator));
+        // A FormData without entries only contains the closing boundary
+        var content = new StringContent("------boundary--\r\n");
+        content.Headers.ContentType = MediaTypeHeaderValue.Parse("multipart/form-data; boundary=----boundary");
+
+        // Act
+        var response = await client.PutAsync($"{BaseUrl}/update-accounting-unit?key=fsr", content,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        await _factory.KeycloakUserClient.Received(1).RemoveUserFromGroup("id-alice", Arg.Any<string>(), Arg.Any<CancellationToken>());
+        Assert.Null(Context.AccountingUnits.Single().Name);
     }
 }

@@ -8,6 +8,7 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Card from '#lib/components/ui/card/index.js';
+	import AccountingUnitLogo from '#lib/components/accounting-unit-logo/AccountingUnitLogo.svelte';
 	import EmptyState from '#lib/components/EmptyState.svelte';
 	import ErrorAlert from '#lib/components/ErrorAlert.svelte';
 	import PageSpinner from '#lib/components/PageSpinner.svelte';
@@ -102,7 +103,11 @@
 		<div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
 			{#each accountingUnitsLoader.value as accountingUnit (accountingUnit.key)}
 				{@const name = accountingUnit.name ?? accountingUnit.key}
-				<Card.Root class="pb-0">
+				<Card.Root class="pt-0 pb-0">
+					<AccountingUnitLogo
+						accountingUnitKey={accountingUnit.key}
+						class="h-40 w-full rounded-none border-0 border-b p-4"
+					/>
 					<Card.Header>
 						<Card.Title class="truncate text-base">{name}</Card.Title>
 						<Card.Action>

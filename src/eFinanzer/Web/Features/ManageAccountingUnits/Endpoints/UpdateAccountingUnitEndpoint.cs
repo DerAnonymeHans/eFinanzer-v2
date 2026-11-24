@@ -55,7 +55,8 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
         NotFound<NotFoundError>,
         InternalServerErrors>> Handle(
         [FromQuery] string key,
-        [FromForm] UpdateAccountingUnitRequest request,
+        // Null for a form without any fields, e.g. without name, description, users and logo
+        [FromForm] UpdateAccountingUnitRequest? request,
         IUpdateAccountingUnitTask task,
         ClaimsPrincipal user,
         CancellationToken ct)
@@ -67,10 +68,10 @@ public class UpdateAccountingUnitEndpoint : IEndpoint
         var command = new UpdateAccountingUnitCommand
         {
             Key = key,
-            Name = request.Name,
-            Description = request.Description,
-            UsersWithRoles = request.UsersWithRoles ?? [],
-            Logo = request.Logo,
+            Name = request?.Name,
+            Description = request?.Description,
+            UsersWithRoles = request?.UsersWithRoles ?? [],
+            Logo = request?.Logo,
         };
 
         var result = await task.Update(command, ct);

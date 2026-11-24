@@ -44,6 +44,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddOpenApi(options => options
     .AddDocumentTransformer<KeycloakSecuritySchemeTransformer>()
+    .AddDocumentTransformer<ErrorSchemasDocumentTransformer>()
     .AddSchemaTransformer<ErrorTypeSchemaTransformer>());
 
 var app = builder.Build();
