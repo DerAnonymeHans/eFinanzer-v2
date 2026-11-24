@@ -34,6 +34,7 @@
         <Folder Include="Features\GetUsers\"/>
         <Folder Include="Features\ManageAdministrationRoles\Tasks\GetAdministrationUsers\Errors\"/>
         <Folder Include="Features\ManageFiscalYears\Endpoints\"/>
+        <Folder Include="Migrations\" />
     </ItemGroup>
 
     <ItemGroup>

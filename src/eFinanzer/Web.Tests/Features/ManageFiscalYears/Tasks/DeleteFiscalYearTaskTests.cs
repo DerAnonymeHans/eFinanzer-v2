@@ -64,7 +64,7 @@ public class DeleteFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
     public async Task Delete_FiscalYearWithReceipts_ReturnsConflictAndKeepsFiscalYear()
     {
         // Arrange
-        Context.Receipts.Add(new Receipt { Key = "R-1", AccountingUnitKey = "fsr", FiscalYearKey = "2026" });
+        Context.Receipts.Add(new Receipt { AccountingUnitKey = "fsr", FiscalYearKey = "2026" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act
@@ -110,7 +110,7 @@ public class DeleteFiscalYearTaskTests(DatabaseFixture database) : DatabaseTest(
     public async Task Delete_OtherUnitHasReceiptsForSameKey_DeletesFiscalYear()
     {
         // Arrange
-        Context.Receipts.Add(new Receipt { Key = "R-1", AccountingUnitKey = "stura", FiscalYearKey = "2026" });
+        Context.Receipts.Add(new Receipt { AccountingUnitKey = "stura", FiscalYearKey = "2026" });
         await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act

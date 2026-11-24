@@ -11,4 +11,5 @@ public record AccountingUnit
     
     public List<FiscalYear>? FiscalYears { get; init; }
     public List<Receipt>? Receipts { get; init; }
+    public List<Budget>? Budgets { get; init; }
 }

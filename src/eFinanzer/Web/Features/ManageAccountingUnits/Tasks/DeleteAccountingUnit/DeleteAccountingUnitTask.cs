@@ -4,6 +4,7 @@ using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit.Errors;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
 using Microsoft.EntityFrameworkCore;
 
 namespace eFinanzer.Features.ManageAccountingUnits.Tasks.DeleteAccountingUnit;
@@ -16,6 +17,7 @@ public interface IDeleteAccountingUnitTask
 public class DeleteAccountingUnitTask(
     EFinanzerDbContext context,
     IKeycloakUserClient keycloakUserClient,
+    IManageAccountingUnitLogoTask manageAccountingUnitLogoTask,
     ILogger<DeleteAccountingUnitTask> logger
     ) : IDeleteAccountingUnitTask
 {
@@ -45,6 +47,12 @@ public class DeleteAccountingUnitTask(
                 key, deleteGroupResult.Error);
             return new DeleteAccountingUnitGroupError(key, deleteGroupResult.Error);
         }
+
+        // Before the commit, so a new unit with the same key never gets the logo of the old one. If it fails, the
+        // unit is kept and deleting it again succeeds, as a missing group counts as deleted.
+        var deleteLogoResult = manageAccountingUnitLogoTask.Delete(key);
+        if (deleteLogoResult.IsError)
+            return deleteLogoResult;
 
         await transaction.CommitAsync(ct);
 
