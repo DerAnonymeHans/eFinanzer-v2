@@ -6,6 +6,7 @@ using eFinanzer.Common.Models;
 using eFinanzer.Common.Results.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit.Models;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
 using Microsoft.EntityFrameworkCore;
 
 namespace eFinanzer.Features.ManageAccountingUnits.Tasks.CreateAccountingUnit;
@@ -18,6 +19,7 @@ public interface ICreateAccountingUnitTask
 public class CreateAccountingUnitTask(
     EFinanzerDbContext context,
     IKeycloakUserClient keycloakUserClient,
+    IManageAccountingUnitLogoTask manageAccountingUnitLogoTask,
     ILogger<CreateAccountingUnitTask> logger
     ) : ICreateAccountingUnitTask
 {
@@ -32,6 +34,13 @@ public class CreateAccountingUnitTask(
         var failedValidation = validations.FirstOrDefault(x => x.IsError);
         if (failedValidation is not null)
             return failedValidation;
+
+        if (command.Logo is not null)
+        {
+            var logoValidation = manageAccountingUnitLogoTask.Validate(command.Logo);
+            if (logoValidation.IsError)
+                return logoValidation;
+        }
 
         var keyExists = await context.AccountingUnits.AnyAsync(x => x.Key == command.Key, ct);
         if (keyExists)
@@ -55,6 +64,13 @@ public class CreateAccountingUnitTask(
             logger.LogError("Creating the Keycloak groups of accounting unit {AccountingUnitKey} failed: {Error}",
                 command.Key, createGroupsResult.Error);
             return new CreateAccountingUnitGroupsError(command.Key, createGroupsResult.Error);
+        }
+
+        if (command.Logo is not null)
+        {
+            var saveLogoResult = await manageAccountingUnitLogoTask.Save(command.Key, command.Logo, ct);
+            if (saveLogoResult.IsError)
+                return saveLogoResult;
         }
 
         await transaction.CommitAsync(ct);

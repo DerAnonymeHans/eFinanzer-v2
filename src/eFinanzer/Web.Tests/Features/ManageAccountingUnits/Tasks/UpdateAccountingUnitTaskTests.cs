@@ -1,4 +1,5 @@
-﻿using eFinanzer.Common.Database.Models;
+﻿using System.Net.Mime;
+using eFinanzer.Common.Database.Models;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient;
 using eFinanzer.Common.Integrations.Keycloak.Clients.UserClient.Models;
 using eFinanzer.Common.Integrations.Keycloak.Constants;
@@ -7,6 +8,7 @@ using eFinanzer.Common.Results.Errors;
 using eFinanzer.Common.Tasks.GetRoleChanges;
 using eFinanzer.Common.Tasks.GetRoleChanges.Errors;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.GetAccountingUnit;
+using eFinanzer.Features.ManageAccountingUnits.Tasks.ManageAccountingUnitLogo;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit;
 using eFinanzer.Features.ManageAccountingUnits.Tasks.UpdateAccountingUnit.Models;
 using eFinanzer.Tests.Infrastructure;
@@ -24,7 +26,19 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         Database.CreateContext(),
         new GetAccountingUnitTask(Database.CreateContext(), _keycloakUserClient, NullLogger<GetAccountingUnitTask>.Instance),
         new HandleRoleChangesTask(_keycloakUserClient, NullLogger<HandleRoleChangesTask>.Instance),
+        LogoTask,
         NullLogger<UpdateAccountingUnitTask>.Instance);
+
+    private readonly TemporaryDirectory _storage = new();
+
+    private ManageAccountingUnitLogoTask LogoTask => new(Database.CreateContext(),
+        TestFiles.CreateFileStorageTask(_storage.Path), NullLogger<ManageAccountingUnitLogoTask>.Instance);
+
+    public override async ValueTask DisposeAsync()
+    {
+        _storage.Dispose();
+        await base.DisposeAsync();
+    }
 
     private async Task<AccountingUnit> LoadAccountingUnit(string key)
         => await Context.AccountingUnits.SingleAsync(x => x.Key == key, TestContext.Current.CancellationToken);
@@ -251,5 +265,81 @@ public class UpdateAccountingUnitTaskTests(DatabaseFixture database) : DatabaseT
         var error = Assert.IsType<InvalidInputError>(result.Error);
         Assert.Equal("Name", error.Field);
         Assert.Equal("Old name", (await LoadAccountingUnit("fsr")).Name);
+    }
+
+    [Fact]
+    public async Task Update_WithLogo_ReplacesLogo()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _keycloakUserClient.SetupRoleMembers("fsr");
+        await LogoTask.Save("fsr", TestFiles.CreateFormFile(TestFiles.Png), CancellationToken.None);
+        var command = Command("fsr") with { Logo = TestFiles.CreateFormFile(TestFiles.Jpeg, "logo.jpg") };
+
+        // Act
+        var result = await MyTask.Update(command, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var logo = await LogoTask.Load("fsr", CancellationToken.None);
+        await using var content = logo.Value!.Content;
+        Assert.Equal(MediaTypeNames.Image.Jpeg, logo.Value.ContentType);
+    }
+
+    [Fact]
+    public async Task Update_WithoutLogo_KeepsLogo()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _keycloakUserClient.SetupRoleMembers("fsr");
+        await LogoTask.Save("fsr", TestFiles.CreateFormFile(TestFiles.Png), CancellationToken.None);
+
+        // Act
+        var result = await MyTask.Update(Command("fsr"), CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var logo = await LogoTask.Load("fsr", CancellationToken.None);
+        await using var content = logo.Value!.Content;
+        Assert.Equal(MediaTypeNames.Image.Png, logo.Value.ContentType);
+    }
+
+    [Fact]
+    public async Task Update_InvalidLogo_ReturnsInvalidInputWithoutChangingAnything()
+    {
+        // Arrange
+        Context.AccountingUnits.Add(new AccountingUnit { Key = "fsr", Name = "Old name" });
+        await Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        var command = Command("fsr") with
+        {
+            Name = "New name",
+            Logo = TestFiles.CreateFormFile(TestFiles.PngOfSize(ManageAccountingUnitLogoTask.MaxSizeInBytes + 1)),
+        };
+
+        // Act
+        var result = await MyTask.Update(command, CancellationToken.None);
+
+        // Assert
+        var error = Assert.IsType<InvalidInputError>(result.Error);
+        Assert.Equal(ManageAccountingUnitLogoTask.LogoField, error.Field);
+        Assert.Equal("Old name", (await LoadAccountingUnit("fsr")).Name);
+        Assert.Empty(_keycloakUserClient.ReceivedCalls());
+        Assert.Empty(Directory.GetFiles(_storage.Path, "*", SearchOption.AllDirectories));
+    }
+
+    [Fact]
+    public async Task Update_UnknownKeyWithLogo_ReturnsNotFoundAndStoresNoLogo()
+    {
+        // Arrange
+        var command = Command("unknown") with { Logo = TestFiles.CreateFormFile(TestFiles.Png) };
+
+        // Act
+        var result = await MyTask.Update(command, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(new NotFoundError(nameof(AccountingUnit), "unknown"), result.Error);
+        Assert.Empty(Directory.GetFiles(_storage.Path, "*", SearchOption.AllDirectories));
     }
 }
